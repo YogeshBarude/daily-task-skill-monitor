@@ -133,13 +133,13 @@ export function MonitorApp() {
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-[238px] border-r border-[#2B3240] bg-[#12161D] lg:flex lg:flex-col">
         <div className="flex h-[70px] items-center gap-3 border-b border-[#252A35] px-5">
           <div className="grid h-8 w-8 place-items-center rounded-full border border-slate-500 text-slate-100"><CheckCircle2 size={19} /></div>
-          <div><p className="text-[15px] font-semibold leading-tight text-slate-100">Daily Task &</p><p className="text-[15px] font-semibold leading-tight text-slate-100">Skill Monitor</p></div>
+          <div><p className="text-[15px] font-bold leading-tight text-slate-100">Daily Task &</p><p className="text-[15px] font-bold leading-tight text-slate-100">Skill Monitor</p></div>
         </div>
 
         <nav className="scrollbar-thin flex-1 overflow-y-auto px-3 py-4">
           {navGroups.map((group) => (
             <div key={group.label || "overview"} className="mb-5">
-              {group.label && <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{group.label}</p>}
+              {group.label && <p className="mb-2 px-3 text-[10px] font-bold uppercase text-slate-500">{group.label}</p>}
               <div className="grid gap-1">
                 {group.items.map(({ tab, label, icon: Icon }) => (
                   <button key={tab} onClick={() => setActive(tab)} className={`flex h-9 w-full items-center gap-3 rounded-md border px-3 text-left text-[13px] transition ${active === tab ? "border-[#5B8DEF]/70 bg-[#5B8DEF]/20 font-medium text-blue-100 shadow-[inset_3px_0_0_#5B8DEF]" : "border-transparent text-slate-400 hover:bg-white/[0.05] hover:text-slate-100"}`}>
@@ -180,7 +180,7 @@ export function MonitorApp() {
         <div className="mx-auto max-w-[1500px] p-3 sm:p-4 lg:p-5">
           {active !== "Dashboard" && (
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div><p className="text-xl font-semibold text-slate-100">{active}</p><p className="mt-1 text-xs text-slate-500">{active.includes("Finance") || ["Expenses", "EMI Tracker", "Investments", "Financial Goals"].includes(active) ? `Month ${financeMonth}` : `Week of ${format(new Date(`${weekStart}T00:00:00`), "MMM d, yyyy")}`}</p></div>
+              <div><p className="text-xl font-bold text-slate-100">{active}</p><p className="mt-1 text-xs text-slate-500">{active.includes("Finance") || ["Expenses", "EMI Tracker", "Investments", "Financial Goals"].includes(active) ? `Month ${financeMonth}` : `Week of ${format(new Date(`${weekStart}T00:00:00`), "MMM d, yyyy")}`}</p></div>
               {active.includes("Finance") || ["Expenses", "EMI Tracker", "Investments", "Financial Goals"].includes(active) ? <input className={inputClass} type="month" value={financeMonth} onChange={(event) => setFinanceMonth(event.target.value)} /> : null}
             </div>
           )}
@@ -546,7 +546,7 @@ function Metric({ title, value, hint }: { title: string; value: string | number;
   const dot = /done|completion|savings|balance|return/i.test(title) ? "bg-[#3ECF8E]" : /pending|blocked|emi|expense/i.test(title) ? "bg-[#F5B84B]" : /skill|learning|portfolio|investment/i.test(title) ? "bg-[#C879FF]" : "bg-[#5B8DEF]";
   return (
     <Card className={`min-h-[112px] ${tone}`}>
-      <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-[#8D98AE]"><span className={`h-2 w-2 rounded-full ${dot}`} />{title}</p>
+      <p className="flex items-center gap-2 text-[11px] font-bold uppercase text-[#8D98AE]"><span className={`h-2 w-2 rounded-full ${dot}`} />{title}</p>
       <p className="mt-2 text-[32px] font-bold leading-none text-[#F0F2F5]">{value}</p>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
     </Card>
@@ -754,7 +754,7 @@ function Skills({ selectedDate, onSelectDate }: { selectedDate: string; onSelect
 
       <Card className="h-fit xl:sticky xl:top-[90px]">
         <h2 className="text-base font-semibold">Day&apos;s progress</h2>
-        <div className="mt-4 rounded-lg bg-[#5B8DEF] p-5 text-white"><p className="text-xs font-medium uppercase tracking-[0.08em] text-blue-100">Completed</p><p className="mt-2 text-4xl font-bold">{completed}/{selectedTasks.length}</p><p className="mt-1 text-xs text-blue-100">tasks completed today</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-[#3ECF8E]" style={{ width: `${completion}%` }} /></div></div>
+        <div className="mt-4 rounded-lg bg-[#5B8DEF] p-5 text-white"><p className="text-[11px] font-bold uppercase text-blue-100">Completed</p><p className="mt-2 text-4xl font-extrabold tabular-nums">{completed}/{selectedTasks.length}</p><p className="mt-1 text-xs text-blue-100">tasks completed today</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-[#3ECF8E]" style={{ width: `${completion}%` }} /></div></div>
         <div className="mt-5 grid grid-cols-2 gap-3"><ProgressMiniStat value={`${minutesToHours(totalMinutes)}h`} label="Actual" /><ProgressMiniStat value={`${minutesToHours(plannedMinutes)}h`} label="Planned" /></div>
         <h3 className="mt-6 text-sm font-semibold">Skill breakdown</h3>
         <div className="mt-3 grid gap-3">{skillGroups.filter((item) => item.tasks.length).map(({ skill, tasks, done }) => <div key={skill.id} className="rounded-lg border border-[#252A35] bg-[#1E2330] p-3"><div className="flex justify-between text-xs"><span className="font-medium">{skill.skillName}</span><span className="text-[#3ECF8E]">{done}/{tasks.length}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#343A48]"><div className="h-full bg-[#5B8DEF]" style={{ width: `${(done / tasks.length) * 100}%` }} /></div></div>)}</div>
@@ -791,7 +791,7 @@ function SkillTile({ skill, tasks, done, tone, onAddTask, onEditSkill, onDeleteS
 }
 
 function ProgressMiniStat({ value, label }: { value: string; label: string }) {
-  return <div className="rounded-lg bg-[#1E2330] p-3 text-center"><p className="text-lg font-bold text-[#F0F2F5]">{value}</p><p className="mt-1 text-[10px] uppercase tracking-[0.08em] text-[#7A8499]">{label}</p></div>;
+  return <div className="rounded-lg bg-[#1E2330] p-3 text-center"><p className="text-lg font-extrabold tabular-nums text-[#F0F2F5]">{value}</p><p className="mt-1 text-[10px] font-bold uppercase text-[#7A8499]">{label}</p></div>;
 }
 
 function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
@@ -902,7 +902,7 @@ function LearningAnalytics({ weekStart }: { weekStart: string }) {
       </section>
       <Card className="h-fit xl:sticky xl:top-[90px]">
         <h2 className="text-base font-semibold">Weekly progress</h2>
-        <div className="mt-4 rounded-lg bg-[#5B8DEF] p-5 text-white"><p className="text-xs uppercase tracking-[0.08em] text-blue-100">Completion</p><p className="mt-2 text-4xl font-bold">{completion}%</p><p className="mt-1 text-xs text-blue-100">{completed} of {week.learningTasks.length} tasks done</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-[#3ECF8E]" style={{ width: `${completion}%` }} /></div></div>
+        <div className="mt-4 rounded-lg bg-[#5B8DEF] p-5 text-white"><p className="text-[11px] font-bold uppercase text-blue-100">Completion</p><p className="mt-2 text-4xl font-extrabold tabular-nums">{completion}%</p><p className="mt-1 text-xs text-blue-100">{completed} of {week.learningTasks.length} tasks done</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-[#3ECF8E]" style={{ width: `${completion}%` }} /></div></div>
         <div className="mt-5 grid grid-cols-2 gap-3"><ProgressMiniStat value={`${minutesToHours(totalActualMinutes)}h`} label="Actual" /><ProgressMiniStat value={`${minutesToHours(totalPlannedMinutes)}h`} label="Planned" /></div>
         <h3 className="mt-6 text-sm font-semibold">Category breakdown</h3>
         <div className="mt-3 grid gap-3">{categoryData.map((category, index) => <div key={category.name} className="rounded-lg border border-[#252A35] bg-[#1E2330] p-3"><div className="flex items-center justify-between text-xs"><span>{category.name}</span><span className="font-medium text-[#3ECF8E]">{category.value}h</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#343A48]"><div className="h-full" style={{ width: `${totalActualMinutes ? Math.min(100, (category.value * 60 / totalActualMinutes) * 100) : 0}%`, backgroundColor: colors[index % colors.length] }} /></div></div>)}</div>

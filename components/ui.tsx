@@ -11,7 +11,7 @@ export function Button({ children, variant = "primary", className = "", ...props
   return (
     <button
       className={clsx(
-        "inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50",
         variant === "primary" && "bg-[#5B8DEF] text-white shadow-[0_8px_24px_rgba(91,141,239,0.2)] hover:bg-[#6D99F1]",
         variant === "secondary" && "border border-[#252A35] bg-[#1E2330] text-[#F0F2F5] hover:bg-[#252B39]",
         variant === "danger" && "bg-danger text-white hover:bg-red-700",
@@ -27,7 +27,7 @@ export function Button({ children, variant = "primary", className = "", ...props
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="grid gap-1.5 text-xs font-medium uppercase tracking-[0.08em] text-[#7A8499]">
+    <label className="grid gap-1.5 text-[11px] font-semibold uppercase text-[#8792A8]">
       <span>{label}</span>
       {children}
     </label>
