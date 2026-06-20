@@ -27,15 +27,19 @@ import {
   IndianRupee,
   LayoutDashboard,
   ListChecks,
+  LockKeyhole,
   LogOut,
+  Mail,
   Plus,
   Printer,
   Save,
   Settings,
+  ShieldCheck,
   Sparkles,
   Trash2,
   TrendingUp,
   UserCircle,
+  UserRound,
   WalletCards
 } from "lucide-react";
 import { addMinutes, differenceInMinutes, format } from "date-fns";
@@ -187,40 +191,70 @@ export function MonitorApp() {
 
 function AuthScreen() {
   const { signIn, signUp, mode } = useStore();
-  const [isSignup, setIsSignup] = useState(true);
-  const [name, setName] = useState("Personal Workspace");
-  const [email, setEmail] = useState("demo@daily-monitor.local");
-  const [password, setPassword] = useState("password123");
+  const [isSignup, setIsSignup] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
+    setMessage("");
+    setSubmitting(true);
     try {
-      if (isSignup) await signUp(email, password, name);
-      else await signIn(email, password);
+      if (isSignup) {
+        await signUp(email, password, name);
+        setMessage("Account created. Check your email to confirm your account, then log in.");
+        setIsSignup(false);
+        setPassword("");
+      } else {
+        await signIn(email, password);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Authentication failed");
+    } finally {
+      setSubmitting(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-soft p-4">
-      <Card className="w-full max-w-md">
-        <p className="text-2xl font-bold">Daily Task & Skill Monitor</p>
-        <p className="mt-2 text-sm text-slate-500">Personal work, learning, time, and weekly review tracking.</p>
-        <form className="mt-6 grid gap-3" onSubmit={submit}>
-          {isSignup && <Field label="Name"><input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required /></Field>}
-          <Field label="Email"><input className={inputClass} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></Field>
-          <Field label="Password"><input className={inputClass} type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} required /></Field>
-          {error && <p className="rounded-md bg-red-50 p-2 text-sm text-red-700">{error}</p>}
-          <Button type="submit">{isSignup ? "Create workspace" : "Log in"}</Button>
-        </form>
-        <button className="mt-4 text-sm font-medium text-brand" onClick={() => setIsSignup(!isSignup)}>
-          {isSignup ? "Already have an account? Log in" : "Need an account? Sign up"}
-        </button>
-        <p className="mt-4 text-xs text-slate-500">{mode === "local" ? "No Supabase keys found, so this runs in localStorage mode." : "Supabase authentication is enabled."}</p>
-      </Card>
+    <main className="grid min-h-screen place-items-center bg-[#080d14] px-4 py-10 text-slate-100">
+      <div className="w-full max-w-[430px]">
+        <div className="mb-7 flex items-center justify-center gap-3">
+          <div className="grid h-11 w-11 place-items-center rounded-lg border border-blue-400/40 bg-blue-500/10 text-blue-300"><CheckCircle2 size={24} /></div>
+          <div><p className="text-lg font-semibold leading-tight">Daily Task & Skill Monitor</p><p className="mt-1 text-xs text-slate-500">Your private productivity workspace</p></div>
+        </div>
+
+        <Card className="p-5 sm:p-6">
+          <div className="grid grid-cols-2 rounded-md border border-[#2b3947] bg-[#091019] p-1">
+            <button type="button" onClick={() => { setIsSignup(false); setError(""); setMessage(""); }} className={`h-9 rounded text-sm font-medium ${!isSignup ? "bg-blue-600 text-white" : "text-slate-400 hover:text-slate-200"}`}>Log in</button>
+            <button type="button" onClick={() => { setIsSignup(true); setError(""); setMessage(""); }} className={`h-9 rounded text-sm font-medium ${isSignup ? "bg-blue-600 text-white" : "text-slate-400 hover:text-slate-200"}`}>Sign up</button>
+          </div>
+
+          <div className="mt-6">
+            <h1 className="text-xl font-semibold">{isSignup ? "Create your workspace" : "Welcome back"}</h1>
+            <p className="mt-1.5 text-sm text-slate-500">{isSignup ? "Create an account to securely sync your data." : "Log in to continue to your workspace."}</p>
+          </div>
+
+          <form className="mt-6 grid gap-4" onSubmit={submit}>
+            {isSignup && <Field label="Name"><div className="relative"><UserRound className="pointer-events-none absolute left-3 top-3 text-slate-600" size={16} /><input className={`${inputClass} pl-10`} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Your name" required /></div></Field>}
+            <Field label="Email"><div className="relative"><Mail className="pointer-events-none absolute left-3 top-3 text-slate-600" size={16} /><input className={`${inputClass} pl-10`} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@example.com" required /></div></Field>
+            <Field label="Password"><div className="relative"><LockKeyhole className="pointer-events-none absolute left-3 top-3 text-slate-600" size={16} /><input className={`${inputClass} pl-10`} type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={isSignup ? "new-password" : "current-password"} placeholder="At least 8 characters" required /></div></Field>
+            {mode === "local" && <p className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-200">Secure cloud authentication is not configured. Add the Supabase environment variables in Vercel before using this website.</p>}
+            {error && <p className="rounded-md border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
+            {message && <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">{message}</p>}
+            <Button className="mt-1 w-full" type="submit" disabled={submitting || mode === "local"}>{submitting ? "Please wait..." : isSignup ? "Create account" : "Log in"}</Button>
+          </form>
+
+          <div className="mt-5 flex items-center justify-center gap-2 border-t border-[#263340] pt-4 text-xs text-slate-500">
+            <ShieldCheck size={15} className="text-emerald-400" />
+            <span>{mode === "supabase" ? "Protected by secure cloud authentication" : "Cloud connection required"}</span>
+          </div>
+        </Card>
+      </div>
     </main>
   );
 }

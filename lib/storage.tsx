@@ -82,9 +82,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       return () => listener.subscription.unsubscribe();
     }
 
-    const savedUser = localStorage.getItem(USER_KEY);
     const savedData = localStorage.getItem(STORAGE_KEY);
-    setUser(savedUser ? JSON.parse(savedUser) : demoUser);
+    localStorage.removeItem(USER_KEY);
+    setUser(null);
     setData(savedData ? normalizeAppData(JSON.parse(savedData)) : createSampleData(demoUser.id));
     setLoading(false);
   }, []);
@@ -155,9 +155,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
       return;
     }
-    const nextUser = { id: `local-${Date.now()}`, email, name };
-    setUser(nextUser);
-    setData(createSampleData(nextUser.id));
+    throw new Error("Secure cloud authentication is not configured yet.");
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -166,9 +164,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       return;
     }
-    const nextUser = { id: demoUser.id, email, name: email.split("@")[0] || "Personal workspace" };
-    setUser(nextUser);
-    localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+    throw new Error("Secure cloud authentication is not configured yet.");
   }, []);
 
   const signOut = useCallback(async () => {
@@ -176,7 +172,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
     }
     setUser(null);
-  }, []);
+    if (mode === "local") localStorage.removeItem(USER_KEY);
+  }, [mode]);
 
   const upsert = useCallback(async <T extends Entity>(collection: Collection, item: T) => {
     setData((current) => ({
