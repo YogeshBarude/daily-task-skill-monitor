@@ -48,7 +48,7 @@ create table if not exists public.work_tasks (
   estimated_minutes integer not null default 0,
   actual_minutes integer not null default 0,
   completion_percentage integer not null default 0,
-  status text not null default 'Planned',
+  status text not null default 'In Progress',
   priority text not null default 'Medium',
   work_type text not null default 'Other',
   notes text,

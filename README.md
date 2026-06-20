@@ -71,6 +71,7 @@ supabase/migrations/20260620_secure_user_profile_trigger.sql
 supabase/migrations/20260620_simplify_learning_module.sql
 supabase/migrations/20260620_remove_finance_module.sql
 supabase/migrations/20260620_remove_time_tracker.sql
+supabase/migrations/20260620_default_work_tasks_in_progress.sql
 ```
 
 These migrations add the current task and learning fields, secure the profile trigger, and remove retired finance and time-tracker tables.

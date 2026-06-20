@@ -401,7 +401,7 @@ function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, onToggl
       </div>
       <div className="flex items-center gap-3">
         <span className="hidden max-w-[150px] truncate text-xs text-slate-500 sm:block">{meta}</span>
-        {onToggle && <button onClick={onToggle} className={`grid h-5 w-5 place-items-center rounded border ${done ? "border-emerald-400 bg-emerald-400 text-[#07110c]" : "border-slate-500 text-transparent hover:border-blue-400"}`} title={done ? "Mark active" : "Mark complete"}><CheckCircle2 size={13} /></button>}
+        {onToggle && <button type="button" onClick={onToggle} className={`grid h-8 w-8 shrink-0 place-items-center rounded-md border transition ${done ? "border-emerald-400 bg-emerald-400 text-[#07110c]" : "border-slate-500 text-transparent hover:border-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300"}`} title={done ? "Mark in progress" : "Mark complete"} aria-label={done ? "Mark task in progress" : "Mark task complete"}><CheckCircle2 size={17} /></button>}
       </div>
     </div>
   );
@@ -897,7 +897,7 @@ function CrudLayout({ title, filters, form, children }: { title: string; filters
 function WorkTaskForm({ item, onSave, onCancel }: { item: WorkTask | null; onSave: (item: WorkTask) => void; onCancel: () => void }) {
   const stamp = new Date().toISOString();
   const [task, setTask] = useState<WorkTask>(item || {
-    id: newId("wt"), userId: "", title: "", projectName: "Personal", productOwner: "Personal", platform: "", poc: "", category: "General", description: "", receivedDate: toDateInput(new Date()), assignedDate: toDateInput(new Date()), dueDate: toDateInput(new Date()), dayOfWeek: format(new Date(), "EEEE"), estimatedMinutes: 60, actualMinutes: 0, completionPercentage: 0, status: "Planned", priority: "Medium", workType: "Other", notes: "", deliverable: "", blockers: "", learnings: "", createdAt: stamp, updatedAt: stamp
+    id: newId("wt"), userId: "", title: "", projectName: "Personal", productOwner: "Personal", platform: "", poc: "", category: "General", description: "", receivedDate: toDateInput(new Date()), assignedDate: toDateInput(new Date()), dueDate: toDateInput(new Date()), dayOfWeek: format(new Date(), "EEEE"), estimatedMinutes: 60, actualMinutes: 0, completionPercentage: 0, status: "In Progress", priority: "Medium", workType: "Other", notes: "", deliverable: "", blockers: "", learnings: "", createdAt: stamp, updatedAt: stamp
   });
   return <FormGrid onSubmit={() => task.title.trim() && onSave({ ...task, dayOfWeek: format(new Date(`${task.assignedDate}T00:00:00`), "EEEE"), updatedAt: new Date().toISOString() })} onCancel={onCancel}>
     <TextField label="Task title" value={task.title} onChange={(v) => setTask({ ...task, title: v })} required />
@@ -905,7 +905,6 @@ function WorkTaskForm({ item, onSave, onCancel }: { item: WorkTask | null; onSav
     <SelectField label="Product owner" value={task.productOwner || "Personal"} options={pocOptions} onChange={(v) => setTask({ ...task, productOwner: v, poc: v })} />
     <TextField label="Assigned date" type="date" value={task.assignedDate} onChange={(v) => setTask({ ...task, assignedDate: v })} />
     <TextField label="Due date" type="date" value={task.dueDate} onChange={(v) => setTask({ ...task, dueDate: v })} />
-    <SelectField label="Status" value={task.status} options={["Backlog", "Planned", "In Progress", "Blocked", "Completed"]} onChange={(v) => setTask({ ...task, status: v as WorkTask["status"] })} />
     <SelectField label="Priority" value={task.priority} options={["Low", "Medium", "High"]} onChange={(v) => setTask({ ...task, priority: v as WorkTask["priority"] })} />
     <SelectField label="Category" value={task.category || "General"} options={workCategoryOptions} onChange={(v) => setTask({ ...task, category: v })} />
     <SelectField label="Work type" value={task.workType} options={["Research", "Analysis", "Testing", "Documentation", "Meeting", "Development", "Review", "Other"]} onChange={(v) => setTask({ ...task, workType: v as WorkTask["workType"] })} />
