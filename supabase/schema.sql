@@ -86,20 +86,6 @@ create table if not exists public.learning_tasks (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists public.time_logs (
-  id text primary key,
-  user_id uuid not null references public.users(id) on delete cascade,
-  linked_type text not null default 'none',
-  linked_id text,
-  log_type text not null default 'Work',
-  date date not null,
-  start_time time,
-  end_time time,
-  duration_minutes integer not null default 0,
-  notes text,
-  created_at timestamptz not null default now()
-);
-
 create table if not exists public.weekly_reviews (
   id text primary key,
   user_id uuid not null references public.users(id) on delete cascade,
@@ -143,7 +129,6 @@ alter table public.users enable row level security;
 alter table public.work_tasks enable row level security;
 alter table public.skills enable row level security;
 alter table public.learning_tasks enable row level security;
-alter table public.time_logs enable row level security;
 alter table public.weekly_reviews enable row level security;
 
 create policy "Users can read own profile" on public.users for select using (auth.uid() = id);
@@ -164,11 +149,6 @@ create policy "Own learning tasks read" on public.learning_tasks for select usin
 create policy "Own learning tasks insert" on public.learning_tasks for insert with check (auth.uid() = user_id);
 create policy "Own learning tasks update" on public.learning_tasks for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Own learning tasks delete" on public.learning_tasks for delete using (auth.uid() = user_id);
-
-create policy "Own time logs read" on public.time_logs for select using (auth.uid() = user_id);
-create policy "Own time logs insert" on public.time_logs for insert with check (auth.uid() = user_id);
-create policy "Own time logs update" on public.time_logs for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "Own time logs delete" on public.time_logs for delete using (auth.uid() = user_id);
 
 create policy "Own weekly reviews read" on public.weekly_reviews for select using (auth.uid() = user_id);
 create policy "Own weekly reviews insert" on public.weekly_reviews for insert with check (auth.uid() = user_id);

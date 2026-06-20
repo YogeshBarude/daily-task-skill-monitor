@@ -40,15 +40,15 @@ import {
   UserRound,
   X
 } from "lucide-react";
-import { addDays, addMinutes, differenceInMinutes, format } from "date-fns";
+import { addDays, addMinutes, format } from "date-fns";
 import { autoWeeklySummary, dailySeries, dashboardMetrics, priorityDistribution, productivityLabel, productivityScore, projectDistribution, scopedWeekData, skillCategoryDistribution, statusDistribution } from "@/lib/analytics";
 import { minutesToHours, toDateInput, weekBounds, weekDays } from "@/lib/date";
 import { newId, useStore } from "@/lib/storage";
 import { sprintCsv, sprintShareText, tasksForSprint } from "@/lib/sprint";
-import { LearningTask, Skill, TimeLog, WeeklyReview, WorkTask } from "@/lib/types";
+import { LearningTask, Skill, WeeklyReview, WorkTask } from "@/lib/types";
 import { Badge, Button, Card, EmptyState, Field, ProgressBar, inputClass } from "./ui";
 
-type Tab = "Dashboard" | "Weekly Planner" | "Work Tasks" | "Sprint Plan" | "Skills" | "Time Tracker" | "Work Analytics" | "Learning Analytics" | "Weekly Review" | "Settings";
+type Tab = "Dashboard" | "Weekly Planner" | "Work Tasks" | "Sprint Plan" | "Skills" | "Work Analytics" | "Learning Analytics" | "Weekly Review" | "Settings";
 const navGroups: { label: string; items: { tab: Tab; label: string; icon: React.ElementType }[] }[] = [
   { label: "", items: [{ tab: "Dashboard", label: "Dashboard", icon: LayoutDashboard }] },
   {
@@ -57,7 +57,6 @@ const navGroups: { label: string; items: { tab: Tab; label: string; icon: React.
       { tab: "Work Tasks", label: "Tasks", icon: ListChecks },
       { tab: "Sprint Plan", label: "Sprint plan", icon: BriefcaseBusiness },
       { tab: "Weekly Planner", label: "Weekly planner", icon: CalendarDays },
-      { tab: "Time Tracker", label: "Time tracker", icon: Clock3 },
       { tab: "Work Analytics", label: "Work analytics", icon: BarChart3 },
       { tab: "Weekly Review", label: "Weekly review", icon: CheckCircle2 }
     ]
@@ -160,7 +159,6 @@ export function MonitorApp() {
           {active === "Work Tasks" && <WorkTasks />}
           {active === "Sprint Plan" && <SprintPlanPage weekStart={weekStart} />}
           {active === "Skills" && <Skills selectedDate={selectedDate} onSelectDate={selectDate} />}
-          {active === "Time Tracker" && <TimeTracker />}
           {active === "Work Analytics" && <WorkAnalytics weekStart={weekStart} />}
           {active === "Learning Analytics" && <LearningAnalytics weekStart={weekStart} />}
           {active === "Weekly Review" && <WeeklyReviewPage weekStart={weekStart} />}
@@ -316,7 +314,6 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
   const selectedDay = days.find((day) => day.input === selectedDate) || days[0];
   const selectedWork = data.workTasks.filter((task) => task.assignedDate === selectedDay.input);
   const selectedLearning = data.learningTasks.filter((task) => task.plannedDate === selectedDay.input);
-  const selectedLogs = data.timeLogs.filter((log) => log.date === selectedDay.input);
   const totalTasks = week.workTasks.length + week.learningTasks.length;
   const completedTasks = week.workTasks.filter((task) => task.status === "Completed").length + week.learningTasks.filter((task) => task.status === "Done").length;
   const completion = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -372,7 +369,7 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
           <div className="mb-4 flex items-center justify-between"><h2 className="text-base font-semibold text-slate-100">My progress</h2><Badge tone="blue">This week</Badge></div>
           <div className="grid gap-3">
             <ProgressStat title="Weekly completion" value={`${completion}%`} detail={`${completedTasks} of ${totalTasks} tasks done`} progress={completion} tone="green" icon={Goal} />
-            <ProgressStat title="Focus hours" value={`${metrics.totalWorkHours}h`} detail={`${selectedLogs.filter((log) => log.logType === "Work").length} logs on selected day`} progress={Math.min(100, metrics.totalWorkHours * 5)} tone="blue" icon={Clock3} />
+            <ProgressStat title="Focus hours" value={`${metrics.totalWorkHours}h`} detail={`${selectedWork.reduce((total, task) => total + task.actualMinutes, 0)} minutes on selected day`} progress={Math.min(100, metrics.totalWorkHours * 5)} tone="blue" icon={Clock3} />
             <ProgressStat title="Skill practice" value={`${metrics.totalLearningHours}h`} detail={`${selectedLearning.length} learning items on selected day`} progress={Math.min(100, metrics.totalLearningHours * 10)} tone="amber" icon={BookOpen} />
           </div>
         </aside>
@@ -487,15 +484,14 @@ function WeeklyPlanner({ weekStart }: { weekStart: string }) {
       {days.map((day) => {
         const work = data.workTasks.filter((task) => task.assignedDate === day.input);
         const learning = data.learningTasks.filter((task) => task.plannedDate === day.input);
-        const logs = data.timeLogs.filter((log) => log.date === day.input);
         const planned = work.reduce((t, task) => t + task.estimatedMinutes, 0) + learning.reduce((t, task) => t + task.plannedMinutes, 0);
-        const actual = logs.reduce((t, log) => t + log.durationMinutes, 0);
+        const actual = work.reduce((t, task) => t + task.actualMinutes, 0) + learning.reduce((t, task) => t + task.actualMinutes, 0);
         const completed = work.filter((task) => task.status === "Completed").length + learning.filter((task) => task.status === "Done").length;
         const total = work.length + learning.length;
         const percent = total ? Math.round((completed / total) * 100) : 0;
         return (
           <Card key={day.input}>
-            <div className="grid gap-4 xl:grid-cols-[180px_1fr_1fr_220px]">
+            <div className="grid gap-4 xl:grid-cols-[180px_1fr_1fr]">
               <div>
                 <p className="text-lg font-bold">{day.dayName}</p>
                 <p className="text-sm text-slate-500">{day.label}</p>
@@ -508,7 +504,6 @@ function WeeklyPlanner({ weekStart }: { weekStart: string }) {
               </div>
               <PlannerColumn title="Work Tasks" items={work.map((task) => ({ id: task.id, text: task.title, meta: `${task.priority} - ${task.status}` }))} />
               <PlannerColumn title="Skill Development" items={learning.map((task) => ({ id: task.id, text: task.title, meta: `${task.learningType} - ${task.status}` }))} />
-              <PlannerColumn title="Time Logged" items={logs.map((log) => ({ id: log.id, text: `${log.logType}: ${minutesToHours(log.durationMinutes)}h`, meta: log.notes || "Manual log" }))} />
             </div>
           </Card>
         );
@@ -706,65 +701,13 @@ function ModalShell({ title, onClose, children }: { title: string; onClose: () =
   return <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/75 p-4" role="dialog" aria-modal="true" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><Card className="my-6 w-full max-w-md p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{title}</h2><button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-lg text-[#7A8499] hover:bg-white/5 hover:text-white" aria-label="Close"><X size={18} /></button></div><div className="mt-5">{children}</div></Card></div>;
 }
 
-function TimeTracker() {
-  const { data, user, upsert, remove } = useStore();
-  const [running, setRunning] = useState<{ startedAt: Date; linkedType: TimeLog["linkedType"]; linkedId: string; logType: TimeLog["logType"] } | null>(null);
-  const [editing, setEditing] = useState<TimeLog | null>(null);
-
-  async function stopTimer() {
-    if (!running || !user) return;
-    const end = new Date();
-    const duration = Math.max(1, differenceInMinutes(end, running.startedAt));
-    const stamp = new Date().toISOString();
-    await upsert("timeLogs", {
-      id: newId("tl"),
-      userId: user.id,
-      linkedType: running.linkedType,
-      linkedId: running.linkedId,
-      logType: running.logType,
-      date: toDateInput(running.startedAt),
-      startTime: format(running.startedAt, "HH:mm"),
-      endTime: format(end, "HH:mm"),
-      durationMinutes: duration,
-      notes: "Timer entry",
-      createdAt: stamp
-    });
-    setRunning(null);
-  }
-
-  return (
-    <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
-      <Card>
-        <h2 className="font-semibold">Timer</h2>
-        <div className="mt-4 grid gap-3">
-          <select className={inputClass} value={running?.logType || "Work"} disabled={Boolean(running)} onChange={() => undefined}>
-            <option>Work</option><option>Learning</option><option>Personal</option>
-          </select>
-          {running ? (
-            <>
-              <p className="rounded-lg bg-blue-50 p-3 text-sm text-blue-700">Started at {format(running.startedAt, "HH:mm")}</p>
-              <Button onClick={stopTimer}>Stop timer</Button>
-              <Button variant="secondary" onClick={() => setRunning(null)}>Pause / discard</Button>
-            </>
-          ) : (
-            <Button onClick={() => setRunning({ startedAt: new Date(), linkedType: "none", linkedId: "", logType: "Work" })}>Start timer</Button>
-          )}
-        </div>
-      </Card>
-      <CrudLayout title="Time logs" form={<TimeLogForm item={editing} workTasks={data.workTasks} learningTasks={data.learningTasks} onCancel={() => setEditing(null)} onSave={(item) => { if (user) void upsert("timeLogs", { ...item, userId: user.id }); setEditing(null); }} />}>
-        {data.timeLogs.map((log) => <TaskRow key={log.id} title={`${log.logType} - ${minutesToHours(log.durationMinutes)}h`} meta={`${log.date} ${log.startTime || ""}-${log.endTime || ""} - ${log.notes}`} badges={[log.linkedType]} onEdit={() => setEditing(log)} onDelete={() => confirmDelete(() => remove("timeLogs", log.id))} />)}
-      </CrudLayout>
-    </div>
-  );
-}
-
 function WorkAnalytics({ weekStart }: { weekStart: string }) {
   const { data } = useStore();
   const week = scopedWeekData(data, weekStart);
   const score = productivityScore(week.workTasks, week.learningTasks);
   return (
     <AnalyticsGrid>
-      <Metric title="Total work hours" value={`${minutesToHours(week.timeLogs.filter((l) => l.logType === "Work").reduce((t, l) => t + l.durationMinutes, 0))}h`} />
+      <Metric title="Total work hours" value={`${minutesToHours(week.workTasks.reduce((total, task) => total + task.actualMinutes, 0))}h`} />
       <Metric title="Blocked tasks" value={week.workTasks.filter((task) => task.status === "Blocked").length} />
       <Metric title="High priority pending" value={week.workTasks.filter((task) => task.priority === "High" && task.status !== "Completed").length} />
       <Metric title="Weekly productivity" value={`${score}/100`} hint={productivityLabel(score)} />
@@ -916,7 +859,7 @@ function SettingsPage() {
         <div className="mt-4 grid gap-2 text-sm">
           <p><span className="font-medium">User:</span> {user?.email}</p>
           <p><span className="font-medium">Storage mode:</span> {mode}</p>
-          <p><span className="font-medium">Records:</span> {data.workTasks.length} work tasks, {data.skills.length} skills, {data.learningTasks.length} learning tasks, {data.timeLogs.length} logs</p>
+          <p><span className="font-medium">Records:</span> {data.workTasks.length} work tasks, {data.skills.length} skills, {data.learningTasks.length} learning tasks</p>
         </div>
         <Button className="mt-4" variant="secondary" onClick={resetDemo}>Reload sample data</Button>
       </Card>
@@ -1008,22 +951,6 @@ function LearningTaskForm({ item, skills, onSave, onCancel }: { item: LearningTa
     <NumberField label="Planned minutes" value={task.plannedMinutes} onChange={(v) => setTask({ ...task, plannedMinutes: v })} />
     <NumberField label="Actual minutes" value={task.actualMinutes} onChange={(v) => setTask({ ...task, actualMinutes: v })} />
     <SelectField label="Status" value={task.status} options={["Planned", "In Progress", "Done", "Skipped"]} onChange={(v) => setTask({ ...task, status: v as LearningTask["status"] })} />
-  </FormGrid>;
-}
-
-function TimeLogForm({ item, workTasks, learningTasks, onSave, onCancel }: { item: TimeLog | null; workTasks: WorkTask[]; learningTasks: LearningTask[]; onSave: (item: TimeLog) => void; onCancel: () => void }) {
-  const stamp = new Date().toISOString();
-  const [log, setLog] = useState<TimeLog>(item || { id: newId("tl"), userId: "", linkedType: "none", linkedId: "", logType: "Work", date: toDateInput(new Date()), startTime: "09:00", endTime: "10:00", durationMinutes: 60, notes: "", createdAt: stamp });
-  const linkedOptions = log.linkedType === "work" ? workTasks.map((task) => [task.id, task.title]) : log.linkedType === "learning" ? learningTasks.map((task) => [task.id, task.title]) : [];
-  return <FormGrid onSubmit={() => onSave(log)} onCancel={onCancel}>
-    <SelectField label="Type" value={log.logType} options={["Work", "Learning", "Personal"]} onChange={(v) => setLog({ ...log, logType: v as TimeLog["logType"] })} />
-    <SelectField label="Linked type" value={log.linkedType} options={["none", "work", "learning"]} onChange={(v) => setLog({ ...log, linkedType: v as TimeLog["linkedType"], linkedId: "" })} />
-    {linkedOptions.length > 0 && <SelectField label="Linked task" value={log.linkedId} options={linkedOptions.map(([id]) => id)} labels={Object.fromEntries(linkedOptions)} onChange={(v) => setLog({ ...log, linkedId: v })} />}
-    <TextField label="Date" type="date" value={log.date} onChange={(v) => setLog({ ...log, date: v })} />
-    <TextField label="Start time" type="time" value={log.startTime} onChange={(v) => setLog({ ...log, startTime: v })} />
-    <TextField label="End time" type="time" value={log.endTime} onChange={(v) => setLog({ ...log, endTime: v })} />
-    <NumberField label="Duration minutes" value={log.durationMinutes} onChange={(v) => setLog({ ...log, durationMinutes: v })} />
-    <TextField label="Notes" value={log.notes} onChange={(v) => setLog({ ...log, notes: v })} textarea />
   </FormGrid>;
 }
 

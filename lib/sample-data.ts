@@ -1,4 +1,4 @@
-import { AppData, LearningTask, Skill, TimeLog, UserProfile, WeeklyReview, WorkTask } from "./types";
+import { AppData, LearningTask, Skill, UserProfile, WeeklyReview, WorkTask } from "./types";
 import { weekDays } from "./date";
 
 const now = new Date().toISOString();
@@ -136,12 +136,6 @@ export function createSampleData(userId = demoUser.id): AppData {
     learning("lt-4", userId, "sk-4", "Watch business presentation lesson", days[5].input, 120, 0, "Planned", "Watch")
   ];
 
-  const timeLogs: TimeLog[] = [
-    log("tl-1", userId, "work", "wt-1", "Work", days[0].input, "09:30", "12:00", 150, "AI Governance testing"),
-    log("tl-2", userId, "learning", "lt-1", "Learning", days[1].input, "20:00", "22:00", 120, "FastAPI local build"),
-    log("tl-3", userId, "work", "wt-2", "Work", days[2].input, "10:00", "11:30", 90, "Synthetic deck charts")
-  ];
-
   const weeklyReviews: WeeklyReview[] = [
     {
       id: "wr-1",
@@ -162,7 +156,7 @@ export function createSampleData(userId = demoUser.id): AppData {
     }
   ];
 
-  return { workTasks, skills, learningTasks, timeLogs, weeklyReviews };
+  return { workTasks, skills, learningTasks, weeklyReviews };
 }
 
 function skill(id: string, userId: string, skillName: Skill["skillName"], category: Skill["category"], currentLevel: Skill["currentLevel"], deadline: string, weeklyTargetMinutes: number): Skill {
@@ -194,8 +188,4 @@ function learning(id: string, userId: string, skillId: string, title: string, pl
     createdAt: now,
     updatedAt: now
   };
-}
-
-function log(id: string, userId: string, linkedType: TimeLog["linkedType"], linkedId: string, logType: TimeLog["logType"], date: string, startTime: string, endTime: string, durationMinutes: number, notes: string): TimeLog {
-  return { id, userId, linkedType, linkedId, logType, date, startTime, endTime, durationMinutes, notes, createdAt: now };
 }

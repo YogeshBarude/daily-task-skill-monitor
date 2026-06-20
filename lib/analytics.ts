@@ -1,11 +1,10 @@
 import { isInWeek, minutesToHours, weekDays } from "./date";
-import { AppData, LearningTask, Skill, TimeLog, WorkTask } from "./types";
+import { AppData, LearningTask, Skill, WorkTask } from "./types";
 
 export function scopedWeekData(data: AppData, weekStartInput: string) {
   return {
     workTasks: data.workTasks.filter((task) => isInWeek(task.assignedDate, weekStartInput)),
     learningTasks: data.learningTasks.filter((task) => isInWeek(task.plannedDate, weekStartInput)),
-    timeLogs: data.timeLogs.filter((log) => isInWeek(log.date, weekStartInput)),
     skills: data.skills,
     weeklyReviews: data.weeklyReviews.filter((review) => review.weekStartDate === weekStartInput)
   };
@@ -38,12 +37,10 @@ export function productivityLabel(score: number) {
 
 export function dashboardMetrics(data: AppData, weekStartInput: string) {
   const week = scopedWeekData(data, weekStartInput);
-  const workLogs = week.timeLogs.filter((log) => log.logType === "Work");
-  const learningLogs = week.timeLogs.filter((log) => log.logType === "Learning");
   const score = productivityScore(week.workTasks, week.learningTasks);
   return {
-    totalWorkHours: minutesToHours(sum(workLogs.map((log) => log.durationMinutes)) || sum(week.workTasks.map((task) => task.actualMinutes))),
-    totalLearningHours: minutesToHours(sum(learningLogs.map((log) => log.durationMinutes)) || sum(week.learningTasks.map((task) => task.actualMinutes))),
+    totalWorkHours: minutesToHours(sum(week.workTasks.map((task) => task.actualMinutes))),
+    totalLearningHours: minutesToHours(sum(week.learningTasks.map((task) => task.actualMinutes))),
     completedWorkTasks: week.workTasks.filter((task) => task.status === "Completed").length,
     pendingWorkTasks: week.workTasks.filter((task) => task.status !== "Completed").length,
     productivityScore: score,
@@ -54,8 +51,7 @@ export function dashboardMetrics(data: AppData, weekStartInput: string) {
 export function dailySeries(data: AppData, weekStartInput: string) {
   const days = weekDays(new Date(`${weekStartInput}T00:00:00`));
   return days.map((day) => {
-    const logs = data.timeLogs.filter((log) => log.date === day.input);
-    const work = sum(logs.filter((log) => log.logType === "Work").map((log) => log.durationMinutes));
+    const work = sum(data.workTasks.filter((task) => task.assignedDate === day.input).map((task) => task.actualMinutes));
     const learning = sum(data.learningTasks.filter((task) => task.plannedDate === day.input).map((task) => task.actualMinutes));
     const completed = data.workTasks.filter((task) => task.assignedDate === day.input && task.status === "Completed").length;
     return {
@@ -101,8 +97,8 @@ export function autoWeeklySummary(data: AppData, weekStartInput: string) {
   const skillCats = skillCategoryDistribution(week.skills, week.learningTasks).sort((a, b) => b.value - a.value);
   return {
     totalTasksCompleted: week.workTasks.filter((task) => task.status === "Completed").length + week.learningTasks.filter((task) => task.status === "Done").length,
-    totalHoursWorked: minutesToHours(sum(week.timeLogs.filter((log) => log.logType === "Work").map((log) => log.durationMinutes))),
-    totalHoursLearned: minutesToHours(sum(week.timeLogs.filter((log) => log.logType === "Learning").map((log) => log.durationMinutes))),
+    totalHoursWorked: minutesToHours(sum(week.workTasks.map((task) => task.actualMinutes))),
+    totalHoursLearned: minutesToHours(sum(week.learningTasks.map((task) => task.actualMinutes))),
     mostProductiveDay: sorted[0]?.day || "No data",
     leastProductiveDay: sorted[sorted.length - 1]?.day || "No data",
     topProjectByTime: projects[0]?.name || "No project yet",

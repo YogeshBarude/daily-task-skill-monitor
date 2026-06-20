@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { Session } from "@supabase/supabase-js";
 import { createSampleData, demoUser } from "./sample-data";
 import { hasSupabaseConfig, supabase } from "./supabase";
-import { AppData, LearningTask, Skill, TimeLog, UserProfile, WeeklyReview, WorkTask } from "./types";
+import { AppData, LearningTask, Skill, UserProfile, WeeklyReview, WorkTask } from "./types";
 
 type Collection = keyof AppData;
 type Entity = AppData[keyof AppData][number];
@@ -32,7 +32,6 @@ const tableMap: Record<Collection, string> = {
   workTasks: "work_tasks",
   skills: "skills",
   learningTasks: "learning_tasks",
-  timeLogs: "time_logs",
   weeklyReviews: "weekly_reviews"
 };
 
@@ -94,18 +93,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const loadSupabaseData = async (userId: string) => {
     if (!supabase) return;
     setLoading(true);
-    const [workTasks, skills, learningTasks, timeLogs, weeklyReviews] = await Promise.all([
+    const [workTasks, skills, learningTasks, weeklyReviews] = await Promise.all([
       supabase.from("work_tasks").select("*").eq("user_id", userId),
       supabase.from("skills").select("id,user_id,skill_name,category,current_level,target_level,weekly_target_minutes,deadline,created_at,updated_at").eq("user_id", userId),
       supabase.from("learning_tasks").select("id,user_id,skill_id,title,learning_type,planned_date,planned_minutes,actual_minutes,status,created_at,updated_at").eq("user_id", userId),
-      supabase.from("time_logs").select("*").eq("user_id", userId),
       supabase.from("weekly_reviews").select("*").eq("user_id", userId)
     ]);
     setData({
       workTasks: (workTasks.data || []).map(fromWorkTask),
       skills: (skills.data || []).map(fromSkill),
       learningTasks: (learningTasks.data || []).map(fromLearningTask),
-      timeLogs: (timeLogs.data || []).map(fromTimeLog),
       weeklyReviews: (weeklyReviews.data || []).map(fromWeeklyReview)
     });
     setLoading(false);
@@ -208,7 +205,6 @@ function normalizeAppData(data: AppData): AppData {
   return {
     skills: data.skills || defaults.skills,
     learningTasks: data.learningTasks || defaults.learningTasks,
-    timeLogs: data.timeLogs || defaults.timeLogs,
     weeklyReviews: data.weeklyReviews || defaults.weeklyReviews,
     workTasks: (data.workTasks || []).map((task) => ({
       ...task,
@@ -275,21 +271,6 @@ function toDb(collection: Collection, item: Entity) {
       planned_minutes: task.plannedMinutes,
       actual_minutes: task.actualMinutes,
       status: task.status
-    };
-  }
-  if (collection === "timeLogs") {
-    const log = item as TimeLog;
-    return {
-      ...common,
-      user_id: log.userId,
-      linked_type: log.linkedType,
-      linked_id: log.linkedId || null,
-      log_type: log.logType,
-      date: log.date,
-      start_time: log.startTime || null,
-      end_time: log.endTime || null,
-      duration_minutes: log.durationMinutes,
-      notes: log.notes
     };
   }
   const review = item as WeeklyReview;
@@ -380,22 +361,6 @@ function normalizeLearningType(value: string): LearningTask["learningType"] {
   if (value === "Project") return "Build";
   if (value === "Revision") return "Review";
   return ["Read", "Watch", "Practice", "Build", "Review"].includes(value) ? value as LearningTask["learningType"] : "Practice";
-}
-
-function fromTimeLog(row: any): TimeLog {
-  return {
-    id: row.id,
-    userId: row.user_id,
-    linkedType: row.linked_type,
-    linkedId: row.linked_id || "",
-    logType: row.log_type,
-    date: row.date,
-    startTime: row.start_time || "",
-    endTime: row.end_time || "",
-    durationMinutes: row.duration_minutes || 0,
-    notes: row.notes || "",
-    createdAt: row.created_at
-  };
 }
 
 function fromWeeklyReview(row: any): WeeklyReview {

@@ -66,20 +66,6 @@ export type LearningTask = {
   updatedAt: string;
 };
 
-export type TimeLog = {
-  id: ID;
-  userId: ID;
-  linkedType: "work" | "learning" | "none";
-  linkedId: ID | "";
-  logType: "Work" | "Learning" | "Personal";
-  date: string;
-  startTime: string;
-  endTime: string;
-  durationMinutes: number;
-  notes: string;
-  createdAt: string;
-};
-
 export type WeeklyReview = {
   id: ID;
   userId: ID;
@@ -102,6 +88,5 @@ export type AppData = {
   workTasks: WorkTask[];
   skills: Skill[];
   learningTasks: LearningTask[];
-  timeLogs: TimeLog[];
   weeklyReviews: WeeklyReview[];
 };

@@ -1,6 +1,6 @@
 # Daily Task & Skill Monitor
 
-A personal full-stack web prototype for tracking weekly work tasks, daily hours, skill-development time, learning progress, analytics, and weekly review notes.
+A personal full-stack web prototype for tracking weekly work tasks, skill-development time, learning progress, analytics, and weekly review notes.
 
 ## Architecture
 
@@ -19,8 +19,6 @@ A personal full-stack web prototype for tracking weekly work tasks, daily hours,
 - CRUD for work tasks
 - CRUD for skills
 - CRUD for learning tasks
-- CRUD for time logs
-- Start/stop timer and manual time entry
 - Work analytics charts
 - Learning analytics charts
 - Weekly review with generated summary from stored data
@@ -72,9 +70,10 @@ supabase/migrations/20260620_add_sprint_fields.sql
 supabase/migrations/20260620_secure_user_profile_trigger.sql
 supabase/migrations/20260620_simplify_learning_module.sql
 supabase/migrations/20260620_remove_finance_module.sql
+supabase/migrations/20260620_remove_time_tracker.sql
 ```
 
-These migrations add the current task and learning fields, secure the profile trigger, and remove the retired finance tables.
+These migrations add the current task and learning fields, secure the profile trigger, and remove retired finance and time-tracker tables.
 
 ## Daily Work And Sprint Workflow
 
@@ -112,7 +111,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
    - Add a work task
    - Add a skill
    - Add a learning task
-   - Add a time log
    - Check work analytics
    - Check learning analytics
    - Save a weekly review
