@@ -17,6 +17,7 @@ type AppStore = {
   mode: "local" | "supabase";
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
   upsert: <T extends Entity>(collection: Collection, item: T) => Promise<void>;
   remove: (collection: Collection, id: string) => Promise<void>;
@@ -175,6 +176,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (mode === "local") localStorage.removeItem(USER_KEY);
   }, [mode]);
 
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    if (!hasSupabaseConfig || !supabase || !user?.email) {
+      throw new Error("Secure cloud authentication is not available.");
+    }
+    const { error: verificationError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword
+    });
+    if (verificationError) throw new Error("Current password is incorrect.");
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  }, [user]);
+
   const upsert = useCallback(async <T extends Entity>(collection: Collection, item: T) => {
     setData((current) => ({
       ...current,
@@ -203,7 +217,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData(next);
   }, [user?.id]);
 
-  const value = useMemo<AppStore>(() => ({ user, session, data, loading, mode, signUp, signIn, signOut, upsert, remove, resetDemo }), [user, session, data, loading, mode, signUp, signIn, signOut, upsert, remove, resetDemo]);
+  const value = useMemo<AppStore>(() => ({ user, session, data, loading, mode, signUp, signIn, changePassword, signOut, upsert, remove, resetDemo }), [user, session, data, loading, mode, signUp, signIn, changePassword, signOut, upsert, remove, resetDemo]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

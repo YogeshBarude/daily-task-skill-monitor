@@ -1143,9 +1143,45 @@ function MonthlyFinanceReviewPage({ month }: { month: string }) {
 }
 
 function SettingsPage() {
-  const { mode, user, resetDemo, data, upsert, remove } = useStore();
+  const { mode, user, resetDemo, data, upsert, remove, changePassword } = useStore();
   const stamp = new Date().toISOString();
   const [settings, setSettings] = useState<FinanceSettings>(data.financeSettings[0] || { id: newId("finset"), userId: user?.id || "", defaultCurrency: "INR", defaultMonthlyIncome: 0, monthStartDate: 1, budgetAlertThreshold: 80, emiReminderDays: 3, investmentUpdateReminderFrequency: "Weekly", createdAt: stamp, updatedAt: stamp });
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  async function submitPassword(event: React.FormEvent) {
+    event.preventDefault();
+    setPasswordError("");
+    setPasswordMessage("");
+    if (newPassword.length < 8) {
+      setPasswordError("New password must contain at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New password and confirmation do not match.");
+      return;
+    }
+    if (currentPassword === newPassword) {
+      setPasswordError("Choose a password different from your current password.");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await changePassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordMessage("Password changed successfully.");
+    } catch (error) {
+      setPasswordError(error instanceof Error ? error.message : "Unable to change password.");
+    } finally {
+      setChangingPassword(false);
+    }
+  }
 
   async function deleteFinanceData() {
     if (!window.confirm("Delete all finance data? This keeps your work/task/skill data.")) return;
@@ -1175,8 +1211,16 @@ function SettingsPage() {
         <Button className="mt-4" variant="secondary" onClick={resetDemo}>Reload sample data</Button>
       </Card>
       <Card>
-        <h2 className="font-semibold">Supabase setup</h2>
-        <p className="mt-3 text-sm text-slate-600">Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local, run the SQL in supabase/schema.sql, then restart the app. Until then, local mode keeps the app fully usable on this browser.</p>
+        <div className="flex items-center gap-2"><LockKeyhole size={18} className="text-blue-300" /><h2 className="font-semibold">Change password</h2></div>
+        <p className="mt-2 text-sm text-slate-500">Verify your current password before setting a new one.</p>
+        <form className="mt-4 grid gap-3" onSubmit={submitPassword}>
+          <Field label="Current password"><input className={inputClass} type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /></Field>
+          <Field label="New password"><input className={inputClass} type="password" minLength={8} autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required /></Field>
+          <Field label="Confirm new password"><input className={inputClass} type="password" minLength={8} autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required /></Field>
+          {passwordError && <p className="rounded-md border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">{passwordError}</p>}
+          {passwordMessage && <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">{passwordMessage}</p>}
+          <Button className="w-fit" type="submit" disabled={changingPassword || mode !== "supabase"}>{changingPassword ? "Changing password..." : "Change password"}</Button>
+        </form>
       </Card>
       <Card>
         <h2 className="font-semibold">Finance settings</h2>
