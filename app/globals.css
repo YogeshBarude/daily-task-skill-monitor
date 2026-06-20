@@ -4,15 +4,15 @@
 
 :root {
   color-scheme: dark;
-  --bg: #080d14;
-  --panel: #0d151f;
-  --panel-soft: #101a25;
-  --panel-muted: #182330;
-  --line: #263340;
-  --text: #e6edf6;
-  --muted: #8492a6;
-  --brand: #6da8ff;
-  --brand-strong: #2f73e8;
+  --bg: #0d0f12;
+  --panel: #161920;
+  --panel-soft: #1e2330;
+  --panel-muted: #252a35;
+  --line: #252a35;
+  --text: #f0f2f5;
+  --muted: #7a8499;
+  --brand: #5b8def;
+  --brand-strong: #5b8def;
   --green-bg: #073b2a;
   --green-text: #86efac;
   --amber-bg: #422c08;
@@ -148,13 +148,13 @@ input,
 select,
 textarea,
 .min-h-10.w-full {
-  background-color: #0a111a !important;
+  background-color: #1e2330 !important;
   border-color: var(--line) !important;
   color: var(--text) !important;
 }
 
 button.border {
-  background-color: #0f1724 !important;
+  background-color: #1e2330 !important;
 }
 
 summary {

@@ -88,6 +88,7 @@ If you already created the database using an earlier version of this project, ru
 supabase/migrations/20260620_add_sprint_fields.sql
 supabase/migrations/20260620_secure_user_profile_trigger.sql
 supabase/migrations/20260620_finance_schedule_fields.sql
+supabase/migrations/20260620_simplify_learning_module.sql
 ```
 
 This adds the sprint fields without deleting existing tasks.

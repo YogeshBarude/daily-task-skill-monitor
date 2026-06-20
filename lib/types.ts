@@ -1,7 +1,7 @@
 export type ID = string;
 
 export type WorkStatus = "Backlog" | "Planned" | "In Progress" | "Blocked" | "Completed";
-export type LearningStatus = "Planned" | "In Progress" | "Completed";
+export type LearningStatus = "Planned" | "In Progress" | "Done" | "Skipped";
 export type Priority = "Low" | "Medium" | "High";
 export type WeekStatus = "Not Started" | "In Progress" | "Completed" | "Overdue";
 export type FinanceStatus = "Upcoming" | "Paid" | "Missed" | "Closed";
@@ -45,15 +45,11 @@ export type Skill = {
   id: ID;
   userId: ID;
   skillName: string;
-  category: "Technical" | "AI" | "Coding" | "Analytics" | "Cloud" | "Communication" | "Business" | "Other";
+  category: "Coding" | "Design" | "Language" | "Other";
   currentLevel: "Beginner" | "Intermediate" | "Advanced";
   targetLevel: "Beginner" | "Intermediate" | "Advanced";
-  reason: string;
   weeklyTargetMinutes: number;
   deadline: string;
-  progressPercentage: number;
-  confidenceScore: number;
-  notes: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -63,17 +59,11 @@ export type LearningTask = {
   userId: ID;
   skillId: ID;
   title: string;
-  description: string;
-  resourceLink: string;
-  learningType: "Video" | "Course" | "Article" | "Practice" | "Project" | "Documentation" | "Revision";
+  learningType: "Read" | "Watch" | "Practice" | "Build" | "Review";
   plannedDate: string;
   plannedMinutes: number;
   actualMinutes: number;
   status: LearningStatus;
-  difficulty: "Easy" | "Medium" | "Hard";
-  understandingScore: number;
-  outputCreated: string;
-  notes: string;
   createdAt: string;
   updatedAt: string;
 };

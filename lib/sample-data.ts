@@ -123,18 +123,17 @@ export function createSampleData(userId = demoUser.id): AppData {
   ];
 
   const skills: Skill[] = [
-    skill("sk-1", userId, "FastAPI", "Coding", 55, 4, days[6].input, 240),
-    skill("sk-2", userId, "Azure DevOps", "Cloud", 35, 3, days[6].input, 180),
-    skill("sk-3", userId, "Python Backend", "Coding", 60, 4, days[6].input, 210),
-    skill("sk-4", userId, "GenAI Prototyping", "AI", 45, 3, days[6].input, 180),
-    skill("sk-5", userId, "SQL", "Analytics", 70, 4, days[6].input, 150)
+    skill("sk-1", userId, "FastAPI", "Coding", "Intermediate", days[6].input, 240),
+    skill("sk-2", userId, "UI Design", "Design", "Beginner", days[6].input, 180),
+    skill("sk-3", userId, "Python Backend", "Coding", "Intermediate", days[6].input, 210),
+    skill("sk-4", userId, "Business English", "Language", "Beginner", days[6].input, 180)
   ];
 
   const learningTasks: LearningTask[] = [
-    learning("lt-1", userId, "sk-1", "Build simple API with GET and POST endpoints", days[1].input, 90, 120, "Completed", "Project"),
-    learning("lt-2", userId, "sk-2", "Create Azure DevOps pipeline notes", days[3].input, 75, 0, "Planned", "Documentation"),
+    learning("lt-1", userId, "sk-1", "Build simple API with GET and POST endpoints", days[1].input, 90, 120, "Done", "Build"),
+    learning("lt-2", userId, "sk-2", "Review dashboard layout patterns", days[3].input, 75, 0, "Planned", "Read"),
     learning("lt-3", userId, "sk-3", "Practice production-ready error handling", days[4].input, 90, 30, "In Progress", "Practice"),
-    learning("lt-4", userId, "sk-4", "Prototype GenAI prompt evaluation flow", days[5].input, 120, 0, "Planned", "Project")
+    learning("lt-4", userId, "sk-4", "Watch business presentation lesson", days[5].input, 120, 0, "Planned", "Watch")
   ];
 
   const timeLogs: TimeLog[] = [
@@ -301,20 +300,16 @@ export function createSampleData(userId = demoUser.id): AppData {
   return { workTasks, skills, learningTasks, timeLogs, weeklyReviews, incomeEntries, expenses, budgets, categoryBudgets, emis, emiPayments, upcomingPayments, investments, investmentValueHistory, financialGoals, monthlyFinanceReviews, financeSettings };
 }
 
-function skill(id: string, userId: string, skillName: Skill["skillName"], category: Skill["category"], progress: number, confidence: number, deadline: string, weeklyTargetMinutes: number): Skill {
+function skill(id: string, userId: string, skillName: Skill["skillName"], category: Skill["category"], currentLevel: Skill["currentLevel"], deadline: string, weeklyTargetMinutes: number): Skill {
   return {
     id,
     userId,
     skillName,
     category,
-    currentLevel: progress > 60 ? "Intermediate" : "Beginner",
+    currentLevel,
     targetLevel: "Advanced",
-    reason: `Improve ${skillName} for production-quality work.`,
     weeklyTargetMinutes,
     deadline,
-    progressPercentage: progress,
-    confidenceScore: confidence,
-    notes: "",
     createdAt: now,
     updatedAt: now
   };
@@ -326,17 +321,11 @@ function learning(id: string, userId: string, skillId: string, title: string, pl
     userId,
     skillId,
     title,
-    description: title,
-    resourceLink: "",
     learningType,
     plannedDate,
     plannedMinutes,
     actualMinutes,
     status,
-    difficulty: "Medium",
-    understandingScore: status === "Completed" ? 4 : 3,
-    outputCreated: status === "Completed" ? "Working local output" : "",
-    notes: "",
     createdAt: now,
     updatedAt: now
   };

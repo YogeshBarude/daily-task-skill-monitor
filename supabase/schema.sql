@@ -66,12 +66,8 @@ create table if not exists public.skills (
   category text not null default 'Other',
   current_level text not null default 'Beginner',
   target_level text not null default 'Advanced',
-  reason text,
   weekly_target_minutes integer not null default 0,
   deadline date,
-  progress_percentage integer not null default 0,
-  confidence_score integer not null default 1,
-  notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -81,17 +77,11 @@ create table if not exists public.learning_tasks (
   user_id uuid not null references public.users(id) on delete cascade,
   skill_id text references public.skills(id) on delete set null,
   title text not null,
-  description text,
-  resource_link text,
   learning_type text not null default 'Practice',
   planned_date date not null,
   planned_minutes integer not null default 0,
   actual_minutes integer not null default 0,
   status text not null default 'Planned',
-  difficulty text not null default 'Medium',
-  understanding_score integer not null default 1,
-  output_created text,
-  notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

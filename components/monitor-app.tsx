@@ -21,8 +21,6 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Clock3,
   CreditCard,
   Goal,
@@ -42,11 +40,12 @@ import {
   TrendingUp,
   UserCircle,
   UserRound,
-  WalletCards
+  WalletCards,
+  X
 } from "lucide-react";
 import { addDays, addMinutes, differenceInMinutes, format } from "date-fns";
 import { autoWeeklySummary, dailySeries, dashboardMetrics, priorityDistribution, productivityLabel, productivityScore, projectDistribution, scopedWeekData, skillCategoryDistribution, statusDistribution } from "@/lib/analytics";
-import { minutesToHours, toDateInput, weekBounds, weekDays } from "@/lib/date";
+import { isInWeek, minutesToHours, toDateInput, weekBounds, weekDays } from "@/lib/date";
 import { budgetStatuses, categoryTotals, currency, dailyExpenseSeries, dueThisWeek, financeMetrics, financeMonthData, goalProgress, inMonth, investmentAllocation, monthlyFinanceSummary, monthlyTrend, monthKey, natureTotals, paymentModeTotals, portfolioMetrics, weeklyFinanceSummary } from "@/lib/finance";
 import { newId, useStore } from "@/lib/storage";
 import { sprintCsv, sprintShareText, tasksForSprint } from "@/lib/sprint";
@@ -111,21 +110,9 @@ function reminderDateFor(dueDate: string, daysBefore: number) {
 export function MonitorApp() {
   const store = useStore();
   const [active, setActive] = useState<Tab>("Dashboard");
-  const [weekStart, setWeekStart] = useState(weekBounds().startInput);
-  const [selectedDate, setSelectedDate] = useState(toDateInput(new Date()));
+  const [weekStart] = useState(weekBounds().startInput);
   const [financeMonth, setFinanceMonth] = useState(monthKey());
-
-  function selectDate(dateInput: string) {
-    const normalized = weekBounds(new Date(`${dateInput}T00:00:00`)).startInput;
-    setSelectedDate(dateInput);
-    setWeekStart(normalized);
-  }
-
-  function moveWeek(direction: -1 | 1) {
-    const nextStart = toDateInput(addMinutes(new Date(`${weekStart}T00:00:00`), direction * 7 * 24 * 60));
-    setWeekStart(nextStart);
-    setSelectedDate(nextStart);
-  }
+  const [showLogTask, setShowLogTask] = useState(false);
 
   if (store.loading) {
     return <div className="flex min-h-screen items-center justify-center text-sm text-slate-600">Loading your workspace...</div>;
@@ -134,9 +121,9 @@ export function MonitorApp() {
   if (!store.user) return <AuthScreen />;
 
   return (
-    <div className="min-h-screen bg-[#080d14] text-ink">
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[238px] border-r border-[#24303d] bg-[#091019] lg:flex lg:flex-col">
-        <div className="flex h-[70px] items-center gap-3 border-b border-[#24303d] px-5">
+    <div className="min-h-screen bg-[#0D0F12] text-ink">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[238px] border-r border-[#252A35] bg-[#161920] lg:flex lg:flex-col">
+        <div className="flex h-[70px] items-center gap-3 border-b border-[#252A35] px-5">
           <div className="grid h-8 w-8 place-items-center rounded-full border border-slate-500 text-slate-100"><CheckCircle2 size={19} /></div>
           <div><p className="text-[15px] font-semibold leading-tight text-slate-100">Daily Task &</p><p className="text-[15px] font-semibold leading-tight text-slate-100">Skill Monitor</p></div>
         </div>
@@ -157,10 +144,10 @@ export function MonitorApp() {
           ))}
         </nav>
 
-        <div className="border-t border-[#24303d] p-3">
+        <div className="border-t border-[#252A35] p-3">
           <button onClick={() => setActive("Settings")} className="flex h-9 w-full items-center gap-3 rounded-md px-3 text-[13px] text-slate-400 hover:bg-white/[0.04] hover:text-slate-100"><Settings size={17} /> Settings</button>
           <button onClick={() => store.signOut()} className="mt-1 flex h-9 w-full items-center gap-3 rounded-md px-3 text-[13px] text-slate-500 hover:bg-white/[0.04] hover:text-slate-200"><LogOut size={17} /> Sign out</button>
-          <div className="mt-3 flex items-center gap-3 rounded-md border border-[#24303d] bg-[#0d151f] p-2.5">
+          <div className="mt-3 flex items-center gap-3 rounded-md border border-[#252A35] bg-[#1E2330] p-2.5">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-blue-600/30 text-sm font-semibold text-blue-100">{store.user.name.slice(0, 2).toUpperCase()}</div>
             <div className="min-w-0"><p className="truncate text-xs font-medium text-slate-200">{store.user.name}</p><p className="truncate text-[10px] text-slate-500">{store.mode === "supabase" ? "Cloud workspace" : "Personal workspace"}</p></div>
           </div>
@@ -169,15 +156,15 @@ export function MonitorApp() {
       </aside>
 
       <main className="lg:pl-[238px]">
-        <header className="sticky top-0 z-10 border-b border-[#24303d] bg-[#091019]/95 backdrop-blur">
+        <header className="sticky top-0 z-10 border-b border-[#252A35] bg-[#161920]/95 backdrop-blur">
           <div className="flex min-h-[70px] flex-wrap items-center gap-3 px-3 py-3 sm:px-4 lg:px-6">
-            <WeekNavigator weekStart={weekStart} selectedDate={selectedDate} onSelectDate={selectDate} onMoveWeek={moveWeek} />
+            <p className="text-sm text-[#7A8499]">Today: <span className="font-medium text-[#F0F2F5]">{format(new Date(), "EEEE, MMMM d, yyyy")}</span></p>
             <div className="ml-auto flex items-center gap-2">
-              <Button className="h-10 px-4" onClick={() => setActive("Work Tasks")}><Plus size={17} /><span className="hidden sm:inline">Quick add task</span></Button>
+              <Button className="h-10 px-4" onClick={() => setShowLogTask(true)}><Plus size={17} /><span>Log Task</span></Button>
               <button className="grid h-10 w-10 place-items-center rounded-md border border-[#2b3745] text-slate-400 hover:bg-white/[0.05] hover:text-white lg:hidden" onClick={() => setActive("Settings")} title="Profile"><UserCircle size={19} /></button>
             </div>
           </div>
-          <div className="scrollbar-thin flex gap-1 overflow-x-auto border-t border-[#18222d] px-3 py-2 lg:hidden">
+          <div className="scrollbar-thin flex gap-1 overflow-x-auto border-t border-[#252A35] px-3 py-2 lg:hidden">
             {navGroups.flatMap((group) => group.items).map(({ tab, label }) => <button key={tab} onClick={() => setActive(tab)} className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs ${active === tab ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-white/[0.05]"}`}>{label}</button>)}
           </div>
         </header>
@@ -186,10 +173,10 @@ export function MonitorApp() {
           {active !== "Dashboard" && (
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div><p className="text-xl font-semibold text-slate-100">{active}</p><p className="mt-1 text-xs text-slate-500">{active.includes("Finance") || ["Expenses", "Budget", "EMI Tracker", "Upcoming Payments", "Investments", "Financial Goals"].includes(active) ? `Month ${financeMonth}` : `Week of ${format(new Date(`${weekStart}T00:00:00`), "MMM d, yyyy")}`}</p></div>
-              {active.includes("Finance") || ["Expenses", "Budget", "EMI Tracker", "Upcoming Payments", "Investments", "Financial Goals"].includes(active) ? <input className={inputClass} type="month" value={financeMonth} onChange={(event) => setFinanceMonth(event.target.value)} /> : <input className={inputClass} type="date" value={selectedDate} onChange={(event) => selectDate(event.target.value)} />}
+              {active.includes("Finance") || ["Expenses", "Budget", "EMI Tracker", "Upcoming Payments", "Investments", "Financial Goals"].includes(active) ? <input className={inputClass} type="month" value={financeMonth} onChange={(event) => setFinanceMonth(event.target.value)} /> : null}
             </div>
           )}
-          {active === "Dashboard" && <Dashboard weekStart={weekStart} selectedDate={selectedDate} onSelectDate={setSelectedDate} setActive={setActive} />}
+          {active === "Dashboard" && <Dashboard weekStart={weekStart} setActive={setActive} />}
           {active === "Weekly Planner" && <WeeklyPlanner weekStart={weekStart} />}
           {active === "Work Tasks" && <WorkTasks />}
           {active === "Sprint Plan" && <SprintPlanPage weekStart={weekStart} />}
@@ -210,6 +197,7 @@ export function MonitorApp() {
           {active === "Settings" && <SettingsPage />}
         </div>
       </main>
+      {showLogTask && <QuickLearningTaskModal onClose={() => setShowLogTask(false)} />}
     </div>
   );
 }
@@ -284,31 +272,59 @@ function AuthScreen() {
   );
 }
 
-function WeekNavigator({ weekStart, selectedDate, onSelectDate, onMoveWeek }: { weekStart: string; selectedDate: string; onSelectDate: (date: string) => void; onMoveWeek: (direction: -1 | 1) => void }) {
-  const start = new Date(`${weekStart}T00:00:00`);
-  const end = addMinutes(start, 6 * 24 * 60);
-  const currentWeek = weekBounds().startInput === weekStart;
+function QuickLearningTaskModal({ onClose }: { onClose: () => void }) {
+  const { data, user, upsert } = useStore();
+  const stamp = new Date().toISOString();
+  const [task, setTask] = useState<LearningTask>({
+    id: newId("lt"),
+    userId: user?.id || "",
+    skillId: data.skills[0]?.id || "",
+    title: "",
+    learningType: "Practice",
+    plannedDate: toDateInput(new Date()),
+    plannedMinutes: 30,
+    actualMinutes: 30,
+    status: "Done",
+    createdAt: stamp,
+    updatedAt: stamp
+  });
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    if (!user || !task.skillId || !task.title.trim()) return;
+    await upsert("learningTasks", { ...task, userId: user.id, updatedAt: new Date().toISOString() });
+    onClose();
+  }
 
   return (
-    <div className="flex min-w-0 items-center gap-1.5">
-      <button type="button" onClick={() => onMoveWeek(-1)} className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-[#2b3745] text-slate-400 hover:bg-white/[0.05] hover:text-white" title="Previous week" aria-label="Previous week"><ChevronLeft size={18} /></button>
-      <label className="relative flex h-10 min-w-0 items-center rounded-md border border-[#2b3745] bg-[#0a111a] px-3 hover:border-blue-500/70">
-        <CalendarDays size={16} className="mr-2 shrink-0 text-blue-300" />
-        <span className="whitespace-nowrap text-xs font-medium text-slate-200 sm:text-sm">{format(start, "MMM d")} - {format(end, "MMM d, yyyy")}</span>
-        <input type="date" value={selectedDate} onChange={(event) => onSelectDate(event.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label="Choose a date and open its week" />
-      </label>
-      <button type="button" onClick={() => onMoveWeek(1)} className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-[#2b3745] text-slate-400 hover:bg-white/[0.05] hover:text-white" title="Next week" aria-label="Next week"><ChevronRight size={18} /></button>
-      {!currentWeek && <button type="button" onClick={() => onSelectDate(toDateInput(new Date()))} className="hidden h-10 rounded-md border border-[#2b3745] px-3 text-xs font-medium text-slate-300 hover:bg-white/[0.05] hover:text-white sm:block">Today</button>}
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="log-task-title" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <Card className="w-full max-w-md p-5">
+        <div className="flex items-center justify-between">
+          <h2 id="log-task-title" className="text-xl font-semibold">Log learning task</h2>
+          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-md text-[#7A8499] hover:bg-white/5 hover:text-white" aria-label="Close"><X size={18} /></button>
+        </div>
+        <form className="mt-5 grid gap-4" onSubmit={save}>
+          <SelectField label="Linked skill" value={task.skillId} options={data.skills.map((skill) => skill.id)} labels={Object.fromEntries(data.skills.map((skill) => [skill.id, skill.skillName]))} onChange={(value) => setTask({ ...task, skillId: value })} />
+          <TextField label="Task title" value={task.title} onChange={(value) => setTask({ ...task, title: value })} required />
+          <TextField label="Planned date" type="date" value={task.plannedDate} onChange={(value) => setTask({ ...task, plannedDate: value })} />
+          <NumberField label="Planned minutes" value={task.plannedMinutes} onChange={(value) => setTask({ ...task, plannedMinutes: value })} />
+          <NumberField label="Actual minutes" value={task.actualMinutes} onChange={(value) => setTask({ ...task, actualMinutes: value })} />
+          <SelectField label="Status" value={task.status} options={["Planned", "In Progress", "Done", "Skipped"]} onChange={(value) => setTask({ ...task, status: value as LearningTask["status"] })} />
+          <Button type="submit" disabled={!data.skills.length}>Save</Button>
+          {!data.skills.length && <p className="text-xs text-[#7A8499]">Add a skill before logging a learning task.</p>}
+        </form>
+      </Card>
     </div>
   );
 }
 
-function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekStart: string; selectedDate: string; onSelectDate: (date: string) => void; setActive: (tab: Tab) => void }) {
+function Dashboard({ weekStart, setActive }: { weekStart: string; setActive: (tab: Tab) => void }) {
   const { data, upsert } = useStore();
   const week = scopedWeekData(data, weekStart);
   const metrics = dashboardMetrics(data, weekStart);
   const days = weekDays(new Date(`${weekStart}T00:00:00`));
   const todayInput = toDateInput(new Date());
+  const [selectedDate, setSelectedDate] = useState(todayInput);
   const selectedDay = days.find((day) => day.input === selectedDate) || days[0];
   const selectedWork = data.workTasks.filter((task) => task.assignedDate === selectedDay.input);
   const selectedLearning = data.learningTasks.filter((task) => task.plannedDate === selectedDay.input);
@@ -316,11 +332,11 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
   const selectedLogs = data.timeLogs.filter((log) => log.date === selectedDay.input);
   const finance = financeMetrics(data, monthKey());
   const totalTasks = week.workTasks.length + week.learningTasks.length;
-  const completedTasks = week.workTasks.filter((task) => task.status === "Completed").length + week.learningTasks.filter((task) => task.status === "Completed").length;
+  const completedTasks = week.workTasks.filter((task) => task.status === "Completed").length + week.learningTasks.filter((task) => task.status === "Done").length;
   const completion = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const agenda: AgendaEntry[] = [
     ...selectedWork.map((task, index) => ({ id: task.id, time: ["07:30", "09:30", "14:00", "17:00"][index % 4], type: "Work Task", title: task.title, meta: task.projectName || "Personal", accent: "blue", done: task.status === "Completed", icon: BriefcaseBusiness, onToggle: () => void upsert("workTasks", { ...task, status: task.status === "Completed" ? "In Progress" : "Completed", completionPercentage: task.status === "Completed" ? Math.min(task.completionPercentage, 99) : 100, updatedAt: new Date().toISOString() }) })),
-    ...selectedLearning.map((task, index) => ({ id: task.id, time: ["11:30", "16:00", "19:00"][index % 3], type: "Learning Session", title: task.title, meta: `${task.plannedMinutes} min`, accent: "amber", done: task.status === "Completed", icon: BookOpen, onToggle: () => void upsert("learningTasks", { ...task, status: task.status === "Completed" ? "In Progress" : "Completed", updatedAt: new Date().toISOString() }) })),
+    ...selectedLearning.map((task, index) => ({ id: task.id, time: ["11:30", "16:00", "19:00"][index % 3], type: "Learning Session", title: task.title, meta: `${task.plannedMinutes} min`, accent: "amber", done: task.status === "Done", icon: BookOpen, onToggle: () => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", updatedAt: new Date().toISOString() }) })),
     ...selectedExpenses.slice(0, 2).map((expense, index) => ({ id: expense.id, time: expense.expenseTime || ["13:00", "18:15"][index], type: "Expense", title: expense.title, meta: currency.format(expense.amount), accent: "rose", done: false, icon: CreditCard }))
   ].sort((a, b) => a.time.localeCompare(b.time));
 
@@ -332,7 +348,7 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
           const active = day.input === selectedDay.input;
           const isToday = day.input === todayInput;
           return (
-            <button key={day.input} type="button" aria-pressed={active} onClick={() => onSelectDate(day.input)} className={`min-h-[122px] border-r border-[#24303d] px-3 py-4 text-center last:border-r-0 ${active ? "bg-blue-600/25" : "hover:bg-white/[0.025]"}`}>
+            <button key={day.input} type="button" aria-pressed={active} onClick={() => setSelectedDate(day.input)} className={`min-h-[122px] border-r border-[#24303d] px-3 py-4 text-center last:border-r-0 ${active ? "bg-blue-600/25" : "hover:bg-white/[0.025]"}`}>
               <p className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${active ? "text-blue-200" : "text-slate-400"}`}>{day.dayName.slice(0, 3)}</p>
               <p className={`mt-1 text-3xl font-semibold ${active ? "text-blue-100" : "text-slate-300"}`}>{format(day.date, "d")}</p>
               <p className={`mt-1 text-[11px] ${active ? "text-blue-300" : "text-slate-500"}`}>{isToday ? "Today" : `${count} tasks`}</p>
@@ -372,7 +388,7 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
           <div className="grid gap-3">
             <ProgressStat title="Weekly completion" value={`${completion}%`} detail={`${completedTasks} of ${totalTasks} tasks done`} progress={completion} tone="green" icon={Goal} />
             <ProgressStat title="Focus hours" value={`${metrics.totalWorkHours}h`} detail={`${selectedLogs.filter((log) => log.logType === "Work").length} logs on selected day`} progress={Math.min(100, metrics.totalWorkHours * 5)} tone="blue" icon={Clock3} />
-            <ProgressStat title="Skill practice" value={`${metrics.totalLearningHours}h`} detail={`${selectedLearning.length} learning items on selected day`} progress={Math.min(100, metrics.skillProgress)} tone="amber" icon={BookOpen} />
+            <ProgressStat title="Skill practice" value={`${metrics.totalLearningHours}h`} detail={`${selectedLearning.length} learning items on selected day`} progress={Math.min(100, metrics.totalLearningHours * 10)} tone="amber" icon={BookOpen} />
             <div className="rounded-lg border border-[#2a3744] bg-[#0d151f] p-4">
               <div className="flex items-center gap-2 text-xs font-medium text-slate-300"><IndianRupee size={16} className="text-amber-300" /> Salary vs spending</div>
               <div className="mt-3 flex items-end justify-between gap-3"><div><p className="text-xl font-semibold text-emerald-300">{currency.format(finance.remainingBalance)}</p><p className="text-[11px] text-slate-500">Balance</p></div><div className="text-right"><p className="text-sm text-slate-200">{currency.format(finance.totalIncome)}</p><p className="text-[11px] text-slate-500">Income</p></div></div>
@@ -504,8 +520,8 @@ function MiniMoney({ label, value }: { label: string; value: number }) {
 function Metric({ title, value, hint }: { title: string; value: string | number; hint?: string }) {
   return (
     <Card className="min-h-[104px]">
-      <p className="text-xs font-medium text-slate-500">{title}</p>
-      <p className="mt-2 text-xl font-semibold text-slate-100">{value}</p>
+      <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#7A8499]">{title}</p>
+      <p className="mt-2 text-[32px] font-bold leading-none text-[#F0F2F5]">{value}</p>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
     </Card>
   );
@@ -522,82 +538,6 @@ function TaskMiniList({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-function QuickAdd() {
-  const { user, upsert } = useStore();
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState<"work" | "learning">("work");
-  const today = toDateInput(new Date());
-
-  async function add() {
-    if (!user || !title.trim()) return;
-    const stamp = new Date().toISOString();
-    if (type === "work") {
-      await upsert("workTasks", {
-        id: newId("wt"),
-        userId: user.id,
-        title,
-        projectName: "Personal",
-        productOwner: "Personal",
-        platform: "",
-        poc: "",
-        category: "General",
-        description: "",
-        receivedDate: today,
-        assignedDate: today,
-        dueDate: today,
-        dayOfWeek: format(new Date(), "EEEE"),
-        estimatedMinutes: 60,
-        actualMinutes: 0,
-        completionPercentage: 0,
-        status: "Planned",
-        priority: "Medium",
-        workType: "Other",
-        notes: "",
-        deliverable: "",
-        blockers: "",
-        learnings: "",
-        createdAt: stamp,
-        updatedAt: stamp
-      } satisfies WorkTask);
-    } else {
-      await upsert("learningTasks", {
-        id: newId("lt"),
-        userId: user.id,
-        skillId: "",
-        title,
-        description: "",
-        resourceLink: "",
-        learningType: "Practice",
-        plannedDate: today,
-        plannedMinutes: 60,
-        actualMinutes: 0,
-        status: "Planned",
-        difficulty: "Medium",
-        understandingScore: 3,
-        outputCreated: "",
-        notes: "",
-        createdAt: stamp,
-        updatedAt: stamp
-      } satisfies LearningTask);
-    }
-    setTitle("");
-  }
-
-  return (
-    <Card>
-      <h2 className="font-semibold">Quick add</h2>
-      <div className="mt-3 grid gap-3 md:grid-cols-[160px_1fr_auto]">
-        <select className={inputClass} value={type} onChange={(e) => setType(e.target.value as "work" | "learning")}>
-          <option value="work">Work task</option>
-          <option value="learning">Learning task</option>
-        </select>
-        <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs attention today?" />
-        <Button onClick={add}><Plus size={16} /> Add</Button>
-      </div>
-    </Card>
-  );
-}
-
 function WeeklyPlanner({ weekStart }: { weekStart: string }) {
   const { data } = useStore();
   const days = weekDays(new Date(`${weekStart}T00:00:00`));
@@ -611,7 +551,7 @@ function WeeklyPlanner({ weekStart }: { weekStart: string }) {
         const finance = data.expenses.filter((expense) => expense.expenseDate === day.input);
         const planned = work.reduce((t, task) => t + task.estimatedMinutes, 0) + learning.reduce((t, task) => t + task.plannedMinutes, 0);
         const actual = logs.reduce((t, log) => t + log.durationMinutes, 0);
-        const completed = work.filter((task) => task.status === "Completed").length + learning.filter((task) => task.status === "Completed").length;
+        const completed = work.filter((task) => task.status === "Completed").length + learning.filter((task) => task.status === "Done").length;
         const total = work.length + learning.length;
         const percent = total ? Math.round((completed / total) * 100) : 0;
         return (
@@ -754,15 +694,18 @@ function Skills() {
               </div>
               <RowActions onEdit={() => setEditingSkill(skill)} onDelete={() => confirmDelete(() => remove("skills", skill.id))} />
             </div>
-            <div className="mt-3"><ProgressBar value={skill.progressPercentage} /></div>
-            <p className="mt-2 text-xs text-slate-500">{skill.progressPercentage}% progress - confidence {skill.confidenceScore}/5 - target {minutesToHours(skill.weeklyTargetMinutes)}h/week</p>
+            {(() => {
+              const actual = data.learningTasks.filter((task) => task.skillId === skill.id && isInWeek(task.plannedDate, weekBounds().startInput)).reduce((total, task) => total + task.actualMinutes, 0);
+              const progress = skill.weeklyTargetMinutes ? Math.min(100, Math.round((actual / skill.weeklyTargetMinutes) * 100)) : 0;
+              return <><div className="mt-3"><ProgressBar value={progress} /></div><p className="mt-2 text-xs text-slate-500">{minutesToHours(actual)}h of {minutesToHours(skill.weeklyTargetMinutes)}h this week · deadline {skill.deadline}</p></>;
+            })()}
           </div>
         ))}
       </CrudLayout>
       <CrudLayout title="Learning tasks" form={<LearningTaskForm item={editingLearning} skills={data.skills} onCancel={() => setEditingLearning(null)} onSave={(item) => { if (user) void upsert("learningTasks", { ...item, userId: user.id }); setEditingLearning(null); }} />}>
         {data.learningTasks.map((task) => {
           const skill = data.skills.find((item) => item.id === task.skillId);
-          return <TaskRow key={task.id} title={task.title} meta={`${skill?.skillName || "No skill linked"} - ${task.learningType} - ${minutesToHours(task.actualMinutes)}/${minutesToHours(task.plannedMinutes)}h`} badges={[task.status, task.difficulty]} onEdit={() => setEditingLearning(task)} onDelete={() => confirmDelete(() => remove("learningTasks", task.id))} />;
+          return <TaskRow key={task.id} title={task.title} meta={`${skill?.skillName || "No skill linked"} - ${task.learningType} - ${minutesToHours(task.actualMinutes)}/${minutesToHours(task.plannedMinutes)}h`} badges={[task.status]} onEdit={() => setEditingLearning(task)} onDelete={() => confirmDelete(() => remove("learningTasks", task.id))} />;
         })}
       </CrudLayout>
     </div>
@@ -824,7 +767,7 @@ function TimeTracker() {
 function WorkAnalytics({ weekStart }: { weekStart: string }) {
   const { data } = useStore();
   const week = scopedWeekData(data, weekStart);
-  const score = productivityScore(week.workTasks, week.learningTasks, week.skills);
+  const score = productivityScore(week.workTasks, week.learningTasks);
   return (
     <AnalyticsGrid>
       <Metric title="Total work hours" value={`${minutesToHours(week.timeLogs.filter((l) => l.logType === "Work").reduce((t, l) => t + l.durationMinutes, 0))}h`} />
@@ -842,22 +785,20 @@ function WorkAnalytics({ weekStart }: { weekStart: string }) {
 function LearningAnalytics({ weekStart }: { weekStart: string }) {
   const { data } = useStore();
   const week = scopedWeekData(data, weekStart);
-  const completed = week.learningTasks.filter((task) => task.status === "Completed").length;
+  const completed = week.learningTasks.filter((task) => task.status === "Done").length;
+  const pending = week.learningTasks.filter((task) => task.status === "Planned" || task.status === "In Progress").length;
+  const learningHours = minutesToHours(week.learningTasks.reduce((total, task) => total + task.actualMinutes, 0));
+  const dailyData = dailySeries(data, weekStart);
+  const categoryData = skillCategoryDistribution(week.skills, week.learningTasks);
+  const hasDailyData = dailyData.some((item) => item.learningHours > 0);
   return (
     <AnalyticsGrid>
-      <Metric title="Learning hours" value={`${minutesToHours(week.timeLogs.filter((l) => l.logType === "Learning").reduce((t, l) => t + l.durationMinutes, 0))}h`} />
-      <Metric title="Learning tasks done" value={completed} />
-      <Metric title="Pending learning" value={week.learningTasks.length - completed} />
-      <Metric title="Consistency score" value={`${Math.min(100, new Set(week.learningTasks.filter((task) => task.actualMinutes > 0).map((task) => task.plannedDate)).size * 20)}%`} />
-      <ChartCard title="Daily learning hours"><BarChartBox data={dailySeries(data, weekStart)} bars={[["learningHours", "#0F9F6E"]]} /></ChartCard>
-      <ChartCard title="Time by skill category"><PieChartBox data={skillCategoryDistribution(week.skills, week.learningTasks)} /></ChartCard>
-      <ChartCard title="Skill progress"><SkillProgressChart skills={week.skills} /></ChartCard>
-      <Card className="md:col-span-2">
-        <h2 className="font-semibold">Skills needing attention</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {week.skills.filter((skill) => skill.progressPercentage < 60 || skill.confidenceScore < 4).map((skill) => <div key={skill.id} className="rounded-md border border-line p-3"><p className="font-medium">{skill.skillName}</p><p className="text-sm text-slate-500">{skill.progressPercentage}% progress, confidence {skill.confidenceScore}/5</p></div>)}
-        </div>
-      </Card>
+      <Metric title="Learning hours" value={`${learningHours}h`} />
+      <Metric title="Tasks done" value={completed} />
+      <Metric title="Pending tasks" value={pending} />
+      <Metric title="Sessions logged" value={week.learningTasks.filter((task) => task.actualMinutes > 0).length} />
+      <ChartCard title="Daily learning hours">{hasDailyData ? <BarChartBox data={dailyData} bars={[["learningHours", "#5B8DEF"]]} /> : <ChartEmptyState />}</ChartCard>
+      <ChartCard title="Time by skill category">{categoryData.some((item) => item.value > 0) ? <PieChartBox data={categoryData} /> : <ChartEmptyState />}</ChartCard>
     </AnalyticsGrid>
   );
 }
@@ -1303,7 +1244,6 @@ function CrudLayout({ title, filters, form, children }: { title: string; filters
     <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
       <Card className="h-fit xl:sticky xl:top-[90px]">
         <h2 className="text-sm font-semibold text-slate-100">{title}</h2>
-        <p className="mt-1 text-xs text-slate-500">Add a new record or select an existing item to edit.</p>
         <div className="mt-4">{form}</div>
       </Card>
       <Card>
@@ -1349,38 +1289,28 @@ function WorkTaskForm({ item, onSave, onCancel }: { item: WorkTask | null; onSav
 
 function SkillForm({ item, onSave, onCancel }: { item: Skill | null; onSave: (item: Skill) => void; onCancel: () => void }) {
   const stamp = new Date().toISOString();
-  const [skill, setSkill] = useState<Skill>(item || { id: newId("sk"), userId: "", skillName: "", category: "Coding", currentLevel: "Beginner", targetLevel: "Advanced", reason: "", weeklyTargetMinutes: 180, deadline: toDateInput(addMinutes(new Date(), 60 * 24 * 30)), progressPercentage: 0, confidenceScore: 3, notes: "", createdAt: stamp, updatedAt: stamp });
+  const [skill, setSkill] = useState<Skill>(item || { id: newId("sk"), userId: "", skillName: "", category: "Coding", currentLevel: "Beginner", targetLevel: "Advanced", weeklyTargetMinutes: 180, deadline: toDateInput(addMinutes(new Date(), 60 * 24 * 30)), createdAt: stamp, updatedAt: stamp });
   return <FormGrid onSubmit={() => skill.skillName.trim() && onSave({ ...skill, updatedAt: new Date().toISOString() })} onCancel={onCancel}>
     <TextField label="Skill name" value={skill.skillName} onChange={(v) => setSkill({ ...skill, skillName: v })} required />
-    <SelectField label="Category" value={skill.category} options={["Technical", "AI", "Coding", "Analytics", "Cloud", "Communication", "Business", "Other"]} onChange={(v) => setSkill({ ...skill, category: v as Skill["category"] })} />
+    <SelectField label="Category" value={skill.category} options={["Coding", "Design", "Language", "Other"]} onChange={(v) => setSkill({ ...skill, category: v as Skill["category"] })} />
     <SelectField label="Current level" value={skill.currentLevel} options={["Beginner", "Intermediate", "Advanced"]} onChange={(v) => setSkill({ ...skill, currentLevel: v as Skill["currentLevel"] })} />
     <SelectField label="Target level" value={skill.targetLevel} options={["Beginner", "Intermediate", "Advanced"]} onChange={(v) => setSkill({ ...skill, targetLevel: v as Skill["targetLevel"] })} />
     <NumberField label="Weekly target minutes" value={skill.weeklyTargetMinutes} onChange={(v) => setSkill({ ...skill, weeklyTargetMinutes: v })} />
     <TextField label="Deadline" type="date" value={skill.deadline} onChange={(v) => setSkill({ ...skill, deadline: v })} />
-    <NumberField label="Progress percentage" value={skill.progressPercentage} onChange={(v) => setSkill({ ...skill, progressPercentage: Math.min(100, v) })} />
-    <NumberField label="Confidence score 1-5" value={skill.confidenceScore} onChange={(v) => setSkill({ ...skill, confidenceScore: Math.min(5, Math.max(1, v)) })} />
-    <TextField label="Reason for learning" value={skill.reason} onChange={(v) => setSkill({ ...skill, reason: v })} textarea />
-    <TextField label="Notes" value={skill.notes} onChange={(v) => setSkill({ ...skill, notes: v })} textarea />
   </FormGrid>;
 }
 
 function LearningTaskForm({ item, skills, onSave, onCancel }: { item: LearningTask | null; skills: Skill[]; onSave: (item: LearningTask) => void; onCancel: () => void }) {
   const stamp = new Date().toISOString();
-  const [task, setTask] = useState<LearningTask>(item || { id: newId("lt"), userId: "", skillId: skills[0]?.id || "", title: "", description: "", resourceLink: "", learningType: "Practice", plannedDate: toDateInput(new Date()), plannedMinutes: 60, actualMinutes: 0, status: "Planned", difficulty: "Medium", understandingScore: 3, outputCreated: "", notes: "", createdAt: stamp, updatedAt: stamp });
+  const [task, setTask] = useState<LearningTask>(item || { id: newId("lt"), userId: "", skillId: skills[0]?.id || "", title: "", learningType: "Practice", plannedDate: toDateInput(new Date()), plannedMinutes: 60, actualMinutes: 0, status: "Planned", createdAt: stamp, updatedAt: stamp });
   return <FormGrid onSubmit={() => task.title.trim() && onSave({ ...task, updatedAt: new Date().toISOString() })} onCancel={onCancel}>
     <SelectField label="Linked skill" value={task.skillId} options={skills.map((skill) => skill.id)} labels={Object.fromEntries(skills.map((skill) => [skill.id, skill.skillName]))} onChange={(v) => setTask({ ...task, skillId: v })} />
     <TextField label="Learning task title" value={task.title} onChange={(v) => setTask({ ...task, title: v })} required />
-    <SelectField label="Type" value={task.learningType} options={["Video", "Course", "Article", "Practice", "Project", "Documentation", "Revision"]} onChange={(v) => setTask({ ...task, learningType: v as LearningTask["learningType"] })} />
+    <SelectField label="Type" value={task.learningType} options={["Read", "Watch", "Practice", "Build", "Review"]} onChange={(v) => setTask({ ...task, learningType: v as LearningTask["learningType"] })} />
     <TextField label="Planned date" type="date" value={task.plannedDate} onChange={(v) => setTask({ ...task, plannedDate: v })} />
     <NumberField label="Planned minutes" value={task.plannedMinutes} onChange={(v) => setTask({ ...task, plannedMinutes: v })} />
     <NumberField label="Actual minutes" value={task.actualMinutes} onChange={(v) => setTask({ ...task, actualMinutes: v })} />
-    <SelectField label="Status" value={task.status} options={["Planned", "In Progress", "Completed"]} onChange={(v) => setTask({ ...task, status: v as LearningTask["status"] })} />
-    <SelectField label="Difficulty" value={task.difficulty} options={["Easy", "Medium", "Hard"]} onChange={(v) => setTask({ ...task, difficulty: v as LearningTask["difficulty"] })} />
-    <NumberField label="Understanding score 1-5" value={task.understandingScore} onChange={(v) => setTask({ ...task, understandingScore: Math.min(5, Math.max(1, v)) })} />
-    <TextField label="Resource link" value={task.resourceLink} onChange={(v) => setTask({ ...task, resourceLink: v })} />
-    <TextField label="Description" value={task.description} onChange={(v) => setTask({ ...task, description: v })} textarea />
-    <TextField label="Output created" value={task.outputCreated} onChange={(v) => setTask({ ...task, outputCreated: v })} />
-    <TextField label="Notes" value={task.notes} onChange={(v) => setTask({ ...task, notes: v })} textarea />
+    <SelectField label="Status" value={task.status} options={["Planned", "In Progress", "Done", "Skipped"]} onChange={(v) => setTask({ ...task, status: v as LearningTask["status"] })} />
   </FormGrid>;
 }
 
@@ -1590,11 +1520,15 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 function AnalyticsGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{children}</div>;
+  return <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">{children}</div>;
 }
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return <Card className="min-h-80 md:col-span-2"><h2 className="font-semibold">{title}</h2><div className="mt-4 h-64">{children}</div></Card>;
+}
+
+function ChartEmptyState() {
+  return <div className="grid h-full place-items-center rounded-lg border border-dashed border-[#252A35] px-6 text-center text-sm text-[#7A8499]">No sessions logged yet — add your first task above</div>;
 }
 
 function BarChartBox({ data, bars }: { data: any[]; bars: [string, string][] }) {
@@ -1611,12 +1545,8 @@ function LineChartBox({ data, xKey, lineKey }: { data: any[]; xKey: string; line
   return <ResponsiveContainer width="100%" height="100%"><LineChart data={data}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey={xKey} /><YAxis /><Tooltip /><Line type="monotone" dataKey={lineKey} stroke="#2563EB" strokeWidth={2} /></LineChart></ResponsiveContainer>;
 }
 
-function SkillProgressChart({ skills }: { skills: Skill[] }) {
-  return <ResponsiveContainer width="100%" height="100%"><LineChart data={skills.map((skill) => ({ name: skill.skillName, progress: skill.progressPercentage, confidence: skill.confidenceScore * 20 }))}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="name" /><YAxis /><Tooltip /><Line type="monotone" dataKey="progress" stroke="#2563EB" strokeWidth={2} /><Line type="monotone" dataKey="confidence" stroke="#0F9F6E" strokeWidth={2} /></LineChart></ResponsiveContainer>;
-}
-
 function badgeTone(label: string): "slate" | "blue" | "green" | "amber" | "red" {
-  if (["Completed", "Low", "Easy", "work"].includes(label)) return "green";
+  if (["Completed", "Done", "Low", "work"].includes(label)) return "green";
   if (["High", "Blocked", "Hard"].includes(label)) return "red";
   if (["Medium", "In Progress", "learning"].includes(label)) return "amber";
   if (["Planned", "Backlog"].includes(label)) return "blue";

@@ -108,8 +108,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     const [workTasks, skills, learningTasks, timeLogs, weeklyReviews, incomeEntries, expenses, budgets, categoryBudgets, emis, emiPayments, upcomingPayments, investments, investmentValueHistory, financialGoals, monthlyFinanceReviews, financeSettings] = await Promise.all([
       supabase.from("work_tasks").select("*").eq("user_id", userId),
-      supabase.from("skills").select("*").eq("user_id", userId),
-      supabase.from("learning_tasks").select("*").eq("user_id", userId),
+      supabase.from("skills").select("id,user_id,skill_name,category,current_level,target_level,weekly_target_minutes,deadline,created_at,updated_at").eq("user_id", userId),
+      supabase.from("learning_tasks").select("id,user_id,skill_id,title,learning_type,planned_date,planned_minutes,actual_minutes,status,created_at,updated_at").eq("user_id", userId),
       supabase.from("time_logs").select("*").eq("user_id", userId),
       supabase.from("weekly_reviews").select("*").eq("user_id", userId),
       supabase.from("income_entries").select("*").eq("user_id", userId),
@@ -313,12 +313,8 @@ function toDb(collection: Collection, item: Entity) {
       category: skill.category,
       current_level: skill.currentLevel,
       target_level: skill.targetLevel,
-      reason: skill.reason,
       weekly_target_minutes: skill.weeklyTargetMinutes,
-      deadline: skill.deadline,
-      progress_percentage: skill.progressPercentage,
-      confidence_score: skill.confidenceScore,
-      notes: skill.notes
+      deadline: skill.deadline
     };
   }
   if (collection === "learningTasks") {
@@ -328,17 +324,11 @@ function toDb(collection: Collection, item: Entity) {
       user_id: task.userId,
       skill_id: task.skillId,
       title: task.title,
-      description: task.description,
-      resource_link: task.resourceLink,
       learning_type: task.learningType,
       planned_date: task.plannedDate,
       planned_minutes: task.plannedMinutes,
       actual_minutes: task.actualMinutes,
-      status: task.status,
-      difficulty: task.difficulty,
-      understanding_score: task.understandingScore,
-      output_created: task.outputCreated,
-      notes: task.notes
+      status: task.status
     };
   }
   if (collection === "timeLogs") {
@@ -437,12 +427,8 @@ function fromSkill(row: any): Skill {
     category: row.category,
     currentLevel: row.current_level,
     targetLevel: row.target_level,
-    reason: row.reason || "",
     weeklyTargetMinutes: row.weekly_target_minutes || 0,
     deadline: row.deadline || "",
-    progressPercentage: row.progress_percentage || 0,
-    confidenceScore: row.confidence_score || 1,
-    notes: row.notes || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -454,20 +440,22 @@ function fromLearningTask(row: any): LearningTask {
     userId: row.user_id,
     skillId: row.skill_id,
     title: row.title,
-    description: row.description || "",
-    resourceLink: row.resource_link || "",
-    learningType: row.learning_type,
+    learningType: normalizeLearningType(row.learning_type),
     plannedDate: row.planned_date,
     plannedMinutes: row.planned_minutes || 0,
     actualMinutes: row.actual_minutes || 0,
-    status: row.status,
-    difficulty: row.difficulty,
-    understandingScore: row.understanding_score || 1,
-    outputCreated: row.output_created || "",
-    notes: row.notes || "",
+    status: row.status === "Completed" ? "Done" : row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
+}
+
+function normalizeLearningType(value: string): LearningTask["learningType"] {
+  if (value === "Video" || value === "Course") return "Watch";
+  if (value === "Article" || value === "Documentation") return "Read";
+  if (value === "Project") return "Build";
+  if (value === "Revision") return "Review";
+  return ["Read", "Watch", "Practice", "Build", "Review"].includes(value) ? value as LearningTask["learningType"] : "Practice";
 }
 
 function fromTimeLog(row: any): TimeLog {
