@@ -32,6 +32,7 @@ import {
   LockKeyhole,
   LogOut,
   Mail,
+  Pencil,
   Plus,
   Printer,
   Save,
@@ -47,7 +48,7 @@ import {
 } from "lucide-react";
 import { addDays, addMinutes, differenceInMinutes, format } from "date-fns";
 import { autoWeeklySummary, dailySeries, dashboardMetrics, priorityDistribution, productivityLabel, productivityScore, projectDistribution, scopedWeekData, skillCategoryDistribution, statusDistribution } from "@/lib/analytics";
-import { isInWeek, minutesToHours, toDateInput, weekBounds, weekDays } from "@/lib/date";
+import { minutesToHours, toDateInput, weekBounds, weekDays } from "@/lib/date";
 import { categoryTotals, currency, dailyExpenseSeries, financeMetrics, financeMonthData, goalProgress, inMonth, investmentAllocation, monthlyFinanceSummary, monthlyTrend, monthKey, natureTotals, paymentModeTotals, portfolioMetrics, weeklyFinanceSummary } from "@/lib/finance";
 import { newId, useStore } from "@/lib/storage";
 import { sprintCsv, sprintShareText, tasksForSprint } from "@/lib/sprint";
@@ -187,7 +188,7 @@ export function MonitorApp() {
           {active === "Weekly Planner" && <WeeklyPlanner weekStart={weekStart} />}
           {active === "Work Tasks" && <WorkTasks />}
           {active === "Sprint Plan" && <SprintPlanPage weekStart={weekStart} />}
-          {active === "Skills" && <Skills />}
+          {active === "Skills" && <Skills selectedDate={selectedDate} onSelectDate={selectDate} />}
           {active === "Time Tracker" && <TimeTracker />}
           {active === "Work Analytics" && <WorkAnalytics weekStart={weekStart} />}
           {active === "Learning Analytics" && <LearningAnalytics weekStart={weekStart} />}
@@ -700,39 +701,99 @@ function SprintPlanPage({ weekStart }: { weekStart: string }) {
   );
 }
 
-function Skills() {
+function Skills({ selectedDate, onSelectDate }: { selectedDate: string; onSelectDate: (date: string) => void }) {
   const { data, user, upsert, remove } = useStore();
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [editingLearning, setEditingLearning] = useState<LearningTask | null>(null);
+  const [showSkillForm, setShowSkillForm] = useState(false);
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const days = weekDays(new Date(`${selectedDate}T00:00:00`));
+  const selectedTasks = data.learningTasks.filter((task) => task.plannedDate === selectedDate);
+  const completed = selectedTasks.filter((task) => task.status === "Done").length;
+  const totalMinutes = selectedTasks.reduce((total, task) => total + task.actualMinutes, 0);
+  const plannedMinutes = selectedTasks.reduce((total, task) => total + task.plannedMinutes, 0);
+  const completion = selectedTasks.length ? Math.round((completed / selectedTasks.length) * 100) : 0;
+  const skillGroups = data.skills.map((skill) => {
+    const tasks = selectedTasks.filter((task) => task.skillId === skill.id);
+    return { skill, tasks, done: tasks.filter((task) => task.status === "Done").length };
+  });
+
+  function openNewTask(skillId?: string) {
+    setEditingLearning({
+      id: newId("lt"), userId: user?.id || "", skillId: skillId || data.skills[0]?.id || "", title: "", learningType: "Practice", plannedDate: selectedDate,
+      plannedMinutes: 30, actualMinutes: 0, status: "Planned", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+    });
+    setShowTaskForm(true);
+  }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-      <CrudLayout title="Skills" form={<SkillForm item={editingSkill} onCancel={() => setEditingSkill(null)} onSave={(item) => { if (user) void upsert("skills", { ...item, userId: user.id }); setEditingSkill(null); }} />}>
-        {data.skills.map((skill) => (
-          <div key={skill.id} className="rounded-lg border border-line p-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-semibold">{skill.skillName}</p>
-                <p className="text-sm text-slate-500">{skill.category} - {skill.currentLevel} to {skill.targetLevel}</p>
-              </div>
-              <RowActions onEdit={() => setEditingSkill(skill)} onDelete={() => confirmDelete(() => remove("skills", skill.id))} />
-            </div>
-            {(() => {
-              const actual = data.learningTasks.filter((task) => task.skillId === skill.id && isInWeek(task.plannedDate, weekBounds().startInput)).reduce((total, task) => total + task.actualMinutes, 0);
-              const progress = skill.weeklyTargetMinutes ? Math.min(100, Math.round((actual / skill.weeklyTargetMinutes) * 100)) : 0;
-              return <><div className="mt-3"><ProgressBar value={progress} /></div><p className="mt-2 text-xs text-slate-500">{minutesToHours(actual)}h of {minutesToHours(skill.weeklyTargetMinutes)}h this week · deadline {skill.deadline}</p></>;
-            })()}
-          </div>
-        ))}
-      </CrudLayout>
-      <CrudLayout title="Learning tasks" form={<LearningTaskForm item={editingLearning} skills={data.skills} onCancel={() => setEditingLearning(null)} onSave={(item) => { if (user) void upsert("learningTasks", { ...item, userId: user.id }); setEditingLearning(null); }} />}>
-        {data.learningTasks.map((task) => {
-          const skill = data.skills.find((item) => item.id === task.skillId);
-          return <TaskRow key={task.id} title={task.title} meta={`${skill?.skillName || "No skill linked"} - ${task.learningType} - ${minutesToHours(task.actualMinutes)}/${minutesToHours(task.plannedMinutes)}h`} badges={[task.status]} onEdit={() => setEditingLearning(task)} onDelete={() => confirmDelete(() => remove("learningTasks", task.id))} />;
-        })}
-      </CrudLayout>
+    <div className="grid gap-4 xl:grid-cols-[190px_minmax(0,1fr)_300px]">
+      <Card className="h-fit">
+        <div className="flex items-center justify-between"><h2 className="text-base font-semibold">Dates</h2><CalendarDays size={17} className="text-[#5B8DEF]" /></div>
+        <div className="mt-4 grid gap-2">
+          {days.map((day) => {
+            const active = day.input === selectedDate;
+            const count = data.learningTasks.filter((task) => task.plannedDate === day.input).length;
+            return <button key={day.input} onClick={() => onSelectDate(day.input)} className={`rounded-lg border px-3 py-3 text-left transition ${active ? "border-[#5B8DEF] bg-[#5B8DEF] text-white" : "border-transparent bg-[#1E2330] text-[#F0F2F5] hover:border-[#3B4250]"}`}><div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{day.input === toDateInput(new Date()) ? "Today" : day.dayName}</span><span className="text-xs">{count}</span></div><p className={`mt-1 text-xs ${active ? "text-blue-100" : "text-[#7A8499]"}`}>{format(day.date, "MMM d")}</p></button>;
+          })}
+        </div>
+      </Card>
+
+      <section>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div><h1 className="text-xl font-semibold">{format(new Date(`${selectedDate}T00:00:00`), "EEEE, MMMM d, yyyy")}</h1><p className="mt-1 text-sm text-[#7A8499]">Track learning by skill and finish tasks directly from each tile.</p></div>
+          <div className="flex gap-2"><Button variant="secondary" onClick={() => { setEditingSkill(null); setShowSkillForm(true); }}><Plus size={16} /> Skill</Button><Button onClick={() => openNewTask()}><Plus size={16} /> Task</Button></div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {skillGroups.map(({ skill, tasks, done }, index) => <SkillTile key={skill.id} skill={skill} tasks={tasks} done={done} tone={index % 4} onAddTask={() => openNewTask(skill.id)} onEditSkill={() => { setEditingSkill(skill); setShowSkillForm(true); }} onDeleteSkill={() => confirmDelete(() => remove("skills", skill.id))} onEditTask={(task) => { setEditingLearning(task); setShowTaskForm(true); }} onDeleteTask={(id) => confirmDelete(() => remove("learningTasks", id))} onToggleTask={(task) => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", actualMinutes: task.status === "Done" ? task.actualMinutes : Math.max(task.actualMinutes, task.plannedMinutes), updatedAt: new Date().toISOString() })} />)}
+          {!data.skills.length && <div className="md:col-span-2"><EmptyState title="No skills yet" text="Add your first skill to create a learning tile." /></div>}
+        </div>
+      </section>
+
+      <Card className="h-fit xl:sticky xl:top-[90px]">
+        <h2 className="text-base font-semibold">Day&apos;s progress</h2>
+        <div className="mt-4 rounded-lg bg-[#5B8DEF] p-5 text-white"><p className="text-xs font-medium uppercase tracking-[0.08em] text-blue-100">Completed</p><p className="mt-2 text-4xl font-bold">{completed}/{selectedTasks.length}</p><p className="mt-1 text-xs text-blue-100">tasks completed today</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-[#3ECF8E]" style={{ width: `${completion}%` }} /></div></div>
+        <div className="mt-5 grid grid-cols-2 gap-3"><ProgressMiniStat value={`${minutesToHours(totalMinutes)}h`} label="Actual" /><ProgressMiniStat value={`${minutesToHours(plannedMinutes)}h`} label="Planned" /></div>
+        <h3 className="mt-6 text-sm font-semibold">Skill breakdown</h3>
+        <div className="mt-3 grid gap-3">{skillGroups.filter((item) => item.tasks.length).map(({ skill, tasks, done }) => <div key={skill.id} className="rounded-lg border border-[#252A35] bg-[#1E2330] p-3"><div className="flex justify-between text-xs"><span className="font-medium">{skill.skillName}</span><span className="text-[#3ECF8E]">{done}/{tasks.length}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#343A48]"><div className="h-full bg-[#5B8DEF]" style={{ width: `${(done / tasks.length) * 100}%` }} /></div></div>)}</div>
+        {!selectedTasks.length && <p className="mt-5 text-center text-xs text-[#7A8499]">No tasks planned for this date.</p>}
+      </Card>
+
+      {showSkillForm && <ModalShell title={editingSkill ? "Edit skill" : "Add skill"} onClose={() => { setShowSkillForm(false); setEditingSkill(null); }}><SkillForm item={editingSkill} onCancel={() => { setShowSkillForm(false); setEditingSkill(null); }} onSave={(item) => { if (user) void upsert("skills", { ...item, userId: user.id }); setShowSkillForm(false); setEditingSkill(null); }} /></ModalShell>}
+      {showTaskForm && <ModalShell title={editingLearning?.title ? "Edit learning task" : "Add learning task"} onClose={() => { setShowTaskForm(false); setEditingLearning(null); }}><LearningTaskForm item={editingLearning} skills={data.skills} onCancel={() => { setShowTaskForm(false); setEditingLearning(null); }} onSave={(item) => { if (user) void upsert("learningTasks", { ...item, userId: user.id }); setShowTaskForm(false); setEditingLearning(null); }} /></ModalShell>}
     </div>
   );
+}
+
+function SkillTile({ skill, tasks, done, tone, onAddTask, onEditSkill, onDeleteSkill, onEditTask, onDeleteTask, onToggleTask }: { skill: Skill; tasks: LearningTask[]; done: number; tone: number; onAddTask: () => void; onEditSkill: () => void; onDeleteSkill: () => void; onEditTask: (task: LearningTask) => void; onDeleteTask: (id: string) => void; onToggleTask: (task: LearningTask) => void }) {
+  const tones = [
+    "border-blue-500/70 bg-blue-500/[0.08]",
+    "border-emerald-500/70 bg-emerald-500/[0.08]",
+    "border-fuchsia-500/70 bg-fuchsia-500/[0.08]",
+    "border-amber-500/70 bg-amber-500/[0.08]"
+  ];
+  const accents = ["text-blue-300", "text-emerald-300", "text-fuchsia-300", "text-amber-300"];
+  return (
+    <article className={`min-h-[250px] rounded-lg border p-4 ${tones[tone]}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div><p className="text-base font-semibold">{skill.skillName}</p><p className="mt-1 text-xs text-[#7A8499]">{skill.category} · {skill.weeklyTargetMinutes} min/week</p></div>
+        <div className="flex items-center gap-1"><span className={`mr-2 text-xs font-medium ${accents[tone]}`}>{done}/{tasks.length} done</span><button onClick={onEditSkill} className="p-1.5 text-[#7A8499] hover:text-white" title="Edit skill"><Pencil size={14} /></button><button onClick={onDeleteSkill} className="p-1.5 text-[#7A8499] hover:text-rose-300" title="Delete skill"><Trash2 size={14} /></button></div>
+      </div>
+      <div className="mt-4 grid gap-2">
+        {tasks.map((task) => <div key={task.id} className={`group flex min-h-12 items-center gap-3 rounded-lg border px-3 py-2 ${task.status === "Done" ? "border-emerald-500/20 bg-emerald-500/10" : "border-[#252A35] bg-[#161920]"}`}><button onClick={() => onToggleTask(task)} className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${task.status === "Done" ? "border-[#3ECF8E] bg-[#3ECF8E] text-[#0D0F12]" : "border-[#596274] text-transparent hover:border-[#5B8DEF]"}`} title={task.status === "Done" ? "Mark in progress" : "Mark done"}><CheckCircle2 size={13} /></button><button onClick={() => onEditTask(task)} className="min-w-0 flex-1 text-left"><p className={`truncate text-sm ${task.status === "Done" ? "text-[#7A8499] line-through" : "text-[#F0F2F5]"}`}>{task.title}</p><p className="mt-0.5 text-[10px] text-[#7A8499]">{task.learningType} · {task.actualMinutes}/{task.plannedMinutes} min</p></button><button onClick={() => onDeleteTask(task.id)} className="p-1 text-[#596274] opacity-0 hover:text-rose-300 group-hover:opacity-100" title="Delete task"><Trash2 size={13} /></button></div>)}
+        {!tasks.length && <p className="rounded-lg border border-dashed border-[#3B4250] px-3 py-7 text-center text-xs text-[#7A8499]">No tasks for this date</p>}
+      </div>
+      <button onClick={onAddTask} className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-current text-xs font-medium text-[#AAB3C5] hover:bg-white/[0.04]"><Plus size={14} /> Add task</button>
+    </article>
+  );
+}
+
+function ProgressMiniStat({ value, label }: { value: string; label: string }) {
+  return <div className="rounded-lg bg-[#1E2330] p-3 text-center"><p className="text-lg font-bold text-[#F0F2F5]">{value}</p><p className="mt-1 text-[10px] uppercase tracking-[0.08em] text-[#7A8499]">{label}</p></div>;
+}
+
+function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/75 p-4" role="dialog" aria-modal="true" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><Card className="my-6 w-full max-w-md p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{title}</h2><button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-lg text-[#7A8499] hover:bg-white/5 hover:text-white" aria-label="Close"><X size={18} /></button></div><div className="mt-5">{children}</div></Card></div>;
 }
 
 function TimeTracker() {
@@ -814,15 +875,37 @@ function LearningAnalytics({ weekStart }: { weekStart: string }) {
   const dailyData = dailySeries(data, weekStart);
   const categoryData = skillCategoryDistribution(week.skills, week.learningTasks);
   const hasDailyData = dailyData.some((item) => item.learningHours > 0);
+  const completion = week.learningTasks.length ? Math.round((completed / week.learningTasks.length) * 100) : 0;
+  const totalActualMinutes = week.learningTasks.reduce((total, task) => total + task.actualMinutes, 0);
+  const totalPlannedMinutes = week.learningTasks.reduce((total, task) => total + task.plannedMinutes, 0);
   return (
-    <AnalyticsGrid>
-      <Metric title="Learning hours" value={`${learningHours}h`} />
-      <Metric title="Tasks done" value={completed} />
-      <Metric title="Pending tasks" value={pending} />
-      <Metric title="Sessions logged" value={week.learningTasks.filter((task) => task.actualMinutes > 0).length} />
-      <ChartCard title="Daily learning hours">{hasDailyData ? <BarChartBox data={dailyData} bars={[["learningHours", "#5B8DEF"]]} /> : <ChartEmptyState />}</ChartCard>
-      <ChartCard title="Time by skill category">{categoryData.some((item) => item.value > 0) ? <PieChartBox data={categoryData} /> : <ChartEmptyState />}</ChartCard>
-    </AnalyticsGrid>
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section className="grid gap-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4"><Metric title="Learning hours" value={`${learningHours}h`} /><Metric title="Tasks done" value={completed} /><Metric title="Pending tasks" value={pending} /><Metric title="Sessions logged" value={week.learningTasks.filter((task) => task.actualMinutes > 0).length} /></div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <ChartCard title="Daily learning hours">{hasDailyData ? <BarChartBox data={dailyData} bars={[["learningHours", "#5B8DEF"]]} /> : <ChartEmptyState />}</ChartCard>
+          <ChartCard title="Time by skill category">{categoryData.some((item) => item.value > 0) ? <PieChartBox data={categoryData} /> : <ChartEmptyState />}</ChartCard>
+        </div>
+        <div>
+          <h2 className="mb-3 text-base font-semibold">Skill performance</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {data.skills.map((skill, index) => {
+              const tasks = week.learningTasks.filter((task) => task.skillId === skill.id);
+              const done = tasks.filter((task) => task.status === "Done").length;
+              const actual = tasks.reduce((total, task) => total + task.actualMinutes, 0);
+              return <div key={skill.id} className={`rounded-lg border p-4 ${["border-blue-500/50 bg-blue-500/[0.07]", "border-emerald-500/50 bg-emerald-500/[0.07]", "border-fuchsia-500/50 bg-fuchsia-500/[0.07]", "border-amber-500/50 bg-amber-500/[0.07]"][index % 4]}`}><div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{skill.skillName}</p><p className="mt-1 text-xs text-[#7A8499]">{skill.category} · {minutesToHours(actual)}h logged</p></div><span className="text-xs font-medium text-[#3ECF8E]">{done}/{tasks.length} done</span></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-[#252A35]"><div className="h-full bg-[#5B8DEF]" style={{ width: `${tasks.length ? (done / tasks.length) * 100 : 0}%` }} /></div></div>;
+            })}
+          </div>
+        </div>
+      </section>
+      <Card className="h-fit xl:sticky xl:top-[90px]">
+        <h2 className="text-base font-semibold">Weekly progress</h2>
+        <div className="mt-4 rounded-lg bg-[#5B8DEF] p-5 text-white"><p className="text-xs uppercase tracking-[0.08em] text-blue-100">Completion</p><p className="mt-2 text-4xl font-bold">{completion}%</p><p className="mt-1 text-xs text-blue-100">{completed} of {week.learningTasks.length} tasks done</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-[#3ECF8E]" style={{ width: `${completion}%` }} /></div></div>
+        <div className="mt-5 grid grid-cols-2 gap-3"><ProgressMiniStat value={`${minutesToHours(totalActualMinutes)}h`} label="Actual" /><ProgressMiniStat value={`${minutesToHours(totalPlannedMinutes)}h`} label="Planned" /></div>
+        <h3 className="mt-6 text-sm font-semibold">Category breakdown</h3>
+        <div className="mt-3 grid gap-3">{categoryData.map((category, index) => <div key={category.name} className="rounded-lg border border-[#252A35] bg-[#1E2330] p-3"><div className="flex items-center justify-between text-xs"><span>{category.name}</span><span className="font-medium text-[#3ECF8E]">{category.value}h</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#343A48]"><div className="h-full" style={{ width: `${totalActualMinutes ? Math.min(100, (category.value * 60 / totalActualMinutes) * 100) : 0}%`, backgroundColor: colors[index % colors.length] }} /></div></div>)}</div>
+      </Card>
+    </div>
   );
 }
 
