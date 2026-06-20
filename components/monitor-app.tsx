@@ -21,6 +21,8 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   CreditCard,
   Goal,
@@ -100,7 +102,20 @@ export function MonitorApp() {
   const store = useStore();
   const [active, setActive] = useState<Tab>("Dashboard");
   const [weekStart, setWeekStart] = useState(weekBounds().startInput);
+  const [selectedDate, setSelectedDate] = useState(toDateInput(new Date()));
   const [financeMonth, setFinanceMonth] = useState(monthKey());
+
+  function selectDate(dateInput: string) {
+    const normalized = weekBounds(new Date(`${dateInput}T00:00:00`)).startInput;
+    setSelectedDate(dateInput);
+    setWeekStart(normalized);
+  }
+
+  function moveWeek(direction: -1 | 1) {
+    const nextStart = toDateInput(addMinutes(new Date(`${weekStart}T00:00:00`), direction * 7 * 24 * 60));
+    setWeekStart(nextStart);
+    setSelectedDate(nextStart);
+  }
 
   if (store.loading) {
     return <div className="flex min-h-screen items-center justify-center text-sm text-slate-600">Loading your workspace...</div>;
@@ -145,8 +160,8 @@ export function MonitorApp() {
 
       <main className="lg:pl-[238px]">
         <header className="sticky top-0 z-10 border-b border-[#24303d] bg-[#091019]/95 backdrop-blur">
-          <div className="flex h-[70px] items-center gap-3 px-4 lg:px-6">
-            <div className="hidden text-sm text-slate-400 md:block">{format(new Date(`${weekStart}T00:00:00`), "MMM d")} - {format(addMinutes(new Date(`${weekStart}T00:00:00`), 6 * 24 * 60), "MMM d, yyyy")}</div>
+          <div className="flex min-h-[70px] flex-wrap items-center gap-3 px-3 py-3 sm:px-4 lg:px-6">
+            <WeekNavigator weekStart={weekStart} selectedDate={selectedDate} onSelectDate={selectDate} onMoveWeek={moveWeek} />
             <div className="ml-auto flex items-center gap-2">
               <Button className="h-10 px-4" onClick={() => setActive("Work Tasks")}><Plus size={17} /><span className="hidden sm:inline">Quick add task</span></Button>
               <button className="grid h-10 w-10 place-items-center rounded-md border border-[#2b3745] text-slate-400 hover:bg-white/[0.05] hover:text-white lg:hidden" onClick={() => setActive("Settings")} title="Profile"><UserCircle size={19} /></button>
@@ -161,10 +176,10 @@ export function MonitorApp() {
           {active !== "Dashboard" && (
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div><p className="text-xl font-semibold text-slate-100">{active}</p><p className="mt-1 text-xs text-slate-500">{active.includes("Finance") || ["Expenses", "Budget", "EMI Tracker", "Upcoming Payments", "Investments", "Financial Goals"].includes(active) ? `Month ${financeMonth}` : `Week of ${format(new Date(`${weekStart}T00:00:00`), "MMM d, yyyy")}`}</p></div>
-              {active.includes("Finance") || ["Expenses", "Budget", "EMI Tracker", "Upcoming Payments", "Investments", "Financial Goals"].includes(active) ? <input className={inputClass} type="month" value={financeMonth} onChange={(event) => setFinanceMonth(event.target.value)} /> : <input className={inputClass} type="date" value={weekStart} onChange={(event) => setWeekStart(event.target.value)} />}
+              {active.includes("Finance") || ["Expenses", "Budget", "EMI Tracker", "Upcoming Payments", "Investments", "Financial Goals"].includes(active) ? <input className={inputClass} type="month" value={financeMonth} onChange={(event) => setFinanceMonth(event.target.value)} /> : <input className={inputClass} type="date" value={selectedDate} onChange={(event) => selectDate(event.target.value)} />}
             </div>
           )}
-          {active === "Dashboard" && <Dashboard key={weekStart} weekStart={weekStart} setActive={setActive} />}
+          {active === "Dashboard" && <Dashboard weekStart={weekStart} selectedDate={selectedDate} onSelectDate={setSelectedDate} setActive={setActive} />}
           {active === "Weekly Planner" && <WeeklyPlanner weekStart={weekStart} />}
           {active === "Work Tasks" && <WorkTasks />}
           {active === "Sprint Plan" && <SprintPlanPage weekStart={weekStart} />}
@@ -259,13 +274,31 @@ function AuthScreen() {
   );
 }
 
-function Dashboard({ weekStart, setActive }: { weekStart: string; setActive: (tab: Tab) => void }) {
+function WeekNavigator({ weekStart, selectedDate, onSelectDate, onMoveWeek }: { weekStart: string; selectedDate: string; onSelectDate: (date: string) => void; onMoveWeek: (direction: -1 | 1) => void }) {
+  const start = new Date(`${weekStart}T00:00:00`);
+  const end = addMinutes(start, 6 * 24 * 60);
+  const currentWeek = weekBounds().startInput === weekStart;
+
+  return (
+    <div className="flex min-w-0 items-center gap-1.5">
+      <button type="button" onClick={() => onMoveWeek(-1)} className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-[#2b3745] text-slate-400 hover:bg-white/[0.05] hover:text-white" title="Previous week" aria-label="Previous week"><ChevronLeft size={18} /></button>
+      <label className="relative flex h-10 min-w-0 items-center rounded-md border border-[#2b3745] bg-[#0a111a] px-3 hover:border-blue-500/70">
+        <CalendarDays size={16} className="mr-2 shrink-0 text-blue-300" />
+        <span className="whitespace-nowrap text-xs font-medium text-slate-200 sm:text-sm">{format(start, "MMM d")} - {format(end, "MMM d, yyyy")}</span>
+        <input type="date" value={selectedDate} onChange={(event) => onSelectDate(event.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label="Choose a date and open its week" />
+      </label>
+      <button type="button" onClick={() => onMoveWeek(1)} className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-[#2b3745] text-slate-400 hover:bg-white/[0.05] hover:text-white" title="Next week" aria-label="Next week"><ChevronRight size={18} /></button>
+      {!currentWeek && <button type="button" onClick={() => onSelectDate(toDateInput(new Date()))} className="hidden h-10 rounded-md border border-[#2b3745] px-3 text-xs font-medium text-slate-300 hover:bg-white/[0.05] hover:text-white sm:block">Today</button>}
+    </div>
+  );
+}
+
+function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekStart: string; selectedDate: string; onSelectDate: (date: string) => void; setActive: (tab: Tab) => void }) {
   const { data, upsert } = useStore();
   const week = scopedWeekData(data, weekStart);
   const metrics = dashboardMetrics(data, weekStart);
   const days = weekDays(new Date(`${weekStart}T00:00:00`));
   const todayInput = toDateInput(new Date());
-  const [selectedDate, setSelectedDate] = useState(() => days.some((day) => day.input === todayInput) ? todayInput : days[0].input);
   const selectedDay = days.find((day) => day.input === selectedDate) || days[0];
   const selectedWork = data.workTasks.filter((task) => task.assignedDate === selectedDay.input);
   const selectedLearning = data.learningTasks.filter((task) => task.plannedDate === selectedDay.input);
@@ -289,7 +322,7 @@ function Dashboard({ weekStart, setActive }: { weekStart: string; setActive: (ta
           const active = day.input === selectedDay.input;
           const isToday = day.input === todayInput;
           return (
-            <button key={day.input} type="button" aria-pressed={active} onClick={() => setSelectedDate(day.input)} className={`min-h-[122px] border-r border-[#24303d] px-3 py-4 text-center last:border-r-0 ${active ? "bg-blue-600/25" : "hover:bg-white/[0.025]"}`}>
+            <button key={day.input} type="button" aria-pressed={active} onClick={() => onSelectDate(day.input)} className={`min-h-[122px] border-r border-[#24303d] px-3 py-4 text-center last:border-r-0 ${active ? "bg-blue-600/25" : "hover:bg-white/[0.025]"}`}>
               <p className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${active ? "text-blue-200" : "text-slate-400"}`}>{day.dayName.slice(0, 3)}</p>
               <p className={`mt-1 text-3xl font-semibold ${active ? "text-blue-100" : "text-slate-300"}`}>{format(day.date, "d")}</p>
               <p className={`mt-1 text-[11px] ${active ? "text-blue-300" : "text-slate-500"}`}>{isToday ? "Today" : `${count} tasks`}</p>
