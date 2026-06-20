@@ -1,0 +1,9 @@
+drop table if exists public.investment_value_history cascade;
+drop table if exists public.financial_goals cascade;
+drop table if exists public.investments cascade;
+drop table if exists public.emi_payments cascade;
+drop table if exists public.emis cascade;
+drop table if exists public.expenses cascade;
+drop table if exists public.income_entries cascade;
+drop table if exists public.monthly_finance_reviews cascade;
+drop table if exists public.finance_settings cascade;

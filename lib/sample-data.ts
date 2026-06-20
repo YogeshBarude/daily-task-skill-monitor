@@ -1,5 +1,5 @@
-import { AppData, Emi, Expense, FinanceSettings, FinancialGoal, IncomeEntry, Investment, InvestmentValueHistory, LearningTask, MonthlyFinanceReview, Skill, TimeLog, UserProfile, WeeklyReview, WorkTask } from "./types";
-import { toDateInput, weekDays } from "./date";
+import { AppData, LearningTask, Skill, TimeLog, UserProfile, WeeklyReview, WorkTask } from "./types";
+import { weekDays } from "./date";
 
 const now = new Date().toISOString();
 
@@ -162,114 +162,7 @@ export function createSampleData(userId = demoUser.id): AppData {
     }
   ];
 
-  const month = new Date().toISOString().slice(0, 7);
-  const incomeEntries: IncomeEntry[] = [
-    {
-      id: "inc-1",
-      userId,
-      sourceName: "Salary",
-      incomeType: "Salary",
-      amount: 90000,
-      receivedDate: days[0].input,
-      month,
-      isRecurring: true,
-      notes: "Monthly salary",
-      createdAt: now,
-      updatedAt: now
-    }
-  ];
-
-  const expenses: Expense[] = [
-    expense("exp-1", userId, "Lunch", 250, days[0].input, "Food", "Meals", "UPI", "Need"),
-    expense("exp-2", userId, "Office travel", 180, days[0].input, "Travel", "Commute", "UPI", "Need"),
-    expense("exp-3", userId, "Coffee", 120, days[1].input, "Food", "Cafe", "UPI", "Want"),
-    expense("exp-4", userId, "Shopping", 2000, days[2].input, "Shopping", "Clothes", "Debit Card", "Want"),
-    expense("exp-5", userId, "Subscription", 499, days[3].input, "Subscriptions", "Software", "Credit Card", "Need"),
-    expense("exp-6", userId, "Health checkup", 800, days[4].input, "Health", "Clinic", "UPI", "Need"),
-    expense("exp-7", userId, "Education loan EMI paid", 18000, days[1].input, "EMI", "Education loan", "Net Banking", "EMI"),
-    expense("exp-8", userId, "Mutual Fund SIP", 5000, days[2].input, "Investment", "SIP", "Net Banking", "Investment")
-  ];
-
-  const emis: Emi[] = [
-    {
-      id: "emi-1",
-      userId,
-      emiName: "Education Loan EMI",
-      emiType: "Education Loan",
-      emiAmount: 18000,
-      dueDay: 5,
-      startDate: days[0].input,
-      endDate: `${new Date().getFullYear() + 4}-12-05`,
-      totalLoanAmount: 800000,
-      interestRate: 9.5,
-      lenderName: "Education lender",
-      isRecurring: true,
-      status: "Paid",
-      reminderDaysBefore: 3,
-      notes: "Keep buffer before EMI date.",
-      createdAt: now,
-      updatedAt: now
-    }
-  ];
-
-  const emiPayments = [
-    {
-      id: "emip-1",
-      userId,
-      emiId: "emi-1",
-      paymentMonth: month,
-      paymentDate: days[1].input,
-      amountPaid: 18000,
-      status: "Paid" as const,
-      notes: "Paid this month",
-      createdAt: now,
-      updatedAt: now
-    }
-  ];
-
-  const investments: Investment[] = [
-    investment("inv-1", userId, "Mutual Fund SIP", "Mutual Fund", "Groww", 5000, 5125, "MF12345", "NSE", 50, 100, 102.5, "Medium", "Manual Update Required"),
-    investment("inv-2", userId, "Gold ETF / Digital Gold", "Gold ETF", "Broker", 3000, 3090, "GOLDETF", "NSE", 10, 300, 309, "Low", "API Not Configured"),
-    investment("inv-3", userId, "Starter Stocks", "Stocks", "Broker", 2000, 2140, "TCS", "NSE", 1, 2000, 2140, "High", "API Not Configured")
-  ];
-
-  const investmentValueHistory: InvestmentValueHistory[] = investments.map((item, index) => ({
-    id: `ivh-${index + 1}`,
-    userId,
-    investmentId: item.id,
-    valueDate: item.investmentDate,
-    currentPrice: item.currentPrice,
-    currentValue: item.currentValue,
-    amountInvested: item.amountInvested,
-    gainLoss: item.gainLoss,
-    returnPercentage: item.returnPercentage,
-    priceSource: item.priceSource,
-    updateType: "manual",
-    createdAt: now
-  }));
-
-  const financialGoals: FinancialGoal[] = [
-    goal("goal-1", userId, "Emergency Fund", 150000, 18000, "High"),
-    goal("goal-2", userId, "Laptop Fund", 100000, 12000, "Medium"),
-    goal("goal-3", userId, "Travel Fund", 50000, 6000, "Low")
-  ];
-
-  const monthlyFinanceReviews: MonthlyFinanceReview[] = [];
-  const financeSettings: FinanceSettings[] = [
-    {
-      id: "finset-1",
-      userId,
-      defaultCurrency: "INR",
-      defaultMonthlyIncome: 90000,
-      monthStartDate: 1,
-      emiReminderDays: 3,
-      investmentUpdateReminderFrequency: "Weekly",
-      createdAt: now,
-      updatedAt: now
-    }
-  ];
-
-  return { workTasks, skills, learningTasks, timeLogs, weeklyReviews, incomeEntries, expenses, emis, emiPayments, investments, investmentValueHistory, financialGoals, monthlyFinanceReviews, financeSettings };
+  return { workTasks, skills, learningTasks, timeLogs, weeklyReviews };
 }
 
 function skill(id: string, userId: string, skillName: Skill["skillName"], category: Skill["category"], currentLevel: Skill["currentLevel"], deadline: string, weeklyTargetMinutes: number): Skill {
@@ -305,44 +198,4 @@ function learning(id: string, userId: string, skillId: string, title: string, pl
 
 function log(id: string, userId: string, linkedType: TimeLog["linkedType"], linkedId: string, logType: TimeLog["logType"], date: string, startTime: string, endTime: string, durationMinutes: number, notes: string): TimeLog {
   return { id, userId, linkedType, linkedId, logType, date, startTime, endTime, durationMinutes, notes, createdAt: now };
-}
-
-function expense(id: string, userId: string, title: string, amount: number, expenseDate: string, category: Expense["category"], subCategory: string, paymentMode: Expense["paymentMode"], expenseNature: Expense["expenseNature"]): Expense {
-  return { id, userId, title, amount, expenseDate, expenseTime: "10:00", category, subCategory, paymentMode, expenseNature, notes: "", isRecurring: false, createdAt: now, updatedAt: now };
-}
-
-function investment(id: string, userId: string, investmentName: string, investmentType: Investment["investmentType"], platform: string, amountInvested: number, currentValue: number, tickerSymbol: string, marketExchange: string, units: number, averageBuyPrice: number, currentPrice: number, riskLevel: Investment["riskLevel"], priceUpdateStatus: Investment["priceUpdateStatus"]): Investment {
-  const gainLoss = currentValue - amountInvested;
-  return {
-    id,
-    userId,
-    investmentName,
-    investmentType,
-    platform,
-    amountInvested,
-    currentValue,
-    investmentDate: toDateInput(new Date()),
-    tickerSymbol,
-    isin: "",
-    marketExchange,
-    units,
-    averageBuyPrice,
-    currentPrice,
-    linkedGoalId: "",
-    riskLevel,
-    notes: "Tracking only, no investment advice.",
-    gainLoss,
-    returnPercentage: amountInvested ? Math.round((gainLoss / amountInvested) * 10000) / 100 : 0,
-    priceSource: "Manual",
-    priceUpdateStatus,
-    lastPriceUpdatedAt: now,
-    isPriceTrackingEnabled: ["Stocks", "ETF", "Mutual Fund", "Gold ETF", "Digital Gold", "Crypto"].includes(investmentType),
-    manualCurrentValue: currentValue,
-    createdAt: now,
-    updatedAt: now
-  };
-}
-
-function goal(id: string, userId: string, goalName: string, targetAmount: number, currentSavedAmount: number, priority: FinancialGoal["priority"]): FinancialGoal {
-  return { id, userId, goalName, targetAmount, currentSavedAmount, targetDate: `${new Date().getFullYear() + 1}-12-31`, priority, linkedInvestmentId: "", notes: "", createdAt: now, updatedAt: now };
 }

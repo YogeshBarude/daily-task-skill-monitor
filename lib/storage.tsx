@@ -33,16 +33,7 @@ const tableMap: Record<Collection, string> = {
   skills: "skills",
   learningTasks: "learning_tasks",
   timeLogs: "time_logs",
-  weeklyReviews: "weekly_reviews",
-  incomeEntries: "income_entries",
-  expenses: "expenses",
-  emis: "emis",
-  emiPayments: "emi_payments",
-  investments: "investments",
-  investmentValueHistory: "investment_value_history",
-  financialGoals: "financial_goals",
-  monthlyFinanceReviews: "monthly_finance_reviews",
-  financeSettings: "finance_settings"
+  weeklyReviews: "weekly_reviews"
 };
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -103,37 +94,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const loadSupabaseData = async (userId: string) => {
     if (!supabase) return;
     setLoading(true);
-    const [workTasks, skills, learningTasks, timeLogs, weeklyReviews, incomeEntries, expenses, emis, emiPayments, investments, investmentValueHistory, financialGoals, monthlyFinanceReviews, financeSettings] = await Promise.all([
+    const [workTasks, skills, learningTasks, timeLogs, weeklyReviews] = await Promise.all([
       supabase.from("work_tasks").select("*").eq("user_id", userId),
       supabase.from("skills").select("id,user_id,skill_name,category,current_level,target_level,weekly_target_minutes,deadline,created_at,updated_at").eq("user_id", userId),
       supabase.from("learning_tasks").select("id,user_id,skill_id,title,learning_type,planned_date,planned_minutes,actual_minutes,status,created_at,updated_at").eq("user_id", userId),
       supabase.from("time_logs").select("*").eq("user_id", userId),
-      supabase.from("weekly_reviews").select("*").eq("user_id", userId),
-      supabase.from("income_entries").select("*").eq("user_id", userId),
-      supabase.from("expenses").select("*").eq("user_id", userId),
-      supabase.from("emis").select("*").eq("user_id", userId),
-      supabase.from("emi_payments").select("*").eq("user_id", userId),
-      supabase.from("investments").select("*").eq("user_id", userId),
-      supabase.from("investment_value_history").select("*").eq("user_id", userId),
-      supabase.from("financial_goals").select("*").eq("user_id", userId),
-      supabase.from("monthly_finance_reviews").select("*").eq("user_id", userId),
-      supabase.from("finance_settings").select("*").eq("user_id", userId)
+      supabase.from("weekly_reviews").select("*").eq("user_id", userId)
     ]);
     setData({
       workTasks: (workTasks.data || []).map(fromWorkTask),
       skills: (skills.data || []).map(fromSkill),
       learningTasks: (learningTasks.data || []).map(fromLearningTask),
       timeLogs: (timeLogs.data || []).map(fromTimeLog),
-      weeklyReviews: (weeklyReviews.data || []).map(fromWeeklyReview),
-      incomeEntries: (incomeEntries.data || []).map(fromFinanceRow),
-      expenses: (expenses.data || []).map(fromFinanceRow),
-      emis: (emis.data || []).map(fromFinanceRow),
-      emiPayments: (emiPayments.data || []).map(fromFinanceRow),
-      investments: (investments.data || []).map(fromFinanceRow),
-      investmentValueHistory: (investmentValueHistory.data || []).map(fromFinanceRow),
-      financialGoals: (financialGoals.data || []).map(fromFinanceRow),
-      monthlyFinanceReviews: (monthlyFinanceReviews.data || []).map(fromFinanceRow),
-      financeSettings: (financeSettings.data || []).map(fromFinanceRow)
+      weeklyReviews: (weeklyReviews.data || []).map(fromWeeklyReview)
     });
     setLoading(false);
   };
@@ -231,9 +204,12 @@ function upsertLocal(items: Entity[], item: Entity) {
 
 function normalizeAppData(data: AppData): AppData {
   const today = new Date().toISOString().slice(0, 10);
+  const defaults = createSampleData(demoUser.id);
   return {
-    ...createSampleData(demoUser.id),
-    ...data,
+    skills: data.skills || defaults.skills,
+    learningTasks: data.learningTasks || defaults.learningTasks,
+    timeLogs: data.timeLogs || defaults.timeLogs,
+    weeklyReviews: data.weeklyReviews || defaults.weeklyReviews,
     workTasks: (data.workTasks || []).map((task) => ({
       ...task,
       productOwner: task.productOwner || task.poc || "Personal",
@@ -334,29 +310,7 @@ function toDb(collection: Collection, item: Entity) {
       auto_summary_json: review.autoSummaryJson
     };
   }
-  return camelToSnake(item);
-}
-
-function camelToSnake(item: Entity) {
-  return Object.fromEntries(
-    Object.entries(item as Record<string, unknown>).map(([key, value]) => [
-      key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`),
-      value === "" && key.endsWith("Id") ? null : value
-    ])
-  );
-}
-
-function snakeToCamel(row: Record<string, unknown>) {
-  return Object.fromEntries(
-    Object.entries(row).map(([key, value]) => [
-      key.replace(/_([a-z])/g, (_match, letter: string) => letter.toUpperCase()),
-      value ?? ""
-    ])
-  );
-}
-
-function fromFinanceRow(row: any) {
-  return snakeToCamel(row) as any;
+  throw new Error(`Unsupported collection: ${collection}`);
 }
 
 function fromWorkTask(row: any): WorkTask {

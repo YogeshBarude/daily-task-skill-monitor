@@ -32,17 +32,6 @@ A personal full-stack web prototype for tracking weekly work tasks, daily hours,
   - CSV sprint export
   - Copy-ready sprint text for email, Teams, or chat
   - One-click carry-forward of pending tasks to next week
-- Personal Finance Monitor add-on:
-  - Finance dashboard
-  - Income CRUD
-  - Expense CRUD with CSV import/export
-  - EMI tracker and EMI payment history
-  - Upcoming payments
-  - Investment tracker with manual value updates and server-side price refresh where possible
-  - Financial goals
-  - Finance analytics
-  - Monthly finance review
-  - Finance settings and finance data export/delete controls
 
 ## Local Setup
 
@@ -62,11 +51,6 @@ Create `.env.local`:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-MARKET_DATA_API_KEY=
-STOCK_PRICE_API_KEY=
-MUTUAL_FUND_API_KEY=
-GOLD_PRICE_API_KEY=
-CRYPTO_PRICE_API_KEY=
 ```
 
 ## Supabase Setup
@@ -86,12 +70,11 @@ If you already created the database using an earlier version of this project, ru
 ```text
 supabase/migrations/20260620_add_sprint_fields.sql
 supabase/migrations/20260620_secure_user_profile_trigger.sql
-supabase/migrations/20260620_finance_schedule_fields.sql
 supabase/migrations/20260620_simplify_learning_module.sql
-supabase/migrations/20260620_remove_budgets_and_payments.sql
+supabase/migrations/20260620_remove_finance_module.sql
 ```
 
-This adds the sprint fields without deleting existing tasks.
+These migrations add the current task and learning fields, secure the profile trigger, and remove the retired finance tables.
 
 ## Daily Work And Sprint Workflow
 
@@ -112,32 +95,6 @@ Sprint columns:
 - Due date
 - Status
 
-Finance tables are included in `supabase/schema.sql` and use the same RLS pattern. Run the full schema after pulling this add-on, or copy the finance table section into your Supabase SQL editor if the core task tables already exist.
-
-## Finance Module
-
-The finance module is manual-first and safe for personal tracking. It does not connect to bank accounts, UPI, cards, net banking, broker accounts, OTP flows, or payment APIs. Do not store card numbers, bank account numbers, UPI PINs, passwords, broker credentials, or other sensitive banking details.
-
-CSV expense import format:
-
-```csv
-date,title,amount,category,payment_mode,notes
-2026-06-16,Lunch,250,Food,UPI,Office lunch
-```
-
-CSV export is available for expenses, investments, EMI list, and monthly finance summary.
-
-Investment price refresh is handled through the server route `/api/market-price`, so API keys are not exposed in frontend code. Current adapters include:
-
-- Stocks/ETFs: Yahoo Finance chart endpoint where available
-- Mutual funds: MFAPI India scheme code NAV where available
-- Crypto: CoinGecko INR simple price where available
-- Gold/digital gold: provider slot is ready and returns `API Not Configured` until a gold API is configured
-
-If price fetching fails or no provider is configured, existing values are preserved and the investment can be updated manually. The app only tracks prices and portfolio performance; it does not provide buy/sell advice.
-
-Tracked investments refresh automatically when the Investments page opens and the saved price is more than six hours old. Stocks and ETFs use their ticker/exchange, mutual funds use an MFAPI scheme code, and crypto uses a CoinGecko asset ID.
-
 ## Vercel Deployment
 
 1. Push the project to GitHub.
@@ -147,11 +104,6 @@ Tracked investments refresh automatically when the Investments page opens and th
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-MARKET_DATA_API_KEY=
-STOCK_PRICE_API_KEY=
-MUTUAL_FUND_API_KEY=
-GOLD_PRICE_API_KEY=
-CRYPTO_PRICE_API_KEY=
 ```
 
 4. Deploy.

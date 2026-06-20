@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -24,9 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
-  CreditCard,
   Goal,
-  IndianRupee,
   LayoutDashboard,
   ListChecks,
   LockKeyhole,
@@ -40,22 +36,19 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
-  TrendingUp,
   UserCircle,
   UserRound,
-  WalletCards,
   X
 } from "lucide-react";
 import { addDays, addMinutes, differenceInMinutes, format } from "date-fns";
 import { autoWeeklySummary, dailySeries, dashboardMetrics, priorityDistribution, productivityLabel, productivityScore, projectDistribution, scopedWeekData, skillCategoryDistribution, statusDistribution } from "@/lib/analytics";
 import { minutesToHours, toDateInput, weekBounds, weekDays } from "@/lib/date";
-import { categoryTotals, currency, dailyExpenseSeries, financeMetrics, financeMonthData, goalProgress, inMonth, investmentAllocation, monthlyFinanceSummary, monthlyTrend, monthKey, natureTotals, paymentModeTotals, portfolioMetrics, weeklyFinanceSummary } from "@/lib/finance";
 import { newId, useStore } from "@/lib/storage";
 import { sprintCsv, sprintShareText, tasksForSprint } from "@/lib/sprint";
-import { Emi, Expense, FinancialGoal, FinanceSettings, IncomeEntry, Investment, InvestmentValueHistory, LearningTask, MonthlyFinanceReview, Skill, TimeLog, WeeklyReview, WorkTask } from "@/lib/types";
+import { LearningTask, Skill, TimeLog, WeeklyReview, WorkTask } from "@/lib/types";
 import { Badge, Button, Card, EmptyState, Field, ProgressBar, inputClass } from "./ui";
 
-type Tab = "Dashboard" | "Weekly Planner" | "Work Tasks" | "Sprint Plan" | "Skills" | "Time Tracker" | "Work Analytics" | "Learning Analytics" | "Weekly Review" | "Finance Dashboard" | "Expenses" | "EMI Tracker" | "Investments" | "Financial Goals" | "Finance Analytics" | "Monthly Finance Review" | "Settings";
+type Tab = "Dashboard" | "Weekly Planner" | "Work Tasks" | "Sprint Plan" | "Skills" | "Time Tracker" | "Work Analytics" | "Learning Analytics" | "Weekly Review" | "Settings";
 const navGroups: { label: string; items: { tab: Tab; label: string; icon: React.ElementType }[] }[] = [
   { label: "", items: [{ tab: "Dashboard", label: "Dashboard", icon: LayoutDashboard }] },
   {
@@ -75,41 +68,20 @@ const navGroups: { label: string; items: { tab: Tab; label: string; icon: React.
       { tab: "Skills", label: "Skills & learning", icon: BookOpen },
       { tab: "Learning Analytics", label: "Learning analytics", icon: Sparkles }
     ]
-  },
-  {
-    label: "Finance",
-    items: [
-      { tab: "Finance Dashboard", label: "Overview", icon: IndianRupee },
-      { tab: "Expenses", label: "Income & expenses", icon: CreditCard },
-      { tab: "EMI Tracker", label: "EMIs & loans", icon: WalletCards },
-      { tab: "Investments", label: "Investments", icon: TrendingUp },
-      { tab: "Financial Goals", label: "Financial goals", icon: Goal },
-      { tab: "Finance Analytics", label: "Finance analytics", icon: BarChart3 },
-      { tab: "Monthly Finance Review", label: "Monthly review", icon: CheckCircle2 }
-    ]
   }
 ];
 
 const colors = ["#2563EB", "#0F9F6E", "#D97706", "#DC2626", "#7C3AED", "#0891B2"];
-const expenseCategories: Expense["category"][] = ["Food", "Travel", "Shopping", "Rent", "EMI", "Groceries", "Health", "Subscriptions", "Entertainment", "Family", "Education", "Work-related", "Utilities", "Investment", "Other"];
-const paymentModes: Expense["paymentMode"][] = ["UPI", "Cash", "Credit Card", "Debit Card", "Net Banking", "Wallet", "Other"];
 const projectOptions = ["AI Governance", "Synthetic Testing", "Coca-Cola Creative Analysis", "DU Telecom Concept Testing", "Personal", "Other"];
 const platformOptions = ["AI Governance Portal", "PowerPoint", "Docs", "Analytics workbook", "Excel", "Power BI", "Supabase", "Vercel", "Other"];
 const pocOptions = ["Vaibhav", "Internal", "Research team", "Product team", "Personal", "Other"];
 const workCategoryOptions = ["Validation", "Analysis", "Benchmarking", "Documentation", "Testing", "Development", "Review", "Meeting", "General", "Other"];
-
-function dateForMonthDay(month: string, day: number) {
-  const [year, monthNumber] = month.split("-").map(Number);
-  const finalDay = Math.min(Math.max(1, day), new Date(year, monthNumber, 0).getDate());
-  return `${month}-${String(finalDay).padStart(2, "0")}`;
-}
 
 export function MonitorApp() {
   const store = useStore();
   const [active, setActive] = useState<Tab>("Dashboard");
   const [weekStart, setWeekStart] = useState(weekBounds().startInput);
   const [selectedDate, setSelectedDate] = useState(toDateInput(new Date()));
-  const [financeMonth, setFinanceMonth] = useState(monthKey());
   const [showLogTask, setShowLogTask] = useState(false);
 
   function selectDate(dateInput: string) {
@@ -180,8 +152,7 @@ export function MonitorApp() {
         <div className="mx-auto max-w-[1500px] p-3 sm:p-4 lg:p-5">
           {active !== "Dashboard" && (
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div><p className="text-xl font-bold text-slate-100">{active}</p><p className="mt-1 text-xs text-slate-500">{active.includes("Finance") || ["Expenses", "EMI Tracker", "Investments", "Financial Goals"].includes(active) ? `Month ${financeMonth}` : `Week of ${format(new Date(`${weekStart}T00:00:00`), "MMM d, yyyy")}`}</p></div>
-              {active.includes("Finance") || ["Expenses", "EMI Tracker", "Investments", "Financial Goals"].includes(active) ? <input className={inputClass} type="month" value={financeMonth} onChange={(event) => setFinanceMonth(event.target.value)} /> : null}
+              <div><p className="text-xl font-bold text-slate-100">{active}</p><p className="mt-1 text-xs text-slate-500">Week of {format(new Date(`${weekStart}T00:00:00`), "MMM d, yyyy")}</p></div>
             </div>
           )}
           {active === "Dashboard" && <Dashboard weekStart={weekStart} selectedDate={selectedDate} onSelectDate={selectDate} setActive={setActive} />}
@@ -193,13 +164,6 @@ export function MonitorApp() {
           {active === "Work Analytics" && <WorkAnalytics weekStart={weekStart} />}
           {active === "Learning Analytics" && <LearningAnalytics weekStart={weekStart} />}
           {active === "Weekly Review" && <WeeklyReviewPage weekStart={weekStart} />}
-          {active === "Finance Dashboard" && <FinanceDashboard month={financeMonth} weekStart={weekStart} setActive={setActive} />}
-          {active === "Expenses" && <ExpensesPage month={financeMonth} />}
-          {active === "EMI Tracker" && <EmiPage month={financeMonth} />}
-          {active === "Investments" && <InvestmentsPage month={financeMonth} />}
-          {active === "Financial Goals" && <FinancialGoalsPage />}
-          {active === "Finance Analytics" && <FinanceAnalytics month={financeMonth} weekStart={weekStart} />}
-          {active === "Monthly Finance Review" && <MonthlyFinanceReviewPage month={financeMonth} />}
           {active === "Settings" && <SettingsPage />}
         </div>
       </main>
@@ -352,16 +316,13 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
   const selectedDay = days.find((day) => day.input === selectedDate) || days[0];
   const selectedWork = data.workTasks.filter((task) => task.assignedDate === selectedDay.input);
   const selectedLearning = data.learningTasks.filter((task) => task.plannedDate === selectedDay.input);
-  const selectedExpenses = data.expenses.filter((expense) => expense.expenseDate === selectedDay.input);
   const selectedLogs = data.timeLogs.filter((log) => log.date === selectedDay.input);
-  const finance = financeMetrics(data, monthKey());
   const totalTasks = week.workTasks.length + week.learningTasks.length;
   const completedTasks = week.workTasks.filter((task) => task.status === "Completed").length + week.learningTasks.filter((task) => task.status === "Done").length;
   const completion = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const agenda: AgendaEntry[] = [
     ...selectedWork.map((task, index) => ({ id: task.id, time: ["07:30", "09:30", "14:00", "17:00"][index % 4], type: "Work Task", title: task.title, meta: task.projectName || "Personal", accent: "blue", done: task.status === "Completed", icon: BriefcaseBusiness, onToggle: () => void upsert("workTasks", { ...task, status: task.status === "Completed" ? "In Progress" : "Completed", completionPercentage: task.status === "Completed" ? Math.min(task.completionPercentage, 99) : 100, updatedAt: new Date().toISOString() }) })),
-    ...selectedLearning.map((task, index) => ({ id: task.id, time: ["11:30", "16:00", "19:00"][index % 3], type: "Learning Session", title: task.title, meta: `${task.plannedMinutes} min`, accent: "amber", done: task.status === "Done", icon: BookOpen, onToggle: () => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", updatedAt: new Date().toISOString() }) })),
-    ...selectedExpenses.slice(0, 2).map((expense, index) => ({ id: expense.id, time: expense.expenseTime || ["13:00", "18:15"][index], type: "Expense", title: expense.title, meta: currency.format(expense.amount), accent: "rose", done: false, icon: CreditCard }))
+    ...selectedLearning.map((task, index) => ({ id: task.id, time: ["11:30", "16:00", "19:00"][index % 3], type: "Learning Session", title: task.title, meta: `${task.plannedMinutes} min`, accent: "amber", done: task.status === "Done", icon: BookOpen, onToggle: () => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", updatedAt: new Date().toISOString() }) }))
   ].sort((a, b) => a.time.localeCompare(b.time));
 
   return (
@@ -387,13 +348,13 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
           <div className="flex min-h-[72px] flex-wrap items-center justify-between gap-3 border-b border-[#2B3240] px-5">
             <div>
               <h1 className="text-lg font-semibold text-slate-100">{format(selectedDay.date, "EEEE, MMMM d")}</h1>
-              <p className="mt-1 text-xs text-slate-500">{agenda.length} items planned across work, learning, and money</p>
+              <p className="mt-1 text-xs text-slate-500">{agenda.length} items planned across work and learning</p>
             </div>
             <Button variant="secondary" onClick={() => setActive("Weekly Planner")}><CalendarDays size={16} /> Open planner</Button>
           </div>
 
           <div className="relative px-5 py-2">
-            {agenda.length ? agenda.map((item) => <AgendaItem key={item.id} {...item} />) : <div className="py-16"><EmptyState title="A clear day" text="Add a work task, learning session, or expense to build today's flow." /></div>}
+            {agenda.length ? agenda.map((item) => <AgendaItem key={item.id} {...item} />) : <div className="py-16"><EmptyState title="A clear day" text="Add a work task or learning session to build today's flow." /></div>}
           </div>
 
           <details className="border-t border-[#24303d]">
@@ -413,17 +374,6 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
             <ProgressStat title="Weekly completion" value={`${completion}%`} detail={`${completedTasks} of ${totalTasks} tasks done`} progress={completion} tone="green" icon={Goal} />
             <ProgressStat title="Focus hours" value={`${metrics.totalWorkHours}h`} detail={`${selectedLogs.filter((log) => log.logType === "Work").length} logs on selected day`} progress={Math.min(100, metrics.totalWorkHours * 5)} tone="blue" icon={Clock3} />
             <ProgressStat title="Skill practice" value={`${metrics.totalLearningHours}h`} detail={`${selectedLearning.length} learning items on selected day`} progress={Math.min(100, metrics.totalLearningHours * 10)} tone="amber" icon={BookOpen} />
-            <div className="rounded-lg border border-[#2a3744] bg-[#0d151f] p-4">
-              <div className="flex items-center gap-2 text-xs font-medium text-slate-300"><IndianRupee size={16} className="text-amber-300" /> Salary vs spending</div>
-              <div className="mt-3 flex items-end justify-between gap-3"><div><p className="text-xl font-semibold text-emerald-300">{currency.format(finance.remainingBalance)}</p><p className="text-[11px] text-slate-500">Balance</p></div><div className="text-right"><p className="text-sm text-slate-200">{currency.format(finance.totalIncome)}</p><p className="text-[11px] text-slate-500">Income</p></div></div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#202b37]"><div className="h-full bg-emerald-400" style={{ width: `${Math.max(0, Math.min(100, 100 - finance.expenseToIncome))}%` }} /></div>
-              <div className="mt-3 flex justify-between text-xs"><span className="text-rose-300">{currency.format(finance.totalExpenses)} spent</span><span className="text-slate-500">{finance.expenseToIncome}%</span></div>
-            </div>
-            <div className="rounded-lg border border-[#2a3744] bg-[#0d151f] p-4">
-              <div className="flex items-center justify-between"><div className="flex items-center gap-2 text-xs font-medium text-slate-300"><WalletCards size={16} className="text-amber-300" /> Upcoming EMI</div><button onClick={() => setActive("EMI Tracker")} className="text-[11px] text-blue-400 hover:text-blue-300">View all</button></div>
-              <p className="mt-3 text-xl font-semibold text-slate-100">{currency.format(finance.totalEmi)}</p>
-              <p className="mt-1 text-[11px] text-slate-500">{finance.emiToIncome}% of monthly income</p>
-            </div>
           </div>
         </aside>
       </div>
@@ -505,45 +455,9 @@ function CompletedWorkPanel({ completedWork, pendingWork, setActive }: { complet
   );
 }
 
-function FinanceSummaryWidget() {
-  const { data } = useStore();
-  const metrics = financeMetrics(data, monthKey());
-  return (
-    <Card>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-semibold">Personal finance this month</h2>
-          <p className="text-sm text-slate-500">Compact money snapshot without crowding your work dashboard.</p>
-        </div>
-        <Badge tone={metrics.financeScore >= 70 ? "green" : metrics.financeScore >= 40 ? "amber" : "red"}>{metrics.financeScore}/100</Badge>
-      </div>
-      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-        <MiniMoney label="Spending" value={metrics.totalExpenses} />
-        <MiniMoney label="Monthly EMI" value={metrics.totalEmi} />
-        <MiniMoney label="Savings" value={metrics.savings} />
-        <MiniMoney label="Investment" value={metrics.totalInvestment} />
-        <MiniMoney label="Remaining" value={metrics.remainingBalance} />
-        <div className="rounded-md bg-soft p-3">
-          <p className="text-xs text-slate-500">Finance score</p>
-          <p className="mt-1 text-sm font-semibold">{metrics.financeLabel}</p>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-function MiniMoney({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-md bg-soft p-3">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className={`mt-1 font-semibold ${value < 0 ? "text-red-600" : "text-ink"}`}>{currency.format(value)}</p>
-    </div>
-  );
-}
-
 function Metric({ title, value, hint }: { title: string; value: string | number; hint?: string }) {
-  const tone = /done|completion|savings|balance|return/i.test(title) ? "border-emerald-500/35 bg-emerald-500/[0.055]" : /pending|blocked|emi|expense/i.test(title) ? "border-amber-500/35 bg-amber-500/[0.055]" : /skill|learning|portfolio|investment/i.test(title) ? "border-fuchsia-500/35 bg-fuchsia-500/[0.055]" : "border-blue-500/35 bg-blue-500/[0.055]";
-  const dot = /done|completion|savings|balance|return/i.test(title) ? "bg-[#3ECF8E]" : /pending|blocked|emi|expense/i.test(title) ? "bg-[#F5B84B]" : /skill|learning|portfolio|investment/i.test(title) ? "bg-[#C879FF]" : "bg-[#5B8DEF]";
+  const tone = /done|completion/i.test(title) ? "border-emerald-500/35 bg-emerald-500/[0.055]" : /pending|blocked/i.test(title) ? "border-amber-500/35 bg-amber-500/[0.055]" : /skill|learning/i.test(title) ? "border-fuchsia-500/35 bg-fuchsia-500/[0.055]" : "border-blue-500/35 bg-blue-500/[0.055]";
+  const dot = /done|completion/i.test(title) ? "bg-[#3ECF8E]" : /pending|blocked/i.test(title) ? "bg-[#F5B84B]" : /skill|learning/i.test(title) ? "bg-[#C879FF]" : "bg-[#5B8DEF]";
   return (
     <Card className={`min-h-[112px] ${tone}`}>
       <p className="flex items-center gap-2 text-[11px] font-bold uppercase text-[#8D98AE]"><span className={`h-2 w-2 rounded-full ${dot}`} />{title}</p>
@@ -574,7 +488,6 @@ function WeeklyPlanner({ weekStart }: { weekStart: string }) {
         const work = data.workTasks.filter((task) => task.assignedDate === day.input);
         const learning = data.learningTasks.filter((task) => task.plannedDate === day.input);
         const logs = data.timeLogs.filter((log) => log.date === day.input);
-        const finance = data.expenses.filter((expense) => expense.expenseDate === day.input);
         const planned = work.reduce((t, task) => t + task.estimatedMinutes, 0) + learning.reduce((t, task) => t + task.plannedMinutes, 0);
         const actual = logs.reduce((t, log) => t + log.durationMinutes, 0);
         const completed = work.filter((task) => task.status === "Completed").length + learning.filter((task) => task.status === "Done").length;
@@ -582,7 +495,7 @@ function WeeklyPlanner({ weekStart }: { weekStart: string }) {
         const percent = total ? Math.round((completed / total) * 100) : 0;
         return (
           <Card key={day.input}>
-            <div className="grid gap-4 xl:grid-cols-[180px_1fr_1fr_220px_220px]">
+            <div className="grid gap-4 xl:grid-cols-[180px_1fr_1fr_220px]">
               <div>
                 <p className="text-lg font-bold">{day.dayName}</p>
                 <p className="text-sm text-slate-500">{day.label}</p>
@@ -596,11 +509,6 @@ function WeeklyPlanner({ weekStart }: { weekStart: string }) {
               <PlannerColumn title="Work Tasks" items={work.map((task) => ({ id: task.id, text: task.title, meta: `${task.priority} - ${task.status}` }))} />
               <PlannerColumn title="Skill Development" items={learning.map((task) => ({ id: task.id, text: task.title, meta: `${task.learningType} - ${task.status}` }))} />
               <PlannerColumn title="Time Logged" items={logs.map((log) => ({ id: log.id, text: `${log.logType}: ${minutesToHours(log.durationMinutes)}h`, meta: log.notes || "Manual log" }))} />
-              <PlannerColumn title="Finance" items={[
-                { id: `${day.input}-expense`, text: `Spend ${currency.format(finance.reduce((t, item) => t + item.amount, 0))}`, meta: `Work ${currency.format(finance.filter((item) => item.category === "Work-related").reduce((t, item) => t + item.amount, 0))}` },
-                { id: `${day.input}-learning`, text: `Education ${currency.format(finance.filter((item) => item.category === "Education").reduce((t, item) => t + item.amount, 0))}`, meta: `Investment ${currency.format(finance.filter((item) => item.expenseNature === "Investment").reduce((t, item) => t + item.amount, 0))}` },
-                { id: `${day.input}-emi`, text: `EMI ${currency.format(finance.filter((item) => item.expenseNature === "EMI").reduce((t, item) => t + item.amount, 0))}`, meta: finance.find((item) => item.notes)?.notes || "Daily finance notes" }
-              ]} />
             </div>
           </Card>
         );
@@ -962,265 +870,8 @@ function WeeklyReviewPage({ weekStart }: { weekStart: string }) {
   );
 }
 
-function FinanceDashboard({ month, weekStart, setActive }: { month: string; weekStart: string; setActive: (tab: Tab) => void }) {
-  const { data } = useStore();
-  const metrics = financeMetrics(data, month);
-  const weekly = weeklyFinanceSummary(data, weekStart);
-  return (
-    <div className="grid gap-4">
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <Metric title="Monthly income" value={currency.format(metrics.totalIncome)} />
-        <Metric title="Total expenses" value={currency.format(metrics.totalExpenses)} />
-        <Metric title="EMI amount" value={currency.format(metrics.totalEmi)} hint={`${metrics.emiToIncome}% of income`} />
-        <Metric title="Remaining balance" value={currency.format(metrics.remainingBalance)} />
-        <Metric title="Invested this month" value={currency.format(metrics.totalInvestment)} />
-        <Metric title="Portfolio value" value={currency.format(metrics.currentInvestmentValue)} />
-        <Metric title="Savings rate" value={`${metrics.savingsRate}%`} />
-        <Metric title="Discipline score" value={`${metrics.financeScore}/100`} hint={metrics.financeLabel} />
-      </div>
-      {metrics.emiToIncome > 35 && <Card className="border-amber-200 bg-amber-50"><p className="text-sm font-medium text-amber-800">Your EMI commitment is taking a high share of your monthly income. Keep enough buffer for savings and emergency expenses.</p></Card>}
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <ChartCard title="Weekly expense trend"><BarChartBox data={dailyExpenseSeries(data, weekStart)} bars={[["expense", "#DC2626"], ["investment", "#0F9F6E"], ["emi", "#D97706"]]} /></ChartCard>
-        <Card>
-          <h2 className="font-semibold">Month summary</h2>
-          <div className="mt-4 grid gap-2 text-sm">
-            <p>Highest category: <span className="font-semibold">{metrics.highestCategory}</span></p>
-            <p>Average daily spend: <span className="font-semibold">{currency.format(metrics.averageDailySpend)}</span></p>
-            <p>Expense-to-income: <span className="font-semibold">{metrics.expenseToIncome}%</span></p>
-          </div>
-          <div className="mt-4 grid gap-2 text-sm">
-            <p className="font-semibold">Weekly finance view</p>
-            <p>Total weekly spend: {currency.format(weekly.totalWeeklySpend)}</p>
-            <p>Highest spending day: {weekly.highestSpendingDay}</p>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={() => setActive("Expenses")}>Add expense</Button>
-            <Button variant="secondary" onClick={() => setActive("Investments")}>Update portfolio</Button>
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-function ExpensesPage({ month }: { month: string }) {
-  const { data, user, upsert, remove } = useStore();
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [editingIncome, setEditingIncome] = useState<IncomeEntry | null>(null);
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("All");
-  const [mode, setMode] = useState("All");
-  const expenses = data.expenses.filter((expense) => inMonth(expense.expenseDate, month) && (category === "All" || expense.category === category) && (mode === "All" || expense.paymentMode === mode) && expense.title.toLowerCase().includes(query.toLowerCase()));
-  const monthIncome = data.incomeEntries.filter((item) => item.month === month || inMonth(item.receivedDate, month));
-
-  function exportExpenses() {
-    downloadCsv("expenses.csv", ["date,title,amount,category,payment_mode,notes", ...expenses.map((item) => [item.expenseDate, item.title, item.amount, item.category, item.paymentMode, item.notes].join(","))].join("\n"));
-  }
-
-  async function importExpenses(file: File) {
-    const text = await file.text();
-    const rows = text.split(/\r?\n/).slice(1).filter(Boolean);
-    const stamp = new Date().toISOString();
-    for (const row of rows) {
-      const [date, title, amount, importedCategory, paymentMode, notes = ""] = row.split(",");
-      if (!date || !title || !amount || !user) continue;
-      const duplicate = data.expenses.some((item) => item.expenseDate === date && item.title === title && item.amount === Number(amount));
-      if (!duplicate) {
-        await upsert("expenses", { id: newId("exp"), userId: user.id, title, amount: Number(amount), expenseDate: date, expenseTime: "09:00", category: (importedCategory || "Other") as Expense["category"], subCategory: "", paymentMode: (paymentMode || "Other") as Expense["paymentMode"], expenseNature: "Other", notes, isRecurring: false, createdAt: stamp, updatedAt: stamp } satisfies Expense);
-      }
-    }
-  }
-
-  return (
-    <div className="grid gap-4">
-      <div className="grid gap-4 xl:grid-cols-2">
-        <CrudLayout title="Income management" form={<IncomeForm item={editingIncome} month={month} onCancel={() => setEditingIncome(null)} onSave={(item) => { if (user) void upsert("incomeEntries", { ...item, userId: user.id }); setEditingIncome(null); }} />}>
-          {monthIncome.map((item) => <TaskRow key={item.id} title={`${item.sourceName}: ${currency.format(item.amount)}`} meta={`${item.incomeType} - ${item.receivedDate} - ${item.isRecurring ? "Recurring" : "One-time"}`} badges={[item.incomeType]} onEdit={() => setEditingIncome(item)} onDelete={() => confirmDelete(() => remove("incomeEntries", item.id))} />)}
-        </CrudLayout>
-        <CrudLayout
-          title="Daily expenses"
-          filters={<><input className={inputClass} placeholder="Search expense" value={query} onChange={(e) => setQuery(e.target.value)} /><select className={inputClass} value={category} onChange={(e) => setCategory(e.target.value)}><option>All</option>{expenseCategories.map((item) => <option key={item}>{item}</option>)}</select><select className={inputClass} value={mode} onChange={(e) => setMode(e.target.value)}><option>All</option>{paymentModes.map((item) => <option key={item}>{item}</option>)}</select><Button variant="secondary" onClick={exportExpenses}>Export CSV</Button><Field label="Import expenses CSV"><input className={inputClass} type="file" accept=".csv" onChange={(e) => e.target.files?.[0] && void importExpenses(e.target.files[0])} /></Field></>}
-          form={<ExpenseForm item={editingExpense} onCancel={() => setEditingExpense(null)} onSave={(item) => { if (user) void upsert("expenses", { ...item, userId: user.id }); setEditingExpense(null); }} />}
-        >
-          <div className="grid grid-cols-3 gap-2 text-sm">
-            <MiniMoney label="Today" value={expenses.filter((item) => item.expenseDate === toDateInput(new Date())).reduce((t, i) => t + i.amount, 0)} />
-            <MiniMoney label="Month" value={expenses.reduce((t, i) => t + i.amount, 0)} />
-            <MiniMoney label="Categories" value={categoryTotals(expenses).length} />
-          </div>
-          {expenses.length ? expenses.map((expense) => <TaskRow key={expense.id} title={`${expense.title}: ${currency.format(expense.amount)}`} meta={`${expense.expenseDate} ${expense.expenseTime} - ${expense.category} - ${expense.paymentMode}`} badges={[expense.expenseNature, expense.isRecurring ? "Recurring" : "One-time"]} onEdit={() => setEditingExpense(expense)} onDelete={() => confirmDelete(() => remove("expenses", expense.id))} />) : <EmptyState title="No expenses found" text="Add an expense or import CSV rows." />}
-        </CrudLayout>
-      </div>
-    </div>
-  );
-}
-
-function EmiPage({ month }: { month: string }) {
-  const { data, user, upsert, remove } = useStore();
-  const [editing, setEditing] = useState<Emi | null>(null);
-  const [formVersion, setFormVersion] = useState(0);
-  const metrics = financeMetrics(data, month);
-
-  async function saveEmi(item: Emi) {
-    if (!user) return;
-    await upsert("emis", { ...item, userId: user.id });
-    setEditing(null);
-    setFormVersion((version) => version + 1);
-  }
-
-  function clearEmiForm() {
-    setEditing(null);
-    setFormVersion((version) => version + 1);
-  }
-
-  async function markPaid(emi: Emi) {
-    if (!user) return;
-    const stamp = new Date().toISOString();
-    await upsert("emis", { ...emi, status: "Paid", updatedAt: stamp });
-    await upsert("emiPayments", { id: newId("emip"), userId: user.id, emiId: emi.id, paymentMonth: month, paymentDate: toDateInput(new Date()), amountPaid: emi.emiAmount, status: "Paid", notes: "Marked paid", createdAt: stamp, updatedAt: stamp });
-  }
-  return (
-    <CrudLayout title="EMI tracker" form={<EmiForm key={editing?.id || `new-${formVersion}`} item={editing} onCancel={clearEmiForm} onSave={(item) => void saveEmi(item)} />}>
-      <div className="grid gap-2 md:grid-cols-3"><MiniMoney label="Monthly burden" value={metrics.totalEmi} /><Metric title="EMI-to-income" value={`${metrics.emiToIncome}%`} /><Metric title="Payments logged" value={data.emiPayments.filter((p) => p.paymentMonth === month).length} /></div>
-      {data.emis.map((emi) => <div key={emi.id} className="rounded-lg border border-line p-3"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold">{emi.emiName}: {currency.format(emi.emiAmount)}</p><p className="text-sm text-slate-500">{emi.emiType} - due {format(new Date(`${dateForMonthDay(month, emi.dueDay)}T00:00:00`), "MMM d")} every month - {emi.lenderName}</p><div className="mt-2 flex gap-2"><Badge tone={badgeTone(emi.status)}>{emi.status}</Badge>{emi.status !== "Closed" && <Badge tone="amber">Reminder {emi.reminderDaysBefore} days before</Badge>}</div></div><div className="flex gap-2"><Button variant="secondary" onClick={() => markPaid(emi)}>Mark paid</Button><RowActions onEdit={() => setEditing(emi)} onDelete={() => confirmDelete(() => remove("emis", emi.id))} /></div></div></div>)}
-    </CrudLayout>
-  );
-}
-
-function InvestmentsPage({ month: _month }: { month: string }) {
-  const { data, user, upsert, remove } = useStore();
-  const [editing, setEditing] = useState<Investment | null>(null);
-  const [message, setMessage] = useState("");
-  const automaticRefreshStarted = useRef(false);
-  const portfolio = portfolioMetrics(data.investments);
-
-  async function saveInvestmentSnapshot(investment: Investment, updateType: InvestmentValueHistory["updateType"]) {
-    if (!user) return;
-    const stamp = new Date().toISOString();
-    await upsert("investments", { ...investment, userId: user.id, updatedAt: stamp });
-    await upsert("investmentValueHistory", { id: newId("ivh"), userId: user.id, investmentId: investment.id, valueDate: toDateInput(new Date()), currentPrice: investment.currentPrice, currentValue: investment.currentValue, amountInvested: investment.amountInvested, gainLoss: investment.gainLoss, returnPercentage: investment.returnPercentage, priceSource: investment.priceSource, updateType, createdAt: stamp });
-  }
-
-  async function refreshInvestment(investment: Investment) {
-    if (!investment.isPriceTrackingEnabled) {
-      await saveInvestmentSnapshot(calculateInvestment({ ...investment, currentValue: investment.manualCurrentValue, priceUpdateStatus: "Manual Update Required", priceSource: "Manual", lastPriceUpdatedAt: new Date().toISOString() }), "manual");
-      return { ok: true };
-    }
-    const response = await fetch("/api/market-price", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(investment) });
-    const result = await response.json();
-    if (!result.ok || !result.price) {
-      await upsert("investments", { ...investment, priceUpdateStatus: result.status || "Update Failed", priceSource: result.source || "Unavailable", updatedAt: new Date().toISOString() });
-      return { ok: false };
-    }
-    await saveInvestmentSnapshot(calculateInvestment({ ...investment, currentPrice: Number(result.price), currentValue: investment.units * Number(result.price), priceSource: result.source, priceUpdateStatus: "Updated", lastPriceUpdatedAt: new Date().toISOString() }), "automatic");
-    return { ok: true };
-  }
-
-  async function refreshAll() {
-    let success = 0;
-    let failed = 0;
-    for (const investment of data.investments) {
-      const result = await refreshInvestment(investment);
-      if (result.ok) success += 1;
-      else failed += 1;
-    }
-    setMessage(`Portfolio refresh complete: ${success} updated, ${failed} failed/manual.`);
-  }
-
-  useEffect(() => {
-    if (!user || automaticRefreshStarted.current) return;
-    const currentUser = user;
-    automaticRefreshStarted.current = true;
-    const staleBefore = Date.now() - 6 * 60 * 60 * 1000;
-    const tracked = data.investments.filter((investment) =>
-      investment.isPriceTrackingEnabled &&
-      (!investment.lastPriceUpdatedAt || new Date(investment.lastPriceUpdatedAt).getTime() < staleBefore)
-    );
-    if (!tracked.length) return;
-
-    async function refreshTrackedInvestments() {
-      setMessage(`Automatically updating ${tracked.length} tracked investment${tracked.length === 1 ? "" : "s"}...`);
-      let updated = 0;
-      for (const investment of tracked) {
-        const response = await fetch("/api/market-price", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(investment) });
-        const result = await response.json();
-        if (!result.ok || !result.price) {
-          await upsert("investments", { ...investment, priceUpdateStatus: result.status || "Update Failed", priceSource: result.source || "Unavailable", updatedAt: new Date().toISOString() });
-          continue;
-        }
-        const stamp = new Date().toISOString();
-        const refreshed = calculateInvestment({ ...investment, currentPrice: Number(result.price), currentValue: investment.units * Number(result.price), priceSource: result.source, priceUpdateStatus: "Updated", lastPriceUpdatedAt: stamp, updatedAt: stamp });
-        await upsert("investments", { ...refreshed, userId: currentUser.id });
-        await upsert("investmentValueHistory", { id: newId("ivh"), userId: currentUser.id, investmentId: refreshed.id, valueDate: toDateInput(new Date()), currentPrice: refreshed.currentPrice, currentValue: refreshed.currentValue, amountInvested: refreshed.amountInvested, gainLoss: refreshed.gainLoss, returnPercentage: refreshed.returnPercentage, priceSource: refreshed.priceSource, updateType: "automatic", createdAt: stamp });
-        updated += 1;
-      }
-      setMessage(`Automatic refresh finished: ${updated} of ${tracked.length} updated.`);
-    }
-
-    void refreshTrackedInvestments();
-  }, [data.investments, upsert, user]);
-
-  return (
-    <CrudLayout title="Investments" form={<InvestmentForm item={editing} goals={data.financialGoals} onCancel={() => setEditing(null)} onSave={(item) => { void saveInvestmentSnapshot(calculateInvestment(item), item.priceUpdateStatus === "Updated" ? "automatic" : "manual"); setEditing(null); }} />}>
-      <div className="grid gap-2 md:grid-cols-4"><MiniMoney label="Invested" value={portfolio.totalInvested} /><MiniMoney label="Portfolio value" value={portfolio.currentValue} /><MiniMoney label="Gain/loss" value={portfolio.gainLoss} /><Metric title="Return" value={`${portfolio.returnPercentage}%`} /></div>
-      <div className="flex flex-wrap gap-2"><Button onClick={refreshAll}>Refresh portfolio</Button><Button variant="secondary" onClick={() => downloadCsv("investments.csv", ["name,type,invested,current_value,gain_loss,return_percentage,status", ...data.investments.map((item) => [item.investmentName, item.investmentType, item.amountInvested, item.currentValue, item.gainLoss, item.returnPercentage, item.priceUpdateStatus].join(","))].join("\n"))}>Export CSV</Button>{message && <p className="self-center text-sm text-slate-500">{message}</p>}</div>
-      {data.investments.map((investment) => <div key={investment.id} className="rounded-lg border border-line p-3"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold">{investment.investmentName}</p><p className="text-sm text-slate-500">{investment.investmentType} - {investment.tickerSymbol || "manual"} - units {investment.units}</p><div className="mt-2 grid gap-1 text-sm md:grid-cols-4"><span>Invested {currency.format(investment.amountInvested)}</span><span>Current {currency.format(investment.currentValue)}</span><span className={investment.gainLoss >= 0 ? "text-green-700" : "text-red-700"}>{currency.format(investment.gainLoss)} ({investment.returnPercentage}%)</span><span>Price {currency.format(investment.currentPrice)}</span></div><div className="mt-2 flex flex-wrap gap-2"><Badge tone={investment.priceUpdateStatus === "Updated" ? "green" : investment.priceUpdateStatus === "Update Failed" ? "red" : "amber"}>{investment.priceUpdateStatus}</Badge><Badge tone="slate">{investment.priceSource || "Manual"}</Badge><Badge tone="slate">{investment.lastPriceUpdatedAt ? new Date(investment.lastPriceUpdatedAt).toLocaleString() : "Not updated"}</Badge></div></div><div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => void refreshInvestment(investment)}>Update price</Button><RowActions onEdit={() => setEditing(investment)} onDelete={() => confirmDelete(() => remove("investments", investment.id))} /></div></div></div>)}
-    </CrudLayout>
-  );
-}
-
-function FinancialGoalsPage() {
-  const { data, user, upsert, remove } = useStore();
-  const [editing, setEditing] = useState<FinancialGoal | null>(null);
-  return (
-    <CrudLayout title="Financial goals" form={<FinancialGoalForm item={editing} investments={data.investments} onCancel={() => setEditing(null)} onSave={(item) => { if (user) void upsert("financialGoals", { ...item, userId: user.id }); setEditing(null); }} />}>
-      {data.financialGoals.map((goal) => { const progress = goalProgress(goal); return <div key={goal.id} className="rounded-lg border border-line p-3"><div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{goal.goalName}</p><p className="text-sm text-slate-500">Target {currency.format(goal.targetAmount)} by {goal.targetDate} - monthly required {currency.format(progress.monthlyRequired)}</p></div><RowActions onEdit={() => setEditing(goal)} onDelete={() => confirmDelete(() => remove("financialGoals", goal.id))} /></div><div className="mt-3"><ProgressBar value={progress.progress} /></div><p className="mt-2 text-sm text-slate-500">{progress.progress}% complete, {currency.format(progress.remaining)} remaining</p></div>; })}
-    </CrudLayout>
-  );
-}
-
-function FinanceAnalytics({ month, weekStart }: { month: string; weekStart: string }) {
-  const { data } = useStore();
-  const scoped = financeMonthData(data, month);
-  const metrics = financeMetrics(data, month);
-  const history = Object.entries(data.investmentValueHistory.reduce<Record<string, number>>((acc, item) => { acc[item.valueDate] = (acc[item.valueDate] || 0) + item.currentValue; return acc; }, {})).map(([date, value]) => ({ date, value }));
-  return (
-    <AnalyticsGrid>
-      <Metric title="Savings rate" value={`${metrics.savingsRate}%`} />
-      <Metric title="Remaining balance" value={currency.format(metrics.remainingBalance)} />
-      <Metric title="EMI-to-income" value={`${metrics.emiToIncome}%`} />
-      <Metric title="Finance score" value={`${metrics.financeScore}/100`} />
-      <ChartCard title="Daily expenses"><BarChartBox data={dailyExpenseSeries(data, weekStart)} bars={[["expense", "#DC2626"]]} /></ChartCard>
-      <ChartCard title="Category-wise spending"><PieChartBox data={categoryTotals(scoped.expenses)} /></ChartCard>
-      <ChartCard title="Need vs Want vs EMI vs Investment"><BarChartBox data={natureTotals(scoped.expenses).map((item) => ({ day: item.name, expense: item.value }))} bars={[["expense", "#D97706"]]} /></ChartCard>
-      <ChartCard title="Payment mode split"><PieChartBox data={paymentModeTotals(scoped.expenses)} /></ChartCard>
-      <ChartCard title="Monthly spending trend"><LineChartBox data={monthlyTrend(data)} xKey="month" lineKey="expense" /></ChartCard>
-      <ChartCard title="Investment allocation"><PieChartBox data={investmentAllocation(data.investments)} /></ChartCard>
-      <ChartCard title="Portfolio value over time"><LineChartBox data={history} xKey="date" lineKey="value" /></ChartCard>
-      <Card className="md:col-span-2"><h2 className="font-semibold">Goals</h2><div className="mt-4 grid gap-3">{data.financialGoals.map((goal) => { const progress = goalProgress(goal); return <div key={goal.id}><div className="mb-1 flex justify-between text-sm"><span>{goal.goalName}</span><span>{progress.progress}%</span></div><ProgressBar value={progress.progress} /></div>; })}</div></Card>
-    </AnalyticsGrid>
-  );
-}
-
-function MonthlyFinanceReviewPage({ month }: { month: string }) {
-  const { data, user, upsert } = useStore();
-  const existing = data.monthlyFinanceReviews.find((item) => item.month === month);
-  const [review, setReview] = useState<MonthlyFinanceReview>(existing || { id: newId("mfr"), userId: user?.id || "", month, wentWell: "", overspentAreas: "", avoidableExpenses: "", emisPaidSummary: "", investmentsMadeSummary: "", savingsSummary: "", nextMonthPlan: "", notes: "", autoSummaryJson: {}, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-  const summary = monthlyFinanceSummary(data, month);
-  function setField(field: keyof MonthlyFinanceReview, value: string) {
-    setReview((current) => ({ ...current, [field]: value, updatedAt: new Date().toISOString() }));
-  }
-  return (
-    <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
-      <Card><h2 className="font-semibold">Auto monthly summary</h2><div className="mt-4 grid gap-2 text-sm">{Object.entries(summary).map(([key, value]) => <div key={key} className="rounded-md bg-soft p-2"><span className="font-medium">{labelize(key)}: </span>{Array.isArray(value) ? value.join(", ") || "None" : typeof value === "number" ? currency.format(value) : String(value)}</div>)}</div><Button className="mt-4 w-full" onClick={() => setReview((current) => ({ ...current, autoSummaryJson: summary }))}>Attach summary</Button></Card>
-      <Card><h2 className="font-semibold">Monthly finance review</h2><div className="mt-4 grid gap-3 md:grid-cols-2">{(["wentWell", "overspentAreas", "avoidableExpenses", "emisPaidSummary", "investmentsMadeSummary", "savingsSummary", "nextMonthPlan", "notes"] as const).map((field) => <Field key={field} label={labelize(field)}><textarea className={inputClass} rows={4} value={String(review[field])} onChange={(e) => setField(field, e.target.value)} /></Field>)}</div><Button className="mt-4" onClick={() => user && upsert("monthlyFinanceReviews", { ...review, userId: user.id, month, autoSummaryJson: Object.keys(review.autoSummaryJson).length ? review.autoSummaryJson : summary })}><Save size={16} /> Save review</Button></Card>
-    </div>
-  );
-}
-
 function SettingsPage() {
-  const { mode, user, resetDemo, data, upsert, remove, changePassword } = useStore();
-  const stamp = new Date().toISOString();
-  const [settings, setSettings] = useState<FinanceSettings>(data.financeSettings[0] || { id: newId("finset"), userId: user?.id || "", defaultCurrency: "INR", defaultMonthlyIncome: 0, monthStartDate: 1, emiReminderDays: 3, investmentUpdateReminderFrequency: "Weekly", createdAt: stamp, updatedAt: stamp });
+  const { mode, user, resetDemo, data, changePassword } = useStore();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -1258,22 +909,6 @@ function SettingsPage() {
     }
   }
 
-  async function deleteFinanceData() {
-    if (!window.confirm("Delete all finance data? This keeps your work/task/skill data.")) return;
-    const collections: (keyof typeof data)[] = ["incomeEntries", "expenses", "emis", "emiPayments", "investments", "investmentValueHistory", "financialGoals", "monthlyFinanceReviews"];
-    for (const collection of collections) {
-      for (const item of data[collection] as { id: string }[]) {
-        await remove(collection, item.id);
-      }
-    }
-  }
-
-  function exportFinanceSummary() {
-    const month = monthKey();
-    const summary = monthlyFinanceSummary(data, month);
-    downloadCsv("monthly-finance-summary.csv", Object.entries(summary).map(([key, value]) => `${key},${Array.isArray(value) ? value.join("|") : value}`).join("\n"));
-  }
-
   return (
     <div className="grid gap-4 xl:grid-cols-2">
       <Card>
@@ -1296,24 +931,6 @@ function SettingsPage() {
           {passwordMessage && <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">{passwordMessage}</p>}
           <Button className="w-fit" type="submit" disabled={changingPassword || mode !== "supabase"}>{changingPassword ? "Changing password..." : "Change password"}</Button>
         </form>
-      </Card>
-      <Card>
-        <h2 className="font-semibold">Finance settings</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <Field label="Default currency"><input className={inputClass} value={settings.defaultCurrency} disabled /></Field>
-          <NumberField label="Default monthly income" value={settings.defaultMonthlyIncome} onChange={(v) => setSettings({ ...settings, defaultMonthlyIncome: v })} />
-          <NumberField label="Month start date" value={settings.monthStartDate} onChange={(v) => setSettings({ ...settings, monthStartDate: v })} />
-          <NumberField label="EMI reminder days" value={settings.emiReminderDays} onChange={(v) => setSettings({ ...settings, emiReminderDays: v })} />
-          <SelectField label="Investment update reminder" value={settings.investmentUpdateReminderFrequency} options={["Daily", "Weekly", "Monthly"]} onChange={(v) => setSettings({ ...settings, investmentUpdateReminderFrequency: v as FinanceSettings["investmentUpdateReminderFrequency"] })} />
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button onClick={() => user && upsert("financeSettings", { ...settings, userId: user.id, updatedAt: new Date().toISOString() })}>Save finance settings</Button>
-          <Button variant="secondary" onClick={() => downloadCsv("expenses.csv", ["date,title,amount,category,payment_mode,notes", ...data.expenses.map((item) => [item.expenseDate, item.title, item.amount, item.category, item.paymentMode, item.notes].join(","))].join("\n"))}>Export expenses</Button>
-          <Button variant="secondary" onClick={() => downloadCsv("emi-list.csv", ["name,amount,due_day,status", ...data.emis.map((item) => [item.emiName, item.emiAmount, item.dueDay, item.status].join(","))].join("\n"))}>Export EMI list</Button>
-          <Button variant="secondary" onClick={exportFinanceSummary}>Export summary</Button>
-          <Button variant="danger" onClick={deleteFinanceData}>Delete finance data</Button>
-        </div>
-        <p className="mt-3 text-xs text-slate-500">Security note: this app stores manual finance tracking data only. Do not store bank credentials, card numbers, UPI PINs, OTPs, or broker passwords.</p>
       </Card>
     </div>
   );
@@ -1410,95 +1027,6 @@ function TimeLogForm({ item, workTasks, learningTasks, onSave, onCancel }: { ite
   </FormGrid>;
 }
 
-function IncomeForm({ item, month, onSave, onCancel }: { item: IncomeEntry | null; month: string; onSave: (item: IncomeEntry) => void; onCancel: () => void }) {
-  const stamp = new Date().toISOString();
-  const [income, setIncome] = useState<IncomeEntry>(item || { id: newId("inc"), userId: "", sourceName: "", incomeType: "Salary", amount: 0, receivedDate: toDateInput(new Date()), month, isRecurring: true, notes: "", createdAt: stamp, updatedAt: stamp });
-  return <FormGrid onSubmit={() => income.sourceName.trim() && onSave({ ...income, month: income.receivedDate.slice(0, 7), updatedAt: new Date().toISOString() })} onCancel={onCancel}>
-    <TextField label="Income source" value={income.sourceName} onChange={(v) => setIncome({ ...income, sourceName: v })} required />
-    <SelectField label="Income type" value={income.incomeType} options={["Salary", "Freelance", "Bonus", "Other"]} onChange={(v) => setIncome({ ...income, incomeType: v as IncomeEntry["incomeType"] })} />
-    <NumberField label="Amount" value={income.amount} onChange={(v) => setIncome({ ...income, amount: v })} />
-    <TextField label="Date received" type="date" value={income.receivedDate} onChange={(v) => setIncome({ ...income, receivedDate: v })} />
-    <CheckboxField label="Recurring income" checked={income.isRecurring} onChange={(v) => setIncome({ ...income, isRecurring: v })} />
-    <TextField label="Notes" value={income.notes} onChange={(v) => setIncome({ ...income, notes: v })} textarea />
-  </FormGrid>;
-}
-
-function ExpenseForm({ item, onSave, onCancel }: { item: Expense | null; onSave: (item: Expense) => void; onCancel: () => void }) {
-  const stamp = new Date().toISOString();
-  const [expense, setExpense] = useState<Expense>(item || { id: newId("exp"), userId: "", title: "", amount: 0, expenseDate: toDateInput(new Date()), expenseTime: "09:00", category: "Food", subCategory: "", paymentMode: "UPI", expenseNature: "Need", notes: "", isRecurring: false, createdAt: stamp, updatedAt: stamp });
-  return <FormGrid onSubmit={() => expense.title.trim() && onSave({ ...expense, updatedAt: new Date().toISOString() })} onCancel={onCancel}>
-    <TextField label="Expense title" value={expense.title} onChange={(v) => setExpense({ ...expense, title: v })} required />
-    <NumberField label="Amount" value={expense.amount} onChange={(v) => setExpense({ ...expense, amount: v })} />
-    <TextField label="Date" type="date" value={expense.expenseDate} onChange={(v) => setExpense({ ...expense, expenseDate: v })} />
-    <TextField label="Time" type="time" value={expense.expenseTime} onChange={(v) => setExpense({ ...expense, expenseTime: v })} />
-    <SelectField label="Category" value={expense.category} options={expenseCategories} onChange={(v) => setExpense({ ...expense, category: v as Expense["category"] })} />
-    <TextField label="Sub-category" value={expense.subCategory} onChange={(v) => setExpense({ ...expense, subCategory: v })} />
-    <SelectField label="Payment mode" value={expense.paymentMode} options={paymentModes} onChange={(v) => setExpense({ ...expense, paymentMode: v as Expense["paymentMode"] })} />
-    <SelectField label="Expense nature" value={expense.expenseNature} options={["Need", "Want", "EMI", "Investment", "Other"]} onChange={(v) => setExpense({ ...expense, expenseNature: v as Expense["expenseNature"] })} />
-    <CheckboxField label="Recurring expense" checked={expense.isRecurring} onChange={(v) => setExpense({ ...expense, isRecurring: v })} />
-    <TextField label="Notes" value={expense.notes} onChange={(v) => setExpense({ ...expense, notes: v })} textarea />
-  </FormGrid>;
-}
-
-function EmiForm({ item, onSave, onCancel }: { item: Emi | null; onSave: (item: Emi) => void; onCancel: () => void }) {
-  const stamp = new Date().toISOString();
-  const [emi, setEmi] = useState<Emi>(item || { id: newId("emi"), userId: "", emiName: "", emiType: "Education Loan", emiAmount: 0, dueDay: 5, startDate: toDateInput(new Date()), endDate: toDateInput(new Date()), totalLoanAmount: 0, interestRate: 0, lenderName: "", isRecurring: true, status: "Upcoming", reminderDaysBefore: 3, notes: "", createdAt: stamp, updatedAt: stamp });
-  return <FormGrid onSubmit={() => emi.emiName.trim() && onSave({ ...emi, updatedAt: new Date().toISOString() })} onCancel={onCancel}>
-    <TextField label="EMI name" value={emi.emiName} onChange={(v) => setEmi({ ...emi, emiName: v })} required />
-    <SelectField label="EMI type" value={emi.emiType} options={["Education Loan", "Personal Loan", "Credit Card EMI", "Product EMI", "Other"]} onChange={(v) => setEmi({ ...emi, emiType: v as Emi["emiType"] })} />
-    <NumberField label="EMI amount" value={emi.emiAmount} onChange={(v) => setEmi({ ...emi, emiAmount: v })} />
-    <DayOfMonthField label="Monthly due day" value={emi.dueDay} onChange={(v) => setEmi({ ...emi, dueDay: v })} />
-    <TextField label="Start date" type="date" value={emi.startDate} onChange={(v) => setEmi({ ...emi, startDate: v })} />
-    <TextField label="End date" type="date" value={emi.endDate} onChange={(v) => setEmi({ ...emi, endDate: v })} />
-    <NumberField label="Total loan amount" value={emi.totalLoanAmount} onChange={(v) => setEmi({ ...emi, totalLoanAmount: v })} />
-    <NumberField label="Interest rate" value={emi.interestRate} onChange={(v) => setEmi({ ...emi, interestRate: v })} />
-    <TextField label="Lender name" value={emi.lenderName} onChange={(v) => setEmi({ ...emi, lenderName: v })} />
-    <SelectField label="Status" value={emi.status} options={["Upcoming", "Paid", "Missed", "Closed"]} onChange={(v) => setEmi({ ...emi, status: v as Emi["status"] })} />
-    <NumberField label="Reminder days" value={emi.reminderDaysBefore} onChange={(v) => setEmi({ ...emi, reminderDaysBefore: v })} />
-    <CheckboxField label="Auto-repeat monthly" checked={emi.isRecurring} onChange={(v) => setEmi({ ...emi, isRecurring: v })} />
-    <TextField label="Notes" value={emi.notes} onChange={(v) => setEmi({ ...emi, notes: v })} textarea />
-  </FormGrid>;
-}
-
-function InvestmentForm({ item, goals, onSave, onCancel }: { item: Investment | null; goals: FinancialGoal[]; onSave: (item: Investment) => void; onCancel: () => void }) {
-  const stamp = new Date().toISOString();
-  const [investment, setInvestment] = useState<Investment>(item || { id: newId("inv"), userId: "", investmentName: "", investmentType: "Mutual Fund", platform: "", amountInvested: 0, currentValue: 0, investmentDate: toDateInput(new Date()), tickerSymbol: "", isin: "", marketExchange: "NSE", units: 0, averageBuyPrice: 0, currentPrice: 0, linkedGoalId: "", riskLevel: "Medium", notes: "", gainLoss: 0, returnPercentage: 0, priceSource: "Manual", priceUpdateStatus: "Manual Update Required", lastPriceUpdatedAt: "", isPriceTrackingEnabled: true, manualCurrentValue: 0, createdAt: stamp, updatedAt: stamp });
-  const automaticallyTracked = ["Mutual Fund", "Stocks", "ETF", "Gold ETF", "Crypto"].includes(investment.investmentType);
-  return <FormGrid onSubmit={() => investment.investmentName.trim() && onSave(calculateInvestment({ ...investment, updatedAt: new Date().toISOString() }))} onCancel={onCancel}>
-    <TextField label="Investment name" value={investment.investmentName} onChange={(v) => setInvestment({ ...investment, investmentName: v })} required />
-    <SelectField label="Type" value={investment.investmentType} options={["Mutual Fund", "Stocks", "ETF", "Gold", "Gold ETF", "Digital Gold", "Fixed Deposit", "Recurring Deposit", "PPF", "NPS", "Crypto", "Other"]} onChange={(v) => setInvestment({ ...investment, investmentType: v as Investment["investmentType"], isPriceTrackingEnabled: ["Mutual Fund", "Stocks", "ETF", "Gold ETF", "Crypto"].includes(v) })} />
-    <TextField label="Platform / broker" value={investment.platform} onChange={(v) => setInvestment({ ...investment, platform: v })} />
-    <NumberField label="Amount invested" value={investment.amountInvested} onChange={(v) => setInvestment({ ...investment, amountInvested: v })} />
-    <NumberField label="Units / quantity" value={investment.units} onChange={(v) => setInvestment({ ...investment, units: v })} />
-    <NumberField label="Average buy price" value={investment.averageBuyPrice} onChange={(v) => setInvestment({ ...investment, averageBuyPrice: v })} />
-    <NumberField label="Current price" value={investment.currentPrice} onChange={(v) => setInvestment({ ...investment, currentPrice: v })} />
-    <NumberField label="Manual current value" value={investment.manualCurrentValue} onChange={(v) => setInvestment({ ...investment, manualCurrentValue: v, currentValue: v })} />
-    <TextField label="Investment date" type="date" value={investment.investmentDate} onChange={(v) => setInvestment({ ...investment, investmentDate: v })} />
-    <TextField label={investment.investmentType === "Mutual Fund" ? "Mutual fund scheme code" : investment.investmentType === "Crypto" ? "CoinGecko asset ID" : "Ticker symbol"} value={investment.tickerSymbol} onChange={(v) => setInvestment({ ...investment, tickerSymbol: v.trim() })} />
-    <TextField label="Exchange / market" value={investment.marketExchange} onChange={(v) => setInvestment({ ...investment, marketExchange: v })} />
-    <TextField label="ISIN optional" value={investment.isin} onChange={(v) => setInvestment({ ...investment, isin: v })} />
-    <SelectField label="Risk level" value={investment.riskLevel} options={["Low", "Medium", "High"]} onChange={(v) => setInvestment({ ...investment, riskLevel: v as Investment["riskLevel"] })} />
-    <SelectField label="Linked goal" value={investment.linkedGoalId} options={["", ...goals.map((goal) => goal.id)]} labels={Object.fromEntries([["", "None"], ...goals.map((goal) => [goal.id, goal.goalName])])} onChange={(v) => setInvestment({ ...investment, linkedGoalId: v })} />
-    <CheckboxField label="Automatically update price when Investments opens" checked={investment.isPriceTrackingEnabled} onChange={(v) => setInvestment({ ...investment, isPriceTrackingEnabled: v })} />
-    <p className="rounded-md border border-[#263340] bg-[#0a111a] px-3 py-2 text-xs leading-5 text-slate-500">{automaticallyTracked ? "Automatic updates run when the saved price is more than 6 hours old. Stocks and ETFs use the ticker and exchange; mutual funds use the scheme code; crypto uses its CoinGecko ID." : "This investment type does not have a reliable public price feed here, so keep its current value updated manually."}</p>
-    <TextField label="Notes" value={investment.notes} onChange={(v) => setInvestment({ ...investment, notes: v })} textarea />
-  </FormGrid>;
-}
-
-function FinancialGoalForm({ item, investments, onSave, onCancel }: { item: FinancialGoal | null; investments: Investment[]; onSave: (item: FinancialGoal) => void; onCancel: () => void }) {
-  const stamp = new Date().toISOString();
-  const [goal, setGoal] = useState<FinancialGoal>(item || { id: newId("goal"), userId: "", goalName: "", targetAmount: 0, currentSavedAmount: 0, targetDate: toDateInput(new Date()), priority: "Medium", linkedInvestmentId: "", notes: "", createdAt: stamp, updatedAt: stamp });
-  return <FormGrid onSubmit={() => goal.goalName.trim() && onSave({ ...goal, updatedAt: new Date().toISOString() })} onCancel={onCancel}>
-    <TextField label="Goal name" value={goal.goalName} onChange={(v) => setGoal({ ...goal, goalName: v })} required />
-    <NumberField label="Target amount" value={goal.targetAmount} onChange={(v) => setGoal({ ...goal, targetAmount: v })} />
-    <NumberField label="Current saved amount" value={goal.currentSavedAmount} onChange={(v) => setGoal({ ...goal, currentSavedAmount: v })} />
-    <TextField label="Target date" type="date" value={goal.targetDate} onChange={(v) => setGoal({ ...goal, targetDate: v })} />
-    <SelectField label="Priority" value={goal.priority} options={["Low", "Medium", "High"]} onChange={(v) => setGoal({ ...goal, priority: v as FinancialGoal["priority"] })} />
-    <SelectField label="Linked investment" value={goal.linkedInvestmentId} options={["", ...investments.map((item) => item.id)]} labels={Object.fromEntries([["", "None"], ...investments.map((item) => [item.id, item.investmentName])])} onChange={(v) => setGoal({ ...goal, linkedInvestmentId: v })} />
-    <TextField label="Notes" value={goal.notes} onChange={(v) => setGoal({ ...goal, notes: v })} textarea />
-  </FormGrid>;
-}
-
 function FormGrid({ children, onSubmit, onCancel }: { children: React.ReactNode; onSubmit: () => void; onCancel: () => void }) {
   return (
     <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
@@ -1519,21 +1047,8 @@ function NumberField({ label, value, onChange }: { label: string; value: number;
   return <Field label={label}><input className={inputClass} type="number" min={0} value={value} onChange={(e) => onChange(Number(e.target.value))} /></Field>;
 }
 
-function DayOfMonthField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
-  return <Field label={label}><select className={inputClass} value={Math.min(31, Math.max(1, value || 1))} onChange={(event) => onChange(Number(event.target.value))}>{Array.from({ length: 31 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}</select></Field>;
-}
-
 function SelectField({ label, value, options, labels, onChange }: { label: string; value: string; options: string[]; labels?: Record<string, string>; onChange: (value: string) => void }) {
   return <Field label={label}><select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>{options.map((option) => <option key={option} value={option}>{labels?.[option] || option}</option>)}</select></Field>;
-}
-
-function CheckboxField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
-  return (
-    <label className="flex min-h-10 items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-medium text-slate-700">
-      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      {label}
-    </label>
-  );
 }
 
 function TaskRow({ title, meta, badges, onEdit, onDelete }: { title: string; meta: string; badges: string[]; onEdit: () => void; onDelete: () => void }) {
@@ -1574,11 +1089,6 @@ function PieChartBox({ data }: { data: { name: string; value: number }[] }) {
   return <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={data} dataKey="value" nameKey="name" outerRadius={90} label>{data.map((_, index) => <Cell key={index} fill={colors[index % colors.length]} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer>;
 }
 
-function LineChartBox({ data, xKey, lineKey }: { data: any[]; xKey: string; lineKey: string }) {
-  if (!data.length) return <EmptyState title="No chart data" text="Add records to populate this chart." />;
-  return <ResponsiveContainer width="100%" height="100%"><LineChart data={data}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey={xKey} /><YAxis /><Tooltip /><Line type="monotone" dataKey={lineKey} stroke="#2563EB" strokeWidth={2} /></LineChart></ResponsiveContainer>;
-}
-
 function badgeTone(label: string): "slate" | "blue" | "green" | "amber" | "red" {
   if (["Completed", "Done", "Low", "work"].includes(label)) return "green";
   if (["High", "Blocked", "Hard"].includes(label)) return "red";
@@ -1589,18 +1099,6 @@ function badgeTone(label: string): "slate" | "blue" | "green" | "amber" | "red" 
 
 function confirmDelete(action: () => void) {
   if (window.confirm("Delete this record?")) action();
-}
-
-function calculateInvestment(investment: Investment): Investment {
-  const currentValue = investment.currentValue || investment.manualCurrentValue || investment.units * investment.currentPrice || 0;
-  const gainLoss = currentValue - investment.amountInvested;
-  return {
-    ...investment,
-    currentValue,
-    manualCurrentValue: investment.manualCurrentValue || currentValue,
-    gainLoss,
-    returnPercentage: investment.amountInvested ? Math.round((gainLoss / investment.amountInvested) * 10000) / 100 : 0
-  };
 }
 
 function downloadCsv(filename: string, content: string) {

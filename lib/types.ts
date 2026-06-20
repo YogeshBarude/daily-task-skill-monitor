@@ -4,8 +4,6 @@ export type WorkStatus = "Backlog" | "Planned" | "In Progress" | "Blocked" | "Co
 export type LearningStatus = "Planned" | "In Progress" | "Done" | "Skipped";
 export type Priority = "Low" | "Medium" | "High";
 export type WeekStatus = "Not Started" | "In Progress" | "Completed" | "Overdue";
-export type FinanceStatus = "Upcoming" | "Paid" | "Missed" | "Closed";
-export type PriceUpdateStatus = "Updated" | "Update Failed" | "Manual Update Required" | "API Not Configured" | "Market Closed / Price Not Available";
 
 export type UserProfile = {
   id: ID;
@@ -100,170 +98,10 @@ export type WeeklyReview = {
   updatedAt: string;
 };
 
-export type IncomeEntry = {
-  id: ID;
-  userId: ID;
-  sourceName: string;
-  incomeType: "Salary" | "Freelance" | "Bonus" | "Other";
-  amount: number;
-  receivedDate: string;
-  month: string;
-  isRecurring: boolean;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type Expense = {
-  id: ID;
-  userId: ID;
-  title: string;
-  amount: number;
-  expenseDate: string;
-  expenseTime: string;
-  category: "Food" | "Travel" | "Shopping" | "Rent" | "EMI" | "Groceries" | "Health" | "Subscriptions" | "Entertainment" | "Family" | "Education" | "Work-related" | "Utilities" | "Investment" | "Other";
-  subCategory: string;
-  paymentMode: "UPI" | "Cash" | "Credit Card" | "Debit Card" | "Net Banking" | "Wallet" | "Other";
-  expenseNature: "Need" | "Want" | "EMI" | "Investment" | "Other";
-  notes: string;
-  isRecurring: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type Emi = {
-  id: ID;
-  userId: ID;
-  emiName: string;
-  emiType: "Education Loan" | "Personal Loan" | "Credit Card EMI" | "Product EMI" | "Other";
-  emiAmount: number;
-  dueDay: number;
-  startDate: string;
-  endDate: string;
-  totalLoanAmount: number;
-  interestRate: number;
-  lenderName: string;
-  isRecurring: boolean;
-  status: FinanceStatus;
-  reminderDaysBefore: number;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type EmiPayment = {
-  id: ID;
-  userId: ID;
-  emiId: ID;
-  paymentMonth: string;
-  paymentDate: string;
-  amountPaid: number;
-  status: "Paid" | "Missed";
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type Investment = {
-  id: ID;
-  userId: ID;
-  investmentName: string;
-  investmentType: "Mutual Fund" | "Stocks" | "ETF" | "Gold" | "Gold ETF" | "Digital Gold" | "Fixed Deposit" | "Recurring Deposit" | "PPF" | "NPS" | "Crypto" | "Other";
-  platform: string;
-  amountInvested: number;
-  currentValue: number;
-  investmentDate: string;
-  tickerSymbol: string;
-  isin: string;
-  marketExchange: string;
-  units: number;
-  averageBuyPrice: number;
-  currentPrice: number;
-  linkedGoalId: ID | "";
-  riskLevel: "Low" | "Medium" | "High";
-  notes: string;
-  gainLoss: number;
-  returnPercentage: number;
-  priceSource: string;
-  priceUpdateStatus: PriceUpdateStatus;
-  lastPriceUpdatedAt: string;
-  isPriceTrackingEnabled: boolean;
-  manualCurrentValue: number;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type InvestmentValueHistory = {
-  id: ID;
-  userId: ID;
-  investmentId: ID;
-  valueDate: string;
-  currentPrice: number;
-  currentValue: number;
-  amountInvested: number;
-  gainLoss: number;
-  returnPercentage: number;
-  priceSource: string;
-  updateType: "automatic" | "manual";
-  createdAt: string;
-};
-
-export type FinancialGoal = {
-  id: ID;
-  userId: ID;
-  goalName: string;
-  targetAmount: number;
-  currentSavedAmount: number;
-  targetDate: string;
-  priority: Priority;
-  linkedInvestmentId: ID | "";
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type MonthlyFinanceReview = {
-  id: ID;
-  userId: ID;
-  month: string;
-  wentWell: string;
-  overspentAreas: string;
-  avoidableExpenses: string;
-  emisPaidSummary: string;
-  investmentsMadeSummary: string;
-  savingsSummary: string;
-  nextMonthPlan: string;
-  notes: string;
-  autoSummaryJson: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type FinanceSettings = {
-  id: ID;
-  userId: ID;
-  defaultCurrency: "INR";
-  defaultMonthlyIncome: number;
-  monthStartDate: number;
-  emiReminderDays: number;
-  investmentUpdateReminderFrequency: "Daily" | "Weekly" | "Monthly";
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type AppData = {
   workTasks: WorkTask[];
   skills: Skill[];
   learningTasks: LearningTask[];
   timeLogs: TimeLog[];
   weeklyReviews: WeeklyReview[];
-  incomeEntries: IncomeEntry[];
-  expenses: Expense[];
-  emis: Emi[];
-  emiPayments: EmiPayment[];
-  investments: Investment[];
-  investmentValueHistory: InvestmentValueHistory[];
-  financialGoals: FinancialGoal[];
-  monthlyFinanceReviews: MonthlyFinanceReview[];
-  financeSettings: FinanceSettings[];
 };
