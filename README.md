@@ -105,7 +105,7 @@ Sprint columns:
 - Product owner
 - Work hours
 - Completion percentage
-- Task given date
+- Assigned date
 - Due date
 - Status
 
