@@ -206,28 +206,6 @@ create table if not exists public.expenses (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists public.budgets (
-  id text primary key,
-  user_id uuid not null references public.users(id) on delete cascade,
-  month text not null,
-  total_budget numeric not null default 0,
-  savings_target numeric not null default 0,
-  investment_target numeric not null default 0,
-  discretionary_limit numeric not null default 0,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table if not exists public.category_budgets (
-  id text primary key,
-  user_id uuid not null references public.users(id) on delete cascade,
-  budget_id text references public.budgets(id) on delete cascade,
-  category text not null,
-  budget_amount numeric not null default 0,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
 create table if not exists public.emis (
   id text primary key,
   user_id uuid not null references public.users(id) on delete cascade,
@@ -256,25 +234,6 @@ create table if not exists public.emi_payments (
   payment_date date not null,
   amount_paid numeric not null default 0,
   status text not null,
-  notes text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table if not exists public.upcoming_payments (
-  id text primary key,
-  user_id uuid not null references public.users(id) on delete cascade,
-  title text not null,
-  amount numeric not null default 0,
-  due_date date not null,
-  category text,
-  payment_type text not null,
-  is_recurring boolean not null default false,
-  billing_day integer,
-  due_day integer,
-  reminder_days_before integer not null default 3,
-  reminder_date date,
-  status text not null default 'Upcoming',
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -363,7 +322,6 @@ create table if not exists public.finance_settings (
   default_currency text not null default 'INR',
   default_monthly_income numeric not null default 0,
   month_start_date integer not null default 1,
-  budget_alert_threshold numeric not null default 80,
   emi_reminder_days integer not null default 3,
   investment_update_reminder_frequency text not null default 'Weekly',
   created_at timestamptz not null default now(),
@@ -374,16 +332,10 @@ drop trigger if exists set_income_entries_updated_at on public.income_entries;
 create trigger set_income_entries_updated_at before update on public.income_entries for each row execute function public.set_updated_at();
 drop trigger if exists set_expenses_updated_at on public.expenses;
 create trigger set_expenses_updated_at before update on public.expenses for each row execute function public.set_updated_at();
-drop trigger if exists set_budgets_updated_at on public.budgets;
-create trigger set_budgets_updated_at before update on public.budgets for each row execute function public.set_updated_at();
-drop trigger if exists set_category_budgets_updated_at on public.category_budgets;
-create trigger set_category_budgets_updated_at before update on public.category_budgets for each row execute function public.set_updated_at();
 drop trigger if exists set_emis_updated_at on public.emis;
 create trigger set_emis_updated_at before update on public.emis for each row execute function public.set_updated_at();
 drop trigger if exists set_emi_payments_updated_at on public.emi_payments;
 create trigger set_emi_payments_updated_at before update on public.emi_payments for each row execute function public.set_updated_at();
-drop trigger if exists set_upcoming_payments_updated_at on public.upcoming_payments;
-create trigger set_upcoming_payments_updated_at before update on public.upcoming_payments for each row execute function public.set_updated_at();
 drop trigger if exists set_investments_updated_at on public.investments;
 create trigger set_investments_updated_at before update on public.investments for each row execute function public.set_updated_at();
 drop trigger if exists set_financial_goals_updated_at on public.financial_goals;
@@ -395,11 +347,8 @@ create trigger set_finance_settings_updated_at before update on public.finance_s
 
 alter table public.income_entries enable row level security;
 alter table public.expenses enable row level security;
-alter table public.budgets enable row level security;
-alter table public.category_budgets enable row level security;
 alter table public.emis enable row level security;
 alter table public.emi_payments enable row level security;
-alter table public.upcoming_payments enable row level security;
 alter table public.investments enable row level security;
 alter table public.investment_value_history enable row level security;
 alter table public.financial_goals enable row level security;
@@ -416,16 +365,6 @@ create policy "Own expenses insert" on public.expenses for insert with check (au
 create policy "Own expenses update" on public.expenses for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Own expenses delete" on public.expenses for delete using (auth.uid() = user_id);
 
-create policy "Own budgets read" on public.budgets for select using (auth.uid() = user_id);
-create policy "Own budgets insert" on public.budgets for insert with check (auth.uid() = user_id);
-create policy "Own budgets update" on public.budgets for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "Own budgets delete" on public.budgets for delete using (auth.uid() = user_id);
-
-create policy "Own category budgets read" on public.category_budgets for select using (auth.uid() = user_id);
-create policy "Own category budgets insert" on public.category_budgets for insert with check (auth.uid() = user_id);
-create policy "Own category budgets update" on public.category_budgets for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "Own category budgets delete" on public.category_budgets for delete using (auth.uid() = user_id);
-
 create policy "Own emis read" on public.emis for select using (auth.uid() = user_id);
 create policy "Own emis insert" on public.emis for insert with check (auth.uid() = user_id);
 create policy "Own emis update" on public.emis for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -435,11 +374,6 @@ create policy "Own emi payments read" on public.emi_payments for select using (a
 create policy "Own emi payments insert" on public.emi_payments for insert with check (auth.uid() = user_id);
 create policy "Own emi payments update" on public.emi_payments for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Own emi payments delete" on public.emi_payments for delete using (auth.uid() = user_id);
-
-create policy "Own upcoming payments read" on public.upcoming_payments for select using (auth.uid() = user_id);
-create policy "Own upcoming payments insert" on public.upcoming_payments for insert with check (auth.uid() = user_id);
-create policy "Own upcoming payments update" on public.upcoming_payments for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "Own upcoming payments delete" on public.upcoming_payments for delete using (auth.uid() = user_id);
 
 create policy "Own investments read" on public.investments for select using (auth.uid() = user_id);
 create policy "Own investments insert" on public.investments for insert with check (auth.uid() = user_id);

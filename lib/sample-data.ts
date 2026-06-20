@@ -1,4 +1,4 @@
-import { AppData, Budget, CategoryBudget, Emi, Expense, FinanceSettings, FinancialGoal, IncomeEntry, Investment, InvestmentValueHistory, LearningTask, MonthlyFinanceReview, Skill, TimeLog, UpcomingPayment, UserProfile, WeeklyReview, WorkTask } from "./types";
+import { AppData, Emi, Expense, FinanceSettings, FinancialGoal, IncomeEntry, Investment, InvestmentValueHistory, LearningTask, MonthlyFinanceReview, Skill, TimeLog, UserProfile, WeeklyReview, WorkTask } from "./types";
 import { toDateInput, weekDays } from "./date";
 
 const now = new Date().toISOString();
@@ -190,28 +190,6 @@ export function createSampleData(userId = demoUser.id): AppData {
     expense("exp-8", userId, "Mutual Fund SIP", 5000, days[2].input, "Investment", "SIP", "Net Banking", "Investment")
   ];
 
-  const budgets: Budget[] = [
-    {
-      id: "bud-1",
-      userId,
-      month,
-      totalBudget: 35000,
-      savingsTarget: 20000,
-      investmentTarget: 10000,
-      discretionaryLimit: 9000,
-      createdAt: now,
-      updatedAt: now
-    }
-  ];
-
-  const categoryBudgets: CategoryBudget[] = [
-    categoryBudget("cb-1", userId, "bud-1", "Food", 8000),
-    categoryBudget("cb-2", userId, "bud-1", "Travel", 5000),
-    categoryBudget("cb-3", userId, "bud-1", "Shopping", 6000),
-    categoryBudget("cb-4", userId, "bud-1", "Subscriptions", 2000),
-    categoryBudget("cb-5", userId, "bud-1", "Health", 3000)
-  ];
-
   const emis: Emi[] = [
     {
       id: "emi-1",
@@ -249,11 +227,6 @@ export function createSampleData(userId = demoUser.id): AppData {
     }
   ];
 
-  const upcomingPayments: UpcomingPayment[] = [
-    payment("pay-1", userId, "Credit card bill", 3500, days[5].input, "Credit Card", "Credit Card Bill"),
-    payment("pay-2", userId, "Cloud subscription", 799, days[6].input, "Subscriptions", "Subscription")
-  ];
-
   const investments: Investment[] = [
     investment("inv-1", userId, "Mutual Fund SIP", "Mutual Fund", "Groww", 5000, 5125, "MF12345", "NSE", 50, 100, 102.5, "Medium", "Manual Update Required"),
     investment("inv-2", userId, "Gold ETF / Digital Gold", "Gold ETF", "Broker", 3000, 3090, "GOLDETF", "NSE", 10, 300, 309, "Low", "API Not Configured"),
@@ -289,7 +262,6 @@ export function createSampleData(userId = demoUser.id): AppData {
       defaultCurrency: "INR",
       defaultMonthlyIncome: 90000,
       monthStartDate: 1,
-      budgetAlertThreshold: 80,
       emiReminderDays: 3,
       investmentUpdateReminderFrequency: "Weekly",
       createdAt: now,
@@ -297,7 +269,7 @@ export function createSampleData(userId = demoUser.id): AppData {
     }
   ];
 
-  return { workTasks, skills, learningTasks, timeLogs, weeklyReviews, incomeEntries, expenses, budgets, categoryBudgets, emis, emiPayments, upcomingPayments, investments, investmentValueHistory, financialGoals, monthlyFinanceReviews, financeSettings };
+  return { workTasks, skills, learningTasks, timeLogs, weeklyReviews, incomeEntries, expenses, emis, emiPayments, investments, investmentValueHistory, financialGoals, monthlyFinanceReviews, financeSettings };
 }
 
 function skill(id: string, userId: string, skillName: Skill["skillName"], category: Skill["category"], currentLevel: Skill["currentLevel"], deadline: string, weeklyTargetMinutes: number): Skill {
@@ -337,17 +309,6 @@ function log(id: string, userId: string, linkedType: TimeLog["linkedType"], link
 
 function expense(id: string, userId: string, title: string, amount: number, expenseDate: string, category: Expense["category"], subCategory: string, paymentMode: Expense["paymentMode"], expenseNature: Expense["expenseNature"]): Expense {
   return { id, userId, title, amount, expenseDate, expenseTime: "10:00", category, subCategory, paymentMode, expenseNature, notes: "", isRecurring: false, createdAt: now, updatedAt: now };
-}
-
-function categoryBudget(id: string, userId: string, budgetId: string, category: Expense["category"], budgetAmount: number): CategoryBudget {
-  return { id, userId, budgetId, category, budgetAmount, createdAt: now, updatedAt: now };
-}
-
-function payment(id: string, userId: string, title: string, amount: number, dueDate: string, category: string, paymentType: UpcomingPayment["paymentType"]): UpcomingPayment {
-  const dueDay = new Date(`${dueDate}T00:00:00`).getDate();
-  const reminderDaysBefore = 3;
-  const reminderDate = toDateInput(new Date(new Date(`${dueDate}T00:00:00`).getTime() - reminderDaysBefore * 24 * 60 * 60 * 1000));
-  return { id, userId, title, amount, dueDate, category, paymentType, isRecurring: false, billingDay: paymentType === "Credit Card Bill" ? Math.max(1, dueDay - 18) : 0, dueDay, reminderDaysBefore, reminderDate, status: "Upcoming", notes: "", createdAt: now, updatedAt: now };
 }
 
 function investment(id: string, userId: string, investmentName: string, investmentType: Investment["investmentType"], platform: string, amountInvested: number, currentValue: number, tickerSymbol: string, marketExchange: string, units: number, averageBuyPrice: number, currentPrice: number, riskLevel: Investment["riskLevel"], priceUpdateStatus: Investment["priceUpdateStatus"]): Investment {

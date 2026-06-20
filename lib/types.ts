@@ -131,28 +131,6 @@ export type Expense = {
   updatedAt: string;
 };
 
-export type Budget = {
-  id: ID;
-  userId: ID;
-  month: string;
-  totalBudget: number;
-  savingsTarget: number;
-  investmentTarget: number;
-  discretionaryLimit: number;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type CategoryBudget = {
-  id: ID;
-  userId: ID;
-  budgetId: ID;
-  category: Expense["category"];
-  budgetAmount: number;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type Emi = {
   id: ID;
   userId: ID;
@@ -181,25 +159,6 @@ export type EmiPayment = {
   paymentDate: string;
   amountPaid: number;
   status: "Paid" | "Missed";
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type UpcomingPayment = {
-  id: ID;
-  userId: ID;
-  title: string;
-  amount: number;
-  dueDate: string;
-  category: string;
-  paymentType: "EMI" | "Credit Card Bill" | "Subscription" | "Insurance" | "Rent" | "Education Fee" | "Other Planned Payment";
-  isRecurring: boolean;
-  billingDay: number;
-  dueDay: number;
-  reminderDaysBefore: number;
-  reminderDate: string;
-  status: "Upcoming" | "Paid" | "Missed";
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -286,7 +245,6 @@ export type FinanceSettings = {
   defaultCurrency: "INR";
   defaultMonthlyIncome: number;
   monthStartDate: number;
-  budgetAlertThreshold: number;
   emiReminderDays: number;
   investmentUpdateReminderFrequency: "Daily" | "Weekly" | "Monthly";
   createdAt: string;
@@ -301,11 +259,8 @@ export type AppData = {
   weeklyReviews: WeeklyReview[];
   incomeEntries: IncomeEntry[];
   expenses: Expense[];
-  budgets: Budget[];
-  categoryBudgets: CategoryBudget[];
   emis: Emi[];
   emiPayments: EmiPayment[];
-  upcomingPayments: UpcomingPayment[];
   investments: Investment[];
   investmentValueHistory: InvestmentValueHistory[];
   financialGoals: FinancialGoal[];

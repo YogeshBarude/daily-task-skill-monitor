@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { Session } from "@supabase/supabase-js";
 import { createSampleData, demoUser } from "./sample-data";
 import { hasSupabaseConfig, supabase } from "./supabase";
-import { AppData, LearningTask, Skill, TimeLog, UpcomingPayment, UserProfile, WeeklyReview, WorkTask } from "./types";
+import { AppData, LearningTask, Skill, TimeLog, UserProfile, WeeklyReview, WorkTask } from "./types";
 
 type Collection = keyof AppData;
 type Entity = AppData[keyof AppData][number];
@@ -36,11 +36,8 @@ const tableMap: Record<Collection, string> = {
   weeklyReviews: "weekly_reviews",
   incomeEntries: "income_entries",
   expenses: "expenses",
-  budgets: "budgets",
-  categoryBudgets: "category_budgets",
   emis: "emis",
   emiPayments: "emi_payments",
-  upcomingPayments: "upcoming_payments",
   investments: "investments",
   investmentValueHistory: "investment_value_history",
   financialGoals: "financial_goals",
@@ -106,7 +103,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const loadSupabaseData = async (userId: string) => {
     if (!supabase) return;
     setLoading(true);
-    const [workTasks, skills, learningTasks, timeLogs, weeklyReviews, incomeEntries, expenses, budgets, categoryBudgets, emis, emiPayments, upcomingPayments, investments, investmentValueHistory, financialGoals, monthlyFinanceReviews, financeSettings] = await Promise.all([
+    const [workTasks, skills, learningTasks, timeLogs, weeklyReviews, incomeEntries, expenses, emis, emiPayments, investments, investmentValueHistory, financialGoals, monthlyFinanceReviews, financeSettings] = await Promise.all([
       supabase.from("work_tasks").select("*").eq("user_id", userId),
       supabase.from("skills").select("id,user_id,skill_name,category,current_level,target_level,weekly_target_minutes,deadline,created_at,updated_at").eq("user_id", userId),
       supabase.from("learning_tasks").select("id,user_id,skill_id,title,learning_type,planned_date,planned_minutes,actual_minutes,status,created_at,updated_at").eq("user_id", userId),
@@ -114,11 +111,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       supabase.from("weekly_reviews").select("*").eq("user_id", userId),
       supabase.from("income_entries").select("*").eq("user_id", userId),
       supabase.from("expenses").select("*").eq("user_id", userId),
-      supabase.from("budgets").select("*").eq("user_id", userId),
-      supabase.from("category_budgets").select("*").eq("user_id", userId),
       supabase.from("emis").select("*").eq("user_id", userId),
       supabase.from("emi_payments").select("*").eq("user_id", userId),
-      supabase.from("upcoming_payments").select("*").eq("user_id", userId),
       supabase.from("investments").select("*").eq("user_id", userId),
       supabase.from("investment_value_history").select("*").eq("user_id", userId),
       supabase.from("financial_goals").select("*").eq("user_id", userId),
@@ -133,11 +127,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       weeklyReviews: (weeklyReviews.data || []).map(fromWeeklyReview),
       incomeEntries: (incomeEntries.data || []).map(fromFinanceRow),
       expenses: (expenses.data || []).map(fromFinanceRow),
-      budgets: (budgets.data || []).map(fromFinanceRow),
-      categoryBudgets: (categoryBudgets.data || []).map(fromFinanceRow),
       emis: (emis.data || []).map(fromFinanceRow),
       emiPayments: (emiPayments.data || []).map(fromFinanceRow),
-      upcomingPayments: (upcomingPayments.data || []).map(fromFinanceRow).map(normalizeUpcomingPayment),
       investments: (investments.data || []).map(fromFinanceRow),
       investmentValueHistory: (investmentValueHistory.data || []).map(fromFinanceRow),
       financialGoals: (financialGoals.data || []).map(fromFinanceRow),
@@ -249,29 +240,8 @@ function normalizeAppData(data: AppData): AppData {
       receivedDate: task.receivedDate || task.assignedDate || today,
       dueDate: task.dueDate || task.assignedDate || today,
       completionPercentage: task.completionPercentage ?? (task.status === "Completed" ? 100 : 0)
-    })),
-    upcomingPayments: (data.upcomingPayments || []).map(normalizeUpcomingPayment)
+    }))
   };
-}
-
-function normalizeUpcomingPayment(payment: UpcomingPayment): UpcomingPayment {
-  const dueDay = payment.dueDay || Number(payment.dueDate?.slice(-2)) || 1;
-  const reminderDaysBefore = payment.reminderDaysBefore ?? 3;
-  const due = payment.dueDate ? new Date(`${payment.dueDate}T00:00:00`) : new Date();
-  return {
-    ...payment,
-    billingDay: payment.billingDay || 0,
-    dueDay,
-    reminderDaysBefore,
-    reminderDate: toDateString(new Date(due.getTime() - reminderDaysBefore * 24 * 60 * 60 * 1000))
-  };
-}
-
-function toDateString(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 function toDb(collection: Collection, item: Entity) {

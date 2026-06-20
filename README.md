@@ -36,7 +36,6 @@ A personal full-stack web prototype for tracking weekly work tasks, daily hours,
   - Finance dashboard
   - Income CRUD
   - Expense CRUD with CSV import/export
-  - Monthly budgets and category budgets
   - EMI tracker and EMI payment history
   - Upcoming payments
   - Investment tracker with manual value updates and server-side price refresh where possible
@@ -89,6 +88,7 @@ supabase/migrations/20260620_add_sprint_fields.sql
 supabase/migrations/20260620_secure_user_profile_trigger.sql
 supabase/migrations/20260620_finance_schedule_fields.sql
 supabase/migrations/20260620_simplify_learning_module.sql
+supabase/migrations/20260620_remove_budgets_and_payments.sql
 ```
 
 This adds the sprint fields without deleting existing tasks.

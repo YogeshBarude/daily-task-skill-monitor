@@ -48,13 +48,13 @@ import {
 import { addDays, addMinutes, differenceInMinutes, format } from "date-fns";
 import { autoWeeklySummary, dailySeries, dashboardMetrics, priorityDistribution, productivityLabel, productivityScore, projectDistribution, scopedWeekData, skillCategoryDistribution, statusDistribution } from "@/lib/analytics";
 import { isInWeek, minutesToHours, toDateInput, weekBounds, weekDays } from "@/lib/date";
-import { budgetStatuses, categoryTotals, currency, dailyExpenseSeries, dueThisWeek, financeMetrics, financeMonthData, goalProgress, inMonth, investmentAllocation, monthlyFinanceSummary, monthlyTrend, monthKey, natureTotals, paymentModeTotals, portfolioMetrics, weeklyFinanceSummary } from "@/lib/finance";
+import { categoryTotals, currency, dailyExpenseSeries, financeMetrics, financeMonthData, goalProgress, inMonth, investmentAllocation, monthlyFinanceSummary, monthlyTrend, monthKey, natureTotals, paymentModeTotals, portfolioMetrics, weeklyFinanceSummary } from "@/lib/finance";
 import { newId, useStore } from "@/lib/storage";
 import { sprintCsv, sprintShareText, tasksForSprint } from "@/lib/sprint";
-import { Budget, CategoryBudget, Emi, Expense, FinancialGoal, FinanceSettings, IncomeEntry, Investment, InvestmentValueHistory, LearningTask, MonthlyFinanceReview, Skill, TimeLog, UpcomingPayment, WeeklyReview, WorkTask } from "@/lib/types";
+import { Emi, Expense, FinancialGoal, FinanceSettings, IncomeEntry, Investment, InvestmentValueHistory, LearningTask, MonthlyFinanceReview, Skill, TimeLog, WeeklyReview, WorkTask } from "@/lib/types";
 import { Badge, Button, Card, EmptyState, Field, ProgressBar, inputClass } from "./ui";
 
-type Tab = "Dashboard" | "Weekly Planner" | "Work Tasks" | "Sprint Plan" | "Skills" | "Time Tracker" | "Work Analytics" | "Learning Analytics" | "Weekly Review" | "Finance Dashboard" | "Expenses" | "Budget" | "EMI Tracker" | "Upcoming Payments" | "Investments" | "Financial Goals" | "Finance Analytics" | "Monthly Finance Review" | "Settings";
+type Tab = "Dashboard" | "Weekly Planner" | "Work Tasks" | "Sprint Plan" | "Skills" | "Time Tracker" | "Work Analytics" | "Learning Analytics" | "Weekly Review" | "Finance Dashboard" | "Expenses" | "EMI Tracker" | "Investments" | "Financial Goals" | "Finance Analytics" | "Monthly Finance Review" | "Settings";
 const navGroups: { label: string; items: { tab: Tab; label: string; icon: React.ElementType }[] }[] = [
   { label: "", items: [{ tab: "Dashboard", label: "Dashboard", icon: LayoutDashboard }] },
   {
@@ -80,9 +80,7 @@ const navGroups: { label: string; items: { tab: Tab; label: string; icon: React.
     items: [
       { tab: "Finance Dashboard", label: "Overview", icon: IndianRupee },
       { tab: "Expenses", label: "Income & expenses", icon: CreditCard },
-      { tab: "Budget", label: "Budgets", icon: BarChart3 },
       { tab: "EMI Tracker", label: "EMIs & loans", icon: WalletCards },
-      { tab: "Upcoming Payments", label: "Payments", icon: CalendarDays },
       { tab: "Investments", label: "Investments", icon: TrendingUp },
       { tab: "Financial Goals", label: "Financial goals", icon: Goal },
       { tab: "Finance Analytics", label: "Finance analytics", icon: BarChart3 },
@@ -103,10 +101,6 @@ function dateForMonthDay(month: string, day: number) {
   const [year, monthNumber] = month.split("-").map(Number);
   const finalDay = Math.min(Math.max(1, day), new Date(year, monthNumber, 0).getDate());
   return `${month}-${String(finalDay).padStart(2, "0")}`;
-}
-
-function reminderDateFor(dueDate: string, daysBefore: number) {
-  return toDateInput(addDays(new Date(`${dueDate}T00:00:00`), -Math.max(0, daysBefore)));
 }
 
 export function MonitorApp() {
@@ -185,8 +179,8 @@ export function MonitorApp() {
         <div className="mx-auto max-w-[1500px] p-3 sm:p-4 lg:p-5">
           {active !== "Dashboard" && (
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div><p className="text-xl font-semibold text-slate-100">{active}</p><p className="mt-1 text-xs text-slate-500">{active.includes("Finance") || ["Expenses", "Budget", "EMI Tracker", "Upcoming Payments", "Investments", "Financial Goals"].includes(active) ? `Month ${financeMonth}` : `Week of ${format(new Date(`${weekStart}T00:00:00`), "MMM d, yyyy")}`}</p></div>
-              {active.includes("Finance") || ["Expenses", "Budget", "EMI Tracker", "Upcoming Payments", "Investments", "Financial Goals"].includes(active) ? <input className={inputClass} type="month" value={financeMonth} onChange={(event) => setFinanceMonth(event.target.value)} /> : null}
+              <div><p className="text-xl font-semibold text-slate-100">{active}</p><p className="mt-1 text-xs text-slate-500">{active.includes("Finance") || ["Expenses", "EMI Tracker", "Investments", "Financial Goals"].includes(active) ? `Month ${financeMonth}` : `Week of ${format(new Date(`${weekStart}T00:00:00`), "MMM d, yyyy")}`}</p></div>
+              {active.includes("Finance") || ["Expenses", "EMI Tracker", "Investments", "Financial Goals"].includes(active) ? <input className={inputClass} type="month" value={financeMonth} onChange={(event) => setFinanceMonth(event.target.value)} /> : null}
             </div>
           )}
           {active === "Dashboard" && <Dashboard weekStart={weekStart} selectedDate={selectedDate} onSelectDate={selectDate} setActive={setActive} />}
@@ -200,9 +194,7 @@ export function MonitorApp() {
           {active === "Weekly Review" && <WeeklyReviewPage weekStart={weekStart} />}
           {active === "Finance Dashboard" && <FinanceDashboard month={financeMonth} weekStart={weekStart} setActive={setActive} />}
           {active === "Expenses" && <ExpensesPage month={financeMonth} />}
-          {active === "Budget" && <BudgetPage month={financeMonth} />}
           {active === "EMI Tracker" && <EmiPage month={financeMonth} />}
-          {active === "Upcoming Payments" && <UpcomingPaymentsPage month={financeMonth} />}
           {active === "Investments" && <InvestmentsPage month={financeMonth} />}
           {active === "Financial Goals" && <FinancialGoalsPage />}
           {active === "Finance Analytics" && <FinanceAnalytics month={financeMonth} weekStart={weekStart} />}
@@ -888,7 +880,7 @@ function WeeklyReviewPage({ weekStart }: { weekStart: string }) {
 function FinanceDashboard({ month, weekStart, setActive }: { month: string; weekStart: string; setActive: (tab: Tab) => void }) {
   const { data } = useStore();
   const metrics = financeMetrics(data, month);
-  const weekly = weeklyFinanceSummary(data, weekStart, month);
+  const weekly = weeklyFinanceSummary(data, weekStart);
   return (
     <div className="grid gap-4">
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -909,15 +901,12 @@ function FinanceDashboard({ month, weekStart, setActive }: { month: string; week
           <div className="mt-4 grid gap-2 text-sm">
             <p>Highest category: <span className="font-semibold">{metrics.highestCategory}</span></p>
             <p>Average daily spend: <span className="font-semibold">{currency.format(metrics.averageDailySpend)}</span></p>
-            <p>Budget usage: <span className="font-semibold">{metrics.budgetUsage}%</span></p>
             <p>Expense-to-income: <span className="font-semibold">{metrics.expenseToIncome}%</span></p>
-            <p>Upcoming dues: <span className="font-semibold">{currency.format(metrics.upcomingDue)}</span></p>
           </div>
           <div className="mt-4 grid gap-2 text-sm">
             <p className="font-semibold">Weekly finance view</p>
             <p>Total weekly spend: {currency.format(weekly.totalWeeklySpend)}</p>
             <p>Highest spending day: {weekly.highestSpendingDay}</p>
-            <p>Budget remaining: {currency.format(weekly.budgetRemaining)}</p>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setActive("Expenses")}>Add expense</Button>
@@ -980,23 +969,6 @@ function ExpensesPage({ month }: { month: string }) {
   );
 }
 
-function BudgetPage({ month }: { month: string }) {
-  const { data, user, upsert, remove } = useStore();
-  const [budget, setBudget] = useState<Budget | null>(null);
-  const [catBudget, setCatBudget] = useState<CategoryBudget | null>(null);
-  const statuses = budgetStatuses(data, month);
-  return (
-    <div className="grid gap-4 xl:grid-cols-2">
-      <CrudLayout title="Monthly budget" form={<BudgetForm item={budget} month={month} onCancel={() => setBudget(null)} onSave={(item) => { if (user) void upsert("budgets", { ...item, userId: user.id }); setBudget(null); }} />}>
-        {data.budgets.filter((item) => item.month === month).map((item) => <TaskRow key={item.id} title={`${item.month}: ${currency.format(item.totalBudget)}`} meta={`Savings target ${currency.format(item.savingsTarget)} - Investment target ${currency.format(item.investmentTarget)}`} badges={["Budget"]} onEdit={() => setBudget(item)} onDelete={() => confirmDelete(() => remove("budgets", item.id))} />)}
-      </CrudLayout>
-      <CrudLayout title="Category budgets" form={<CategoryBudgetForm item={catBudget} budgets={data.budgets.filter((item) => item.month === month)} onCancel={() => setCatBudget(null)} onSave={(item) => { if (user) void upsert("categoryBudgets", { ...item, userId: user.id }); setCatBudget(null); }} />}>
-        {statuses.length ? statuses.map((item) => <div key={item.id} className="rounded-lg border border-line p-3"><div className="flex justify-between gap-2"><p className="font-semibold">{item.category}</p><Badge tone={item.status === "Safe" ? "green" : item.status === "Warning" ? "amber" : "red"}>{item.status}</Badge></div><p className="mt-1 text-sm text-slate-500">{currency.format(item.actual)} of {currency.format(item.budgetAmount)} used</p><div className="mt-2"><ProgressBar value={item.usage} /></div><div className="mt-3"><RowActions onEdit={() => setCatBudget(item)} onDelete={() => confirmDelete(() => remove("categoryBudgets", item.id))} /></div></div>) : <EmptyState title="No category budgets" text="Create a monthly budget and category budgets to track usage." />}
-      </CrudLayout>
-    </div>
-  );
-}
-
 function EmiPage({ month }: { month: string }) {
   const { data, user, upsert, remove } = useStore();
   const [editing, setEditing] = useState<Emi | null>(null);
@@ -1011,27 +983,6 @@ function EmiPage({ month }: { month: string }) {
     <CrudLayout title="EMI tracker" form={<EmiForm item={editing} onCancel={() => setEditing(null)} onSave={(item) => { if (user) void upsert("emis", { ...item, userId: user.id }); setEditing(null); }} />}>
       <div className="grid gap-2 md:grid-cols-3"><MiniMoney label="Monthly burden" value={metrics.totalEmi} /><Metric title="EMI-to-income" value={`${metrics.emiToIncome}%`} /><Metric title="Payments logged" value={data.emiPayments.filter((p) => p.paymentMonth === month).length} /></div>
       {data.emis.map((emi) => <div key={emi.id} className="rounded-lg border border-line p-3"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold">{emi.emiName}: {currency.format(emi.emiAmount)}</p><p className="text-sm text-slate-500">{emi.emiType} - due {format(new Date(`${dateForMonthDay(month, emi.dueDay)}T00:00:00`), "MMM d")} every month - {emi.lenderName}</p><div className="mt-2 flex gap-2"><Badge tone={badgeTone(emi.status)}>{emi.status}</Badge>{emi.status !== "Closed" && <Badge tone="amber">Reminder {emi.reminderDaysBefore} days before</Badge>}</div></div><div className="flex gap-2"><Button variant="secondary" onClick={() => markPaid(emi)}>Mark paid</Button><RowActions onEdit={() => setEditing(emi)} onDelete={() => confirmDelete(() => remove("emis", emi.id))} /></div></div></div>)}
-    </CrudLayout>
-  );
-}
-
-function UpcomingPaymentsPage({ month }: { month: string }) {
-  const { data, user, upsert, remove } = useStore();
-  const [editing, setEditing] = useState<UpcomingPayment | null>(null);
-  const today = toDateInput(new Date());
-  const payments = data.upcomingPayments
-    .map((item) => {
-      const dueDate = item.isRecurring ? dateForMonthDay(month, item.dueDay || Number(item.dueDate.slice(-2))) : item.dueDate;
-      return { ...item, dueDate, reminderDate: reminderDateFor(dueDate, item.reminderDaysBefore) };
-    })
-    .filter((item) => inMonth(item.dueDate, month));
-  return (
-    <CrudLayout title="Upcoming payments" form={<UpcomingPaymentForm item={editing} onCancel={() => setEditing(null)} onSave={(item) => { if (user) void upsert("upcomingPayments", { ...item, userId: user.id }); setEditing(null); }} />}>
-      <div className="grid gap-2 md:grid-cols-3"><Metric title="Due this week" value={payments.filter((p) => dueThisWeek(p.dueDate)).length} /><Metric title="Due this month" value={payments.length} /><Metric title="Reminders active" value={payments.filter((p) => p.status === "Upcoming" && p.reminderDate <= today && p.dueDate >= today).length} /></div>
-      {payments.map((payment) => {
-        const reminderActive = payment.status === "Upcoming" && payment.reminderDate <= today && payment.dueDate >= today;
-        return <TaskRow key={payment.id} title={`${payment.title}: ${currency.format(payment.amount)}`} meta={`${payment.paymentType}${payment.paymentType === "Credit Card Bill" && payment.billingDay ? ` - bill generated day ${payment.billingDay}` : ""} - due ${payment.dueDate} - remind ${payment.reminderDaysBefore} days before`} badges={[payment.status, reminderActive ? "Reminder active" : "", payment.isRecurring ? "Recurring" : "One-time"].filter(Boolean)} onEdit={() => setEditing(payment)} onDelete={() => confirmDelete(() => remove("upcomingPayments", payment.id))} />;
-      })}
     </CrudLayout>
   );
 }
@@ -1170,7 +1121,7 @@ function MonthlyFinanceReviewPage({ month }: { month: string }) {
 function SettingsPage() {
   const { mode, user, resetDemo, data, upsert, remove, changePassword } = useStore();
   const stamp = new Date().toISOString();
-  const [settings, setSettings] = useState<FinanceSettings>(data.financeSettings[0] || { id: newId("finset"), userId: user?.id || "", defaultCurrency: "INR", defaultMonthlyIncome: 0, monthStartDate: 1, budgetAlertThreshold: 80, emiReminderDays: 3, investmentUpdateReminderFrequency: "Weekly", createdAt: stamp, updatedAt: stamp });
+  const [settings, setSettings] = useState<FinanceSettings>(data.financeSettings[0] || { id: newId("finset"), userId: user?.id || "", defaultCurrency: "INR", defaultMonthlyIncome: 0, monthStartDate: 1, emiReminderDays: 3, investmentUpdateReminderFrequency: "Weekly", createdAt: stamp, updatedAt: stamp });
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -1210,7 +1161,7 @@ function SettingsPage() {
 
   async function deleteFinanceData() {
     if (!window.confirm("Delete all finance data? This keeps your work/task/skill data.")) return;
-    const collections: (keyof typeof data)[] = ["incomeEntries", "expenses", "budgets", "categoryBudgets", "emis", "emiPayments", "upcomingPayments", "investments", "investmentValueHistory", "financialGoals", "monthlyFinanceReviews"];
+    const collections: (keyof typeof data)[] = ["incomeEntries", "expenses", "emis", "emiPayments", "investments", "investmentValueHistory", "financialGoals", "monthlyFinanceReviews"];
     for (const collection of collections) {
       for (const item of data[collection] as { id: string }[]) {
         await remove(collection, item.id);
@@ -1253,7 +1204,6 @@ function SettingsPage() {
           <Field label="Default currency"><input className={inputClass} value={settings.defaultCurrency} disabled /></Field>
           <NumberField label="Default monthly income" value={settings.defaultMonthlyIncome} onChange={(v) => setSettings({ ...settings, defaultMonthlyIncome: v })} />
           <NumberField label="Month start date" value={settings.monthStartDate} onChange={(v) => setSettings({ ...settings, monthStartDate: v })} />
-          <NumberField label="Budget alert threshold" value={settings.budgetAlertThreshold} onChange={(v) => setSettings({ ...settings, budgetAlertThreshold: v })} />
           <NumberField label="EMI reminder days" value={settings.emiReminderDays} onChange={(v) => setSettings({ ...settings, emiReminderDays: v })} />
           <SelectField label="Investment update reminder" value={settings.investmentUpdateReminderFrequency} options={["Daily", "Weekly", "Monthly"]} onChange={(v) => setSettings({ ...settings, investmentUpdateReminderFrequency: v as FinanceSettings["investmentUpdateReminderFrequency"] })} />
         </div>
@@ -1391,28 +1341,6 @@ function ExpenseForm({ item, onSave, onCancel }: { item: Expense | null; onSave:
   </FormGrid>;
 }
 
-function BudgetForm({ item, month, onSave, onCancel }: { item: Budget | null; month: string; onSave: (item: Budget) => void; onCancel: () => void }) {
-  const stamp = new Date().toISOString();
-  const [budget, setBudget] = useState<Budget>(item || { id: newId("bud"), userId: "", month, totalBudget: 35000, savingsTarget: 20000, investmentTarget: 10000, discretionaryLimit: 9000, createdAt: stamp, updatedAt: stamp });
-  return <FormGrid onSubmit={() => onSave({ ...budget, updatedAt: new Date().toISOString() })} onCancel={onCancel}>
-    <TextField label="Month" type="month" value={budget.month} onChange={(v) => setBudget({ ...budget, month: v })} />
-    <NumberField label="Monthly total budget" value={budget.totalBudget} onChange={(v) => setBudget({ ...budget, totalBudget: v })} />
-    <NumberField label="Savings target" value={budget.savingsTarget} onChange={(v) => setBudget({ ...budget, savingsTarget: v })} />
-    <NumberField label="Investment target" value={budget.investmentTarget} onChange={(v) => setBudget({ ...budget, investmentTarget: v })} />
-    <NumberField label="Discretionary limit" value={budget.discretionaryLimit} onChange={(v) => setBudget({ ...budget, discretionaryLimit: v })} />
-  </FormGrid>;
-}
-
-function CategoryBudgetForm({ item, budgets, onSave, onCancel }: { item: CategoryBudget | null; budgets: Budget[]; onSave: (item: CategoryBudget) => void; onCancel: () => void }) {
-  const stamp = new Date().toISOString();
-  const [budget, setBudget] = useState<CategoryBudget>(item || { id: newId("cb"), userId: "", budgetId: budgets[0]?.id || "", category: "Food", budgetAmount: 0, createdAt: stamp, updatedAt: stamp });
-  return <FormGrid onSubmit={() => budget.budgetId && onSave({ ...budget, updatedAt: new Date().toISOString() })} onCancel={onCancel}>
-    <SelectField label="Budget month" value={budget.budgetId} options={budgets.map((item) => item.id)} labels={Object.fromEntries(budgets.map((item) => [item.id, item.month]))} onChange={(v) => setBudget({ ...budget, budgetId: v })} />
-    <SelectField label="Category" value={budget.category} options={expenseCategories} onChange={(v) => setBudget({ ...budget, category: v as Expense["category"] })} />
-    <NumberField label="Budget amount" value={budget.budgetAmount} onChange={(v) => setBudget({ ...budget, budgetAmount: v })} />
-  </FormGrid>;
-}
-
 function EmiForm({ item, onSave, onCancel }: { item: Emi | null; onSave: (item: Emi) => void; onCancel: () => void }) {
   const stamp = new Date().toISOString();
   const [emi, setEmi] = useState<Emi>(item || { id: newId("emi"), userId: "", emiName: "", emiType: "Education Loan", emiAmount: 0, dueDay: 5, startDate: toDateInput(new Date()), endDate: toDateInput(new Date()), totalLoanAmount: 0, interestRate: 0, lenderName: "", isRecurring: true, status: "Upcoming", reminderDaysBefore: 3, notes: "", createdAt: stamp, updatedAt: stamp });
@@ -1430,30 +1358,6 @@ function EmiForm({ item, onSave, onCancel }: { item: Emi | null; onSave: (item: 
     <NumberField label="Reminder days" value={emi.reminderDaysBefore} onChange={(v) => setEmi({ ...emi, reminderDaysBefore: v })} />
     <CheckboxField label="Auto-repeat monthly" checked={emi.isRecurring} onChange={(v) => setEmi({ ...emi, isRecurring: v })} />
     <TextField label="Notes" value={emi.notes} onChange={(v) => setEmi({ ...emi, notes: v })} textarea />
-  </FormGrid>;
-}
-
-function UpcomingPaymentForm({ item, onSave, onCancel }: { item: UpcomingPayment | null; onSave: (item: UpcomingPayment) => void; onCancel: () => void }) {
-  const stamp = new Date().toISOString();
-  const today = toDateInput(new Date());
-  const [payment, setPayment] = useState<UpcomingPayment>(item || { id: newId("pay"), userId: "", title: "", amount: 0, dueDate: today, category: "Other", paymentType: "Other Planned Payment", isRecurring: false, billingDay: 0, dueDay: new Date().getDate(), reminderDaysBefore: 3, reminderDate: reminderDateFor(today, 3), status: "Upcoming", notes: "", createdAt: stamp, updatedAt: stamp });
-  function setSchedule(next: UpcomingPayment) {
-    const dueDate = next.isRecurring ? dateForMonthDay(next.dueDate.slice(0, 7), next.dueDay) : next.dueDate;
-    setPayment({ ...next, dueDate, reminderDate: reminderDateFor(dueDate, next.reminderDaysBefore) });
-  }
-  return <FormGrid onSubmit={() => payment.title.trim() && onSave({ ...payment, reminderDate: reminderDateFor(payment.dueDate, payment.reminderDaysBefore), updatedAt: new Date().toISOString() })} onCancel={onCancel}>
-    <TextField label="Payment title" value={payment.title} onChange={(v) => setPayment({ ...payment, title: v })} required />
-    <NumberField label="Amount" value={payment.amount} onChange={(v) => setPayment({ ...payment, amount: v })} />
-    <TextField label={payment.isRecurring ? "First due date" : "Due date"} type="date" value={payment.dueDate} onChange={(v) => setSchedule({ ...payment, dueDate: v, dueDay: Number(v.slice(-2)) })} />
-    <TextField label="Category" value={payment.category} onChange={(v) => setPayment({ ...payment, category: v })} />
-    <SelectField label="Payment type" value={payment.paymentType} options={["EMI", "Credit Card Bill", "Subscription", "Insurance", "Rent", "Education Fee", "Other Planned Payment"]} onChange={(v) => setPayment({ ...payment, paymentType: v as UpcomingPayment["paymentType"], isRecurring: v === "Credit Card Bill" ? true : payment.isRecurring })} />
-    {payment.paymentType === "Credit Card Bill" && <DayOfMonthField label="Bill generation day" value={payment.billingDay || 1} onChange={(v) => setPayment({ ...payment, billingDay: v })} />}
-    {(payment.isRecurring || payment.paymentType === "Credit Card Bill") && <DayOfMonthField label="Monthly due day" value={payment.dueDay} onChange={(v) => setSchedule({ ...payment, dueDay: v })} />}
-    <NumberField label="Remind days before due date" value={payment.reminderDaysBefore} onChange={(v) => setSchedule({ ...payment, reminderDaysBefore: Math.min(30, v) })} />
-    <p className="rounded-md border border-[#263340] bg-[#0a111a] px-3 py-2 text-xs text-slate-500">Reminder will appear from {format(new Date(`${reminderDateFor(payment.dueDate, payment.reminderDaysBefore)}T00:00:00`), "MMM d, yyyy")}.</p>
-    <SelectField label="Status" value={payment.status} options={["Upcoming", "Paid", "Missed"]} onChange={(v) => setPayment({ ...payment, status: v as UpcomingPayment["status"] })} />
-    <CheckboxField label="Repeat monthly" checked={payment.isRecurring} onChange={(v) => setSchedule({ ...payment, isRecurring: v })} />
-    <TextField label="Notes" value={payment.notes} onChange={(v) => setPayment({ ...payment, notes: v })} textarea />
   </FormGrid>;
 }
 
