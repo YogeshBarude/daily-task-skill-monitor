@@ -1,0 +1,181 @@
+# Daily Task & Skill Monitor
+
+A personal full-stack web prototype for tracking weekly work tasks, daily hours, skill-development time, learning progress, analytics, and weekly review notes.
+
+## Architecture
+
+- Next.js App Router with TypeScript
+- Tailwind CSS for responsive UI
+- Supabase Auth and PostgreSQL when environment keys are configured
+- localStorage fallback when Supabase keys are missing
+- Recharts for work and learning analytics
+- date-fns for Monday-to-Sunday weekly filtering
+
+## Features
+
+- Email/password signup and login
+- Dashboard with weekly work hours, learning hours, task counts, skill progress, productivity score, today plan, and weekly summary
+- Monday-to-Sunday weekly planner
+- CRUD for work tasks
+- CRUD for skills
+- CRUD for learning tasks
+- CRUD for time logs
+- Start/stop timer and manual time entry
+- Work analytics charts
+- Learning analytics charts
+- Weekly review with generated summary from stored data
+- Settings page with storage mode and demo data reset
+- Supabase SQL schema with RLS policies
+- Fast office-work workflow:
+  - Inline updates for work hours, completion percentage, owner, received date, due date, and status
+  - Automatic weekly sprint-plan compilation
+  - CSV sprint export
+  - Copy-ready sprint text for email, Teams, or chat
+  - One-click carry-forward of pending tasks to next week
+- Personal Finance Monitor add-on:
+  - Finance dashboard
+  - Income CRUD
+  - Expense CRUD with CSV import/export
+  - Monthly budgets and category budgets
+  - EMI tracker and EMI payment history
+  - Upcoming payments
+  - Investment tracker with manual value updates and server-side price refresh where possible
+  - Financial goals
+  - Finance analytics
+  - Monthly finance review
+  - Finance settings and finance data export/delete controls
+
+## Local Setup
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+Without Supabase keys, the app runs in localStorage mode so you can test everything immediately.
+
+## Environment Variables
+
+Create `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+MARKET_DATA_API_KEY=
+STOCK_PRICE_API_KEY=
+MUTUAL_FUND_API_KEY=
+GOLD_PRICE_API_KEY=
+CRYPTO_PRICE_API_KEY=
+```
+
+## Supabase Setup
+
+1. Create a Supabase project.
+2. Open the SQL editor.
+3. Run `supabase/schema.sql`.
+4. Enable email/password authentication.
+5. Copy the project URL and anon key into `.env.local`.
+6. Restart the dev server.
+7. Sign up in the app.
+
+The schema enables Row Level Security. Each authenticated user can only read, create, update, and delete their own records.
+
+If you already created the database using an earlier version of this project, run:
+
+```text
+supabase/migrations/20260620_add_sprint_fields.sql
+```
+
+This adds the sprint fields without deleting existing tasks.
+
+## Daily Work And Sprint Workflow
+
+1. Open **Tasks** and add a task using the short form.
+2. During the day, update hours, completion percentage, owner, dates, and status directly in the task table.
+3. Open **Sprint Plan** at the end of the week.
+4. Export CSV or copy the formatted sprint text.
+5. Use **Carry pending to next week** to clone unfinished items into Monday of the next week.
+
+Sprint columns:
+
+- Project
+- Task
+- Product owner
+- Work hours
+- Completion percentage
+- Task given date
+- Due date
+- Status
+
+Finance tables are included in `supabase/schema.sql` and use the same RLS pattern. Run the full schema after pulling this add-on, or copy the finance table section into your Supabase SQL editor if the core task tables already exist.
+
+## Finance Module
+
+The finance module is manual-first and safe for personal tracking. It does not connect to bank accounts, UPI, cards, net banking, broker accounts, OTP flows, or payment APIs. Do not store card numbers, bank account numbers, UPI PINs, passwords, broker credentials, or other sensitive banking details.
+
+CSV expense import format:
+
+```csv
+date,title,amount,category,payment_mode,notes
+2026-06-16,Lunch,250,Food,UPI,Office lunch
+```
+
+CSV export is available for expenses, investments, EMI list, and monthly finance summary.
+
+Investment price refresh is handled through the server route `/api/market-price`, so API keys are not exposed in frontend code. Current adapters include:
+
+- Stocks/ETFs: Yahoo Finance chart endpoint where available
+- Mutual funds: MFAPI India scheme code NAV where available
+- Crypto: CoinGecko INR simple price where available
+- Gold/digital gold: provider slot is ready and returns `API Not Configured` until a gold API is configured
+
+If price fetching fails or no provider is configured, existing values are preserved and the investment can be updated manually. The app only tracks prices and portfolio performance; it does not provide buy/sell advice.
+
+## Vercel Deployment
+
+1. Push the project to GitHub.
+2. Import the repo into Vercel.
+3. Add these environment variables in Vercel project settings:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+MARKET_DATA_API_KEY=
+STOCK_PRICE_API_KEY=
+MUTUAL_FUND_API_KEY=
+GOLD_PRICE_API_KEY=
+CRYPTO_PRICE_API_KEY=
+```
+
+4. Deploy.
+5. Test the live URL:
+   - Sign up or log in
+   - Add a work task
+   - Add a skill
+   - Add a learning task
+   - Add a time log
+   - Check work analytics
+   - Check learning analytics
+   - Save a weekly review
+
+## Productivity Score
+
+The weekly productivity score is calculated out of 100:
+
+- 40% work task completion rate
+- 25% planned vs actual work hour accuracy
+- 20% learning consistency
+- 15% high-priority task completion
+
+Interpretation:
+
+- 80 to 100: Excellent week
+- 60 to 79: Good week
+- 40 to 59: Needs improvement
+- Below 40: Poor tracking or low completion
+
+## Personal Use Notes
+
+This app is designed as a personal operating dashboard. It supports Supabase Auth because that keeps your deployed data private, but the navigation, sample data, and analytics are intentionally optimized for one person tracking weekly work and skill growth.
