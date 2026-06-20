@@ -972,7 +972,21 @@ function ExpensesPage({ month }: { month: string }) {
 function EmiPage({ month }: { month: string }) {
   const { data, user, upsert, remove } = useStore();
   const [editing, setEditing] = useState<Emi | null>(null);
+  const [formVersion, setFormVersion] = useState(0);
   const metrics = financeMetrics(data, month);
+
+  async function saveEmi(item: Emi) {
+    if (!user) return;
+    await upsert("emis", { ...item, userId: user.id });
+    setEditing(null);
+    setFormVersion((version) => version + 1);
+  }
+
+  function clearEmiForm() {
+    setEditing(null);
+    setFormVersion((version) => version + 1);
+  }
+
   async function markPaid(emi: Emi) {
     if (!user) return;
     const stamp = new Date().toISOString();
@@ -980,7 +994,7 @@ function EmiPage({ month }: { month: string }) {
     await upsert("emiPayments", { id: newId("emip"), userId: user.id, emiId: emi.id, paymentMonth: month, paymentDate: toDateInput(new Date()), amountPaid: emi.emiAmount, status: "Paid", notes: "Marked paid", createdAt: stamp, updatedAt: stamp });
   }
   return (
-    <CrudLayout title="EMI tracker" form={<EmiForm item={editing} onCancel={() => setEditing(null)} onSave={(item) => { if (user) void upsert("emis", { ...item, userId: user.id }); setEditing(null); }} />}>
+    <CrudLayout title="EMI tracker" form={<EmiForm key={editing?.id || `new-${formVersion}`} item={editing} onCancel={clearEmiForm} onSave={(item) => void saveEmi(item)} />}>
       <div className="grid gap-2 md:grid-cols-3"><MiniMoney label="Monthly burden" value={metrics.totalEmi} /><Metric title="EMI-to-income" value={`${metrics.emiToIncome}%`} /><Metric title="Payments logged" value={data.emiPayments.filter((p) => p.paymentMonth === month).length} /></div>
       {data.emis.map((emi) => <div key={emi.id} className="rounded-lg border border-line p-3"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold">{emi.emiName}: {currency.format(emi.emiAmount)}</p><p className="text-sm text-slate-500">{emi.emiType} - due {format(new Date(`${dateForMonthDay(month, emi.dueDay)}T00:00:00`), "MMM d")} every month - {emi.lenderName}</p><div className="mt-2 flex gap-2"><Badge tone={badgeTone(emi.status)}>{emi.status}</Badge>{emi.status !== "Closed" && <Badge tone="amber">Reminder {emi.reminderDaysBefore} days before</Badge>}</div></div><div className="flex gap-2"><Button variant="secondary" onClick={() => markPaid(emi)}>Mark paid</Button><RowActions onEdit={() => setEditing(emi)} onDelete={() => confirmDelete(() => remove("emis", emi.id))} /></div></div></div>)}
     </CrudLayout>
