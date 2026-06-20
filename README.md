@@ -86,6 +86,8 @@ If you already created the database using an earlier version of this project, ru
 
 ```text
 supabase/migrations/20260620_add_sprint_fields.sql
+supabase/migrations/20260620_secure_user_profile_trigger.sql
+supabase/migrations/20260620_finance_schedule_fields.sql
 ```
 
 This adds the sprint fields without deleting existing tasks.
@@ -132,6 +134,8 @@ Investment price refresh is handled through the server route `/api/market-price`
 - Gold/digital gold: provider slot is ready and returns `API Not Configured` until a gold API is configured
 
 If price fetching fails or no provider is configured, existing values are preserved and the investment can be updated manually. The app only tracks prices and portfolio performance; it does not provide buy/sell advice.
+
+Tracked investments refresh automatically when the Investments page opens and the saved price is more than six hours old. Stocks and ETFs use their ticker/exchange, mutual funds use an MFAPI scheme code, and crypto uses a CoinGecko asset ID.
 
 ## Vercel Deployment
 

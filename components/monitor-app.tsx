@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -44,7 +44,7 @@ import {
   UserRound,
   WalletCards
 } from "lucide-react";
-import { addMinutes, differenceInMinutes, format } from "date-fns";
+import { addDays, addMinutes, differenceInMinutes, format } from "date-fns";
 import { autoWeeklySummary, dailySeries, dashboardMetrics, priorityDistribution, productivityLabel, productivityScore, projectDistribution, scopedWeekData, skillCategoryDistribution, statusDistribution } from "@/lib/analytics";
 import { minutesToHours, toDateInput, weekBounds, weekDays } from "@/lib/date";
 import { budgetStatuses, categoryTotals, currency, dailyExpenseSeries, dueThisWeek, financeMetrics, financeMonthData, goalProgress, inMonth, investmentAllocation, monthlyFinanceSummary, monthlyTrend, monthKey, natureTotals, paymentModeTotals, portfolioMetrics, weeklyFinanceSummary } from "@/lib/finance";
@@ -97,6 +97,16 @@ const projectOptions = ["AI Governance", "Synthetic Testing", "Coca-Cola Creativ
 const platformOptions = ["AI Governance Portal", "PowerPoint", "Docs", "Analytics workbook", "Excel", "Power BI", "Supabase", "Vercel", "Other"];
 const pocOptions = ["Vaibhav", "Internal", "Research team", "Product team", "Personal", "Other"];
 const workCategoryOptions = ["Validation", "Analysis", "Benchmarking", "Documentation", "Testing", "Development", "Review", "Meeting", "General", "Other"];
+
+function dateForMonthDay(month: string, day: number) {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const finalDay = Math.min(Math.max(1, day), new Date(year, monthNumber, 0).getDate());
+  return `${month}-${String(finalDay).padStart(2, "0")}`;
+}
+
+function reminderDateFor(dueDate: string, daysBefore: number) {
+  return toDateInput(addDays(new Date(`${dueDate}T00:00:00`), -Math.max(0, daysBefore)));
+}
 
 export function MonitorApp() {
   const store = useStore();
@@ -1028,7 +1038,7 @@ function EmiPage({ month }: { month: string }) {
   return (
     <CrudLayout title="EMI tracker" form={<EmiForm item={editing} onCancel={() => setEditing(null)} onSave={(item) => { if (user) void upsert("emis", { ...item, userId: user.id }); setEditing(null); }} />}>
       <div className="grid gap-2 md:grid-cols-3"><MiniMoney label="Monthly burden" value={metrics.totalEmi} /><Metric title="EMI-to-income" value={`${metrics.emiToIncome}%`} /><Metric title="Payments logged" value={data.emiPayments.filter((p) => p.paymentMonth === month).length} /></div>
-      {data.emis.map((emi) => <div key={emi.id} className="rounded-lg border border-line p-3"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold">{emi.emiName}: {currency.format(emi.emiAmount)}</p><p className="text-sm text-slate-500">{emi.emiType} - due day {emi.dueDay} - {emi.lenderName}</p><div className="mt-2 flex gap-2"><Badge tone={badgeTone(emi.status)}>{emi.status}</Badge>{emi.status !== "Closed" && <Badge tone="amber">Reminder {emi.reminderDaysBefore} days</Badge>}</div></div><div className="flex gap-2"><Button variant="secondary" onClick={() => markPaid(emi)}>Mark paid</Button><RowActions onEdit={() => setEditing(emi)} onDelete={() => confirmDelete(() => remove("emis", emi.id))} /></div></div></div>)}
+      {data.emis.map((emi) => <div key={emi.id} className="rounded-lg border border-line p-3"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold">{emi.emiName}: {currency.format(emi.emiAmount)}</p><p className="text-sm text-slate-500">{emi.emiType} - due {format(new Date(`${dateForMonthDay(month, emi.dueDay)}T00:00:00`), "MMM d")} every month - {emi.lenderName}</p><div className="mt-2 flex gap-2"><Badge tone={badgeTone(emi.status)}>{emi.status}</Badge>{emi.status !== "Closed" && <Badge tone="amber">Reminder {emi.reminderDaysBefore} days before</Badge>}</div></div><div className="flex gap-2"><Button variant="secondary" onClick={() => markPaid(emi)}>Mark paid</Button><RowActions onEdit={() => setEditing(emi)} onDelete={() => confirmDelete(() => remove("emis", emi.id))} /></div></div></div>)}
     </CrudLayout>
   );
 }
@@ -1036,11 +1046,20 @@ function EmiPage({ month }: { month: string }) {
 function UpcomingPaymentsPage({ month }: { month: string }) {
   const { data, user, upsert, remove } = useStore();
   const [editing, setEditing] = useState<UpcomingPayment | null>(null);
-  const payments = data.upcomingPayments.filter((item) => inMonth(item.dueDate, month));
+  const today = toDateInput(new Date());
+  const payments = data.upcomingPayments
+    .map((item) => {
+      const dueDate = item.isRecurring ? dateForMonthDay(month, item.dueDay || Number(item.dueDate.slice(-2))) : item.dueDate;
+      return { ...item, dueDate, reminderDate: reminderDateFor(dueDate, item.reminderDaysBefore) };
+    })
+    .filter((item) => inMonth(item.dueDate, month));
   return (
     <CrudLayout title="Upcoming payments" form={<UpcomingPaymentForm item={editing} onCancel={() => setEditing(null)} onSave={(item) => { if (user) void upsert("upcomingPayments", { ...item, userId: user.id }); setEditing(null); }} />}>
-      <div className="grid gap-2 md:grid-cols-3"><Metric title="Due this week" value={payments.filter((p) => dueThisWeek(p.dueDate)).length} /><Metric title="Due this month" value={payments.length} /><Metric title="Overdue" value={payments.filter((p) => p.status === "Missed").length} /></div>
-      {payments.map((payment) => <TaskRow key={payment.id} title={`${payment.title}: ${currency.format(payment.amount)}`} meta={`${payment.paymentType} - due ${payment.dueDate} - reminder ${payment.reminderDate}`} badges={[payment.status, payment.isRecurring ? "Recurring" : "One-time"]} onEdit={() => setEditing(payment)} onDelete={() => confirmDelete(() => remove("upcomingPayments", payment.id))} />)}
+      <div className="grid gap-2 md:grid-cols-3"><Metric title="Due this week" value={payments.filter((p) => dueThisWeek(p.dueDate)).length} /><Metric title="Due this month" value={payments.length} /><Metric title="Reminders active" value={payments.filter((p) => p.status === "Upcoming" && p.reminderDate <= today && p.dueDate >= today).length} /></div>
+      {payments.map((payment) => {
+        const reminderActive = payment.status === "Upcoming" && payment.reminderDate <= today && payment.dueDate >= today;
+        return <TaskRow key={payment.id} title={`${payment.title}: ${currency.format(payment.amount)}`} meta={`${payment.paymentType}${payment.paymentType === "Credit Card Bill" && payment.billingDay ? ` - bill generated day ${payment.billingDay}` : ""} - due ${payment.dueDate} - remind ${payment.reminderDaysBefore} days before`} badges={[payment.status, reminderActive ? "Reminder active" : "", payment.isRecurring ? "Recurring" : "One-time"].filter(Boolean)} onEdit={() => setEditing(payment)} onDelete={() => confirmDelete(() => remove("upcomingPayments", payment.id))} />;
+      })}
     </CrudLayout>
   );
 }
@@ -1049,6 +1068,7 @@ function InvestmentsPage({ month: _month }: { month: string }) {
   const { data, user, upsert, remove } = useStore();
   const [editing, setEditing] = useState<Investment | null>(null);
   const [message, setMessage] = useState("");
+  const automaticRefreshStarted = useRef(false);
   const portfolio = portfolioMetrics(data.investments);
 
   async function saveInvestmentSnapshot(investment: Investment, updateType: InvestmentValueHistory["updateType"]) {
@@ -1084,10 +1104,43 @@ function InvestmentsPage({ month: _month }: { month: string }) {
     setMessage(`Portfolio refresh complete: ${success} updated, ${failed} failed/manual.`);
   }
 
+  useEffect(() => {
+    if (!user || automaticRefreshStarted.current) return;
+    const currentUser = user;
+    automaticRefreshStarted.current = true;
+    const staleBefore = Date.now() - 6 * 60 * 60 * 1000;
+    const tracked = data.investments.filter((investment) =>
+      investment.isPriceTrackingEnabled &&
+      (!investment.lastPriceUpdatedAt || new Date(investment.lastPriceUpdatedAt).getTime() < staleBefore)
+    );
+    if (!tracked.length) return;
+
+    async function refreshTrackedInvestments() {
+      setMessage(`Automatically updating ${tracked.length} tracked investment${tracked.length === 1 ? "" : "s"}...`);
+      let updated = 0;
+      for (const investment of tracked) {
+        const response = await fetch("/api/market-price", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(investment) });
+        const result = await response.json();
+        if (!result.ok || !result.price) {
+          await upsert("investments", { ...investment, priceUpdateStatus: result.status || "Update Failed", priceSource: result.source || "Unavailable", updatedAt: new Date().toISOString() });
+          continue;
+        }
+        const stamp = new Date().toISOString();
+        const refreshed = calculateInvestment({ ...investment, currentPrice: Number(result.price), currentValue: investment.units * Number(result.price), priceSource: result.source, priceUpdateStatus: "Updated", lastPriceUpdatedAt: stamp, updatedAt: stamp });
+        await upsert("investments", { ...refreshed, userId: currentUser.id });
+        await upsert("investmentValueHistory", { id: newId("ivh"), userId: currentUser.id, investmentId: refreshed.id, valueDate: toDateInput(new Date()), currentPrice: refreshed.currentPrice, currentValue: refreshed.currentValue, amountInvested: refreshed.amountInvested, gainLoss: refreshed.gainLoss, returnPercentage: refreshed.returnPercentage, priceSource: refreshed.priceSource, updateType: "automatic", createdAt: stamp });
+        updated += 1;
+      }
+      setMessage(`Automatic refresh finished: ${updated} of ${tracked.length} updated.`);
+    }
+
+    void refreshTrackedInvestments();
+  }, [data.investments, upsert, user]);
+
   return (
     <CrudLayout title="Investments" form={<InvestmentForm item={editing} goals={data.financialGoals} onCancel={() => setEditing(null)} onSave={(item) => { void saveInvestmentSnapshot(calculateInvestment(item), item.priceUpdateStatus === "Updated" ? "automatic" : "manual"); setEditing(null); }} />}>
       <div className="grid gap-2 md:grid-cols-4"><MiniMoney label="Invested" value={portfolio.totalInvested} /><MiniMoney label="Portfolio value" value={portfolio.currentValue} /><MiniMoney label="Gain/loss" value={portfolio.gainLoss} /><Metric title="Return" value={`${portfolio.returnPercentage}%`} /></div>
-      <div className="flex flex-wrap gap-2"><Button onClick={refreshAll}>Refresh portfolio</Button><Button variant="secondary" onClick={() => downloadCsv("investments.csv", ["name,type,invested,current_value,gain_loss,return_percentage,status", ...data.investments.map((item) => [item.investmentName, item.investmentType, item.amountInvested, item.currentValue, item.gainLoss, item.returnPercentage, item.priceUpdateStatus].join(","))].join("\n"))}>Export CSV</Button>{message && <p className="self-center text-sm text-slate-600">{message}</p>}</div>
+      <div className="flex flex-wrap gap-2"><Button onClick={refreshAll}>Refresh portfolio</Button><Button variant="secondary" onClick={() => downloadCsv("investments.csv", ["name,type,invested,current_value,gain_loss,return_percentage,status", ...data.investments.map((item) => [item.investmentName, item.investmentType, item.amountInvested, item.currentValue, item.gainLoss, item.returnPercentage, item.priceUpdateStatus].join(","))].join("\n"))}>Export CSV</Button>{message && <p className="self-center text-sm text-slate-500">{message}</p>}</div>
       {data.investments.map((investment) => <div key={investment.id} className="rounded-lg border border-line p-3"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold">{investment.investmentName}</p><p className="text-sm text-slate-500">{investment.investmentType} - {investment.tickerSymbol || "manual"} - units {investment.units}</p><div className="mt-2 grid gap-1 text-sm md:grid-cols-4"><span>Invested {currency.format(investment.amountInvested)}</span><span>Current {currency.format(investment.currentValue)}</span><span className={investment.gainLoss >= 0 ? "text-green-700" : "text-red-700"}>{currency.format(investment.gainLoss)} ({investment.returnPercentage}%)</span><span>Price {currency.format(investment.currentPrice)}</span></div><div className="mt-2 flex flex-wrap gap-2"><Badge tone={investment.priceUpdateStatus === "Updated" ? "green" : investment.priceUpdateStatus === "Update Failed" ? "red" : "amber"}>{investment.priceUpdateStatus}</Badge><Badge tone="slate">{investment.priceSource || "Manual"}</Badge><Badge tone="slate">{investment.lastPriceUpdatedAt ? new Date(investment.lastPriceUpdatedAt).toLocaleString() : "Not updated"}</Badge></div></div><div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => void refreshInvestment(investment)}>Update price</Button><RowActions onEdit={() => setEditing(investment)} onDelete={() => confirmDelete(() => remove("investments", investment.id))} /></div></div></div>)}
     </CrudLayout>
   );
@@ -1406,7 +1459,7 @@ function EmiForm({ item, onSave, onCancel }: { item: Emi | null; onSave: (item: 
     <TextField label="EMI name" value={emi.emiName} onChange={(v) => setEmi({ ...emi, emiName: v })} required />
     <SelectField label="EMI type" value={emi.emiType} options={["Education Loan", "Personal Loan", "Credit Card EMI", "Product EMI", "Other"]} onChange={(v) => setEmi({ ...emi, emiType: v as Emi["emiType"] })} />
     <NumberField label="EMI amount" value={emi.emiAmount} onChange={(v) => setEmi({ ...emi, emiAmount: v })} />
-    <NumberField label="Due day" value={emi.dueDay} onChange={(v) => setEmi({ ...emi, dueDay: v })} />
+    <DayOfMonthField label="Monthly due day" value={emi.dueDay} onChange={(v) => setEmi({ ...emi, dueDay: v })} />
     <TextField label="Start date" type="date" value={emi.startDate} onChange={(v) => setEmi({ ...emi, startDate: v })} />
     <TextField label="End date" type="date" value={emi.endDate} onChange={(v) => setEmi({ ...emi, endDate: v })} />
     <NumberField label="Total loan amount" value={emi.totalLoanAmount} onChange={(v) => setEmi({ ...emi, totalLoanAmount: v })} />
@@ -1421,26 +1474,35 @@ function EmiForm({ item, onSave, onCancel }: { item: Emi | null; onSave: (item: 
 
 function UpcomingPaymentForm({ item, onSave, onCancel }: { item: UpcomingPayment | null; onSave: (item: UpcomingPayment) => void; onCancel: () => void }) {
   const stamp = new Date().toISOString();
-  const [payment, setPayment] = useState<UpcomingPayment>(item || { id: newId("pay"), userId: "", title: "", amount: 0, dueDate: toDateInput(new Date()), category: "Other", paymentType: "Other Planned Payment", isRecurring: false, reminderDate: toDateInput(new Date()), status: "Upcoming", notes: "", createdAt: stamp, updatedAt: stamp });
-  return <FormGrid onSubmit={() => payment.title.trim() && onSave({ ...payment, updatedAt: new Date().toISOString() })} onCancel={onCancel}>
+  const today = toDateInput(new Date());
+  const [payment, setPayment] = useState<UpcomingPayment>(item || { id: newId("pay"), userId: "", title: "", amount: 0, dueDate: today, category: "Other", paymentType: "Other Planned Payment", isRecurring: false, billingDay: 0, dueDay: new Date().getDate(), reminderDaysBefore: 3, reminderDate: reminderDateFor(today, 3), status: "Upcoming", notes: "", createdAt: stamp, updatedAt: stamp });
+  function setSchedule(next: UpcomingPayment) {
+    const dueDate = next.isRecurring ? dateForMonthDay(next.dueDate.slice(0, 7), next.dueDay) : next.dueDate;
+    setPayment({ ...next, dueDate, reminderDate: reminderDateFor(dueDate, next.reminderDaysBefore) });
+  }
+  return <FormGrid onSubmit={() => payment.title.trim() && onSave({ ...payment, reminderDate: reminderDateFor(payment.dueDate, payment.reminderDaysBefore), updatedAt: new Date().toISOString() })} onCancel={onCancel}>
     <TextField label="Payment title" value={payment.title} onChange={(v) => setPayment({ ...payment, title: v })} required />
     <NumberField label="Amount" value={payment.amount} onChange={(v) => setPayment({ ...payment, amount: v })} />
-    <TextField label="Due date" type="date" value={payment.dueDate} onChange={(v) => setPayment({ ...payment, dueDate: v })} />
+    <TextField label={payment.isRecurring ? "First due date" : "Due date"} type="date" value={payment.dueDate} onChange={(v) => setSchedule({ ...payment, dueDate: v, dueDay: Number(v.slice(-2)) })} />
     <TextField label="Category" value={payment.category} onChange={(v) => setPayment({ ...payment, category: v })} />
-    <SelectField label="Payment type" value={payment.paymentType} options={["EMI", "Credit Card Bill", "Subscription", "Insurance", "Rent", "Education Fee", "Other Planned Payment"]} onChange={(v) => setPayment({ ...payment, paymentType: v as UpcomingPayment["paymentType"] })} />
-    <TextField label="Reminder date" type="date" value={payment.reminderDate} onChange={(v) => setPayment({ ...payment, reminderDate: v })} />
+    <SelectField label="Payment type" value={payment.paymentType} options={["EMI", "Credit Card Bill", "Subscription", "Insurance", "Rent", "Education Fee", "Other Planned Payment"]} onChange={(v) => setPayment({ ...payment, paymentType: v as UpcomingPayment["paymentType"], isRecurring: v === "Credit Card Bill" ? true : payment.isRecurring })} />
+    {payment.paymentType === "Credit Card Bill" && <DayOfMonthField label="Bill generation day" value={payment.billingDay || 1} onChange={(v) => setPayment({ ...payment, billingDay: v })} />}
+    {(payment.isRecurring || payment.paymentType === "Credit Card Bill") && <DayOfMonthField label="Monthly due day" value={payment.dueDay} onChange={(v) => setSchedule({ ...payment, dueDay: v })} />}
+    <NumberField label="Remind days before due date" value={payment.reminderDaysBefore} onChange={(v) => setSchedule({ ...payment, reminderDaysBefore: Math.min(30, v) })} />
+    <p className="rounded-md border border-[#263340] bg-[#0a111a] px-3 py-2 text-xs text-slate-500">Reminder will appear from {format(new Date(`${reminderDateFor(payment.dueDate, payment.reminderDaysBefore)}T00:00:00`), "MMM d, yyyy")}.</p>
     <SelectField label="Status" value={payment.status} options={["Upcoming", "Paid", "Missed"]} onChange={(v) => setPayment({ ...payment, status: v as UpcomingPayment["status"] })} />
-    <CheckboxField label="Recurring" checked={payment.isRecurring} onChange={(v) => setPayment({ ...payment, isRecurring: v })} />
+    <CheckboxField label="Repeat monthly" checked={payment.isRecurring} onChange={(v) => setSchedule({ ...payment, isRecurring: v })} />
     <TextField label="Notes" value={payment.notes} onChange={(v) => setPayment({ ...payment, notes: v })} textarea />
   </FormGrid>;
 }
 
 function InvestmentForm({ item, goals, onSave, onCancel }: { item: Investment | null; goals: FinancialGoal[]; onSave: (item: Investment) => void; onCancel: () => void }) {
   const stamp = new Date().toISOString();
-  const [investment, setInvestment] = useState<Investment>(item || { id: newId("inv"), userId: "", investmentName: "", investmentType: "Mutual Fund", platform: "", amountInvested: 0, currentValue: 0, investmentDate: toDateInput(new Date()), tickerSymbol: "", isin: "", marketExchange: "NSE", units: 0, averageBuyPrice: 0, currentPrice: 0, linkedGoalId: "", riskLevel: "Medium", notes: "", gainLoss: 0, returnPercentage: 0, priceSource: "Manual", priceUpdateStatus: "Manual Update Required", lastPriceUpdatedAt: "", isPriceTrackingEnabled: false, manualCurrentValue: 0, createdAt: stamp, updatedAt: stamp });
+  const [investment, setInvestment] = useState<Investment>(item || { id: newId("inv"), userId: "", investmentName: "", investmentType: "Mutual Fund", platform: "", amountInvested: 0, currentValue: 0, investmentDate: toDateInput(new Date()), tickerSymbol: "", isin: "", marketExchange: "NSE", units: 0, averageBuyPrice: 0, currentPrice: 0, linkedGoalId: "", riskLevel: "Medium", notes: "", gainLoss: 0, returnPercentage: 0, priceSource: "Manual", priceUpdateStatus: "Manual Update Required", lastPriceUpdatedAt: "", isPriceTrackingEnabled: true, manualCurrentValue: 0, createdAt: stamp, updatedAt: stamp });
+  const automaticallyTracked = ["Mutual Fund", "Stocks", "ETF", "Gold ETF", "Crypto"].includes(investment.investmentType);
   return <FormGrid onSubmit={() => investment.investmentName.trim() && onSave(calculateInvestment({ ...investment, updatedAt: new Date().toISOString() }))} onCancel={onCancel}>
     <TextField label="Investment name" value={investment.investmentName} onChange={(v) => setInvestment({ ...investment, investmentName: v })} required />
-    <SelectField label="Type" value={investment.investmentType} options={["Mutual Fund", "Stocks", "ETF", "Gold", "Gold ETF", "Digital Gold", "Fixed Deposit", "Recurring Deposit", "PPF", "NPS", "Crypto", "Other"]} onChange={(v) => setInvestment({ ...investment, investmentType: v as Investment["investmentType"] })} />
+    <SelectField label="Type" value={investment.investmentType} options={["Mutual Fund", "Stocks", "ETF", "Gold", "Gold ETF", "Digital Gold", "Fixed Deposit", "Recurring Deposit", "PPF", "NPS", "Crypto", "Other"]} onChange={(v) => setInvestment({ ...investment, investmentType: v as Investment["investmentType"], isPriceTrackingEnabled: ["Mutual Fund", "Stocks", "ETF", "Gold ETF", "Crypto"].includes(v) })} />
     <TextField label="Platform / broker" value={investment.platform} onChange={(v) => setInvestment({ ...investment, platform: v })} />
     <NumberField label="Amount invested" value={investment.amountInvested} onChange={(v) => setInvestment({ ...investment, amountInvested: v })} />
     <NumberField label="Units / quantity" value={investment.units} onChange={(v) => setInvestment({ ...investment, units: v })} />
@@ -1448,12 +1510,13 @@ function InvestmentForm({ item, goals, onSave, onCancel }: { item: Investment | 
     <NumberField label="Current price" value={investment.currentPrice} onChange={(v) => setInvestment({ ...investment, currentPrice: v })} />
     <NumberField label="Manual current value" value={investment.manualCurrentValue} onChange={(v) => setInvestment({ ...investment, manualCurrentValue: v, currentValue: v })} />
     <TextField label="Investment date" type="date" value={investment.investmentDate} onChange={(v) => setInvestment({ ...investment, investmentDate: v })} />
-    <TextField label="Ticker / fund code / asset code" value={investment.tickerSymbol} onChange={(v) => setInvestment({ ...investment, tickerSymbol: v })} />
+    <TextField label={investment.investmentType === "Mutual Fund" ? "Mutual fund scheme code" : investment.investmentType === "Crypto" ? "CoinGecko asset ID" : "Ticker symbol"} value={investment.tickerSymbol} onChange={(v) => setInvestment({ ...investment, tickerSymbol: v.trim() })} />
     <TextField label="Exchange / market" value={investment.marketExchange} onChange={(v) => setInvestment({ ...investment, marketExchange: v })} />
     <TextField label="ISIN optional" value={investment.isin} onChange={(v) => setInvestment({ ...investment, isin: v })} />
     <SelectField label="Risk level" value={investment.riskLevel} options={["Low", "Medium", "High"]} onChange={(v) => setInvestment({ ...investment, riskLevel: v as Investment["riskLevel"] })} />
     <SelectField label="Linked goal" value={investment.linkedGoalId} options={["", ...goals.map((goal) => goal.id)]} labels={Object.fromEntries([["", "None"], ...goals.map((goal) => [goal.id, goal.goalName])])} onChange={(v) => setInvestment({ ...investment, linkedGoalId: v })} />
-    <CheckboxField label="Enable automatic price tracking" checked={investment.isPriceTrackingEnabled} onChange={(v) => setInvestment({ ...investment, isPriceTrackingEnabled: v })} />
+    <CheckboxField label="Automatically update price when Investments opens" checked={investment.isPriceTrackingEnabled} onChange={(v) => setInvestment({ ...investment, isPriceTrackingEnabled: v })} />
+    <p className="rounded-md border border-[#263340] bg-[#0a111a] px-3 py-2 text-xs leading-5 text-slate-500">{automaticallyTracked ? "Automatic updates run when the saved price is more than 6 hours old. Stocks and ETFs use the ticker and exchange; mutual funds use the scheme code; crypto uses its CoinGecko ID." : "This investment type does not have a reliable public price feed here, so keep its current value updated manually."}</p>
     <TextField label="Notes" value={investment.notes} onChange={(v) => setInvestment({ ...investment, notes: v })} textarea />
   </FormGrid>;
 }
@@ -1490,6 +1553,10 @@ function TextField({ label, value, onChange, type = "text", textarea, required }
 
 function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
   return <Field label={label}><input className={inputClass} type="number" min={0} value={value} onChange={(e) => onChange(Number(e.target.value))} /></Field>;
+}
+
+function DayOfMonthField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+  return <Field label={label}><select className={inputClass} value={Math.min(31, Math.max(1, value || 1))} onChange={(event) => onChange(Number(event.target.value))}>{Array.from({ length: 31 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}</select></Field>;
 }
 
 function SelectField({ label, value, options, labels, onChange }: { label: string; value: string; options: string[]; labels?: Record<string, string>; onChange: (value: string) => void }) {

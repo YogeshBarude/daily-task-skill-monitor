@@ -355,7 +355,10 @@ function categoryBudget(id: string, userId: string, budgetId: string, category: 
 }
 
 function payment(id: string, userId: string, title: string, amount: number, dueDate: string, category: string, paymentType: UpcomingPayment["paymentType"]): UpcomingPayment {
-  return { id, userId, title, amount, dueDate, category, paymentType, isRecurring: false, reminderDate: dueDate, status: "Upcoming", notes: "", createdAt: now, updatedAt: now };
+  const dueDay = new Date(`${dueDate}T00:00:00`).getDate();
+  const reminderDaysBefore = 3;
+  const reminderDate = toDateInput(new Date(new Date(`${dueDate}T00:00:00`).getTime() - reminderDaysBefore * 24 * 60 * 60 * 1000));
+  return { id, userId, title, amount, dueDate, category, paymentType, isRecurring: false, billingDay: paymentType === "Credit Card Bill" ? Math.max(1, dueDay - 18) : 0, dueDay, reminderDaysBefore, reminderDate, status: "Upcoming", notes: "", createdAt: now, updatedAt: now };
 }
 
 function investment(id: string, userId: string, investmentName: string, investmentType: Investment["investmentType"], platform: string, amountInvested: number, currentValue: number, tickerSymbol: string, marketExchange: string, units: number, averageBuyPrice: number, currentPrice: number, riskLevel: Investment["riskLevel"], priceUpdateStatus: Investment["priceUpdateStatus"]): Investment {

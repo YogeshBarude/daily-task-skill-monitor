@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { Session } from "@supabase/supabase-js";
 import { createSampleData, demoUser } from "./sample-data";
 import { hasSupabaseConfig, supabase } from "./supabase";
-import { AppData, LearningTask, Skill, TimeLog, UserProfile, WeeklyReview, WorkTask } from "./types";
+import { AppData, LearningTask, Skill, TimeLog, UpcomingPayment, UserProfile, WeeklyReview, WorkTask } from "./types";
 
 type Collection = keyof AppData;
 type Entity = AppData[keyof AppData][number];
@@ -137,7 +137,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       categoryBudgets: (categoryBudgets.data || []).map(fromFinanceRow),
       emis: (emis.data || []).map(fromFinanceRow),
       emiPayments: (emiPayments.data || []).map(fromFinanceRow),
-      upcomingPayments: (upcomingPayments.data || []).map(fromFinanceRow),
+      upcomingPayments: (upcomingPayments.data || []).map(fromFinanceRow).map(normalizeUpcomingPayment),
       investments: (investments.data || []).map(fromFinanceRow),
       investmentValueHistory: (investmentValueHistory.data || []).map(fromFinanceRow),
       financialGoals: (financialGoals.data || []).map(fromFinanceRow),
@@ -249,8 +249,29 @@ function normalizeAppData(data: AppData): AppData {
       receivedDate: task.receivedDate || task.assignedDate || today,
       dueDate: task.dueDate || task.assignedDate || today,
       completionPercentage: task.completionPercentage ?? (task.status === "Completed" ? 100 : 0)
-    }))
+    })),
+    upcomingPayments: (data.upcomingPayments || []).map(normalizeUpcomingPayment)
   };
+}
+
+function normalizeUpcomingPayment(payment: UpcomingPayment): UpcomingPayment {
+  const dueDay = payment.dueDay || Number(payment.dueDate?.slice(-2)) || 1;
+  const reminderDaysBefore = payment.reminderDaysBefore ?? 3;
+  const due = payment.dueDate ? new Date(`${payment.dueDate}T00:00:00`) : new Date();
+  return {
+    ...payment,
+    billingDay: payment.billingDay || 0,
+    dueDay,
+    reminderDaysBefore,
+    reminderDate: toDateString(new Date(due.getTime() - reminderDaysBefore * 24 * 60 * 60 * 1000))
+  };
+}
+
+function toDateString(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function toDb(collection: Collection, item: Entity) {

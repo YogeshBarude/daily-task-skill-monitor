@@ -205,6 +205,9 @@ export type UpcomingPayment = {
   category: string;
   paymentType: "EMI" | "Credit Card Bill" | "Subscription" | "Insurance" | "Rent" | "Education Fee" | "Other Planned Payment";
   isRecurring: boolean;
+  billingDay: number;
+  dueDay: number;
+  reminderDaysBefore: number;
   reminderDate: string;
   status: "Upcoming" | "Paid" | "Missed";
   notes: string;
