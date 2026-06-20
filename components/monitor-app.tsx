@@ -130,7 +130,7 @@ export function MonitorApp() {
 
   return (
     <div className="min-h-screen bg-[#0D0F12] text-ink">
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[238px] border-r border-[#252A35] bg-[#161920] lg:flex lg:flex-col">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[238px] border-r border-[#2B3240] bg-[#12161D] lg:flex lg:flex-col">
         <div className="flex h-[70px] items-center gap-3 border-b border-[#252A35] px-5">
           <div className="grid h-8 w-8 place-items-center rounded-full border border-slate-500 text-slate-100"><CheckCircle2 size={19} /></div>
           <div><p className="text-[15px] font-semibold leading-tight text-slate-100">Daily Task &</p><p className="text-[15px] font-semibold leading-tight text-slate-100">Skill Monitor</p></div>
@@ -142,7 +142,7 @@ export function MonitorApp() {
               {group.label && <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{group.label}</p>}
               <div className="grid gap-1">
                 {group.items.map(({ tab, label, icon: Icon }) => (
-                  <button key={tab} onClick={() => setActive(tab)} className={`flex h-9 w-full items-center gap-3 rounded-md border px-3 text-left text-[13px] transition ${active === tab ? "border-blue-500/60 bg-blue-500/20 font-medium text-blue-100" : "border-transparent text-slate-400 hover:bg-white/[0.04] hover:text-slate-100"}`}>
+                  <button key={tab} onClick={() => setActive(tab)} className={`flex h-9 w-full items-center gap-3 rounded-md border px-3 text-left text-[13px] transition ${active === tab ? "border-[#5B8DEF]/70 bg-[#5B8DEF]/20 font-medium text-blue-100 shadow-[inset_3px_0_0_#5B8DEF]" : "border-transparent text-slate-400 hover:bg-white/[0.05] hover:text-slate-100"}`}>
                     <Icon size={17} strokeWidth={1.8} />
                     <span className="truncate">{label}</span>
                   </button>
@@ -164,7 +164,7 @@ export function MonitorApp() {
       </aside>
 
       <main className="lg:pl-[238px]">
-        <header className="sticky top-0 z-10 border-b border-[#252A35] bg-[#161920]/95 backdrop-blur">
+        <header className="sticky top-0 z-10 border-b border-[#2B3240] bg-[#12161D]/95 backdrop-blur">
           <div className="flex min-h-[70px] flex-wrap items-center gap-3 px-3 py-3 sm:px-4 lg:px-6">
             <WeekNavigator weekStart={weekStart} selectedDate={selectedDate} onSelectDate={selectDate} onMoveWeek={moveWeek} />
             <div className="ml-auto flex items-center gap-2">
@@ -365,14 +365,14 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
   ].sort((a, b) => a.time.localeCompare(b.time));
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[#24303d] bg-[#091019]">
-      <div className="scrollbar-thin grid min-w-[760px] grid-cols-7 border-b border-[#24303d]">
+    <div className="overflow-hidden rounded-lg border border-[#2B3240] bg-[#12161D] shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
+      <div className="scrollbar-thin grid min-w-[760px] grid-cols-7 border-b border-[#2B3240]">
         {days.map((day) => {
           const count = data.workTasks.filter((task) => task.assignedDate === day.input).length + data.learningTasks.filter((task) => task.plannedDate === day.input).length;
           const active = day.input === selectedDay.input;
           const isToday = day.input === todayInput;
           return (
-            <button key={day.input} type="button" aria-pressed={active} onClick={() => onSelectDate(day.input)} className={`min-h-[122px] border-r border-[#24303d] px-3 py-4 text-center last:border-r-0 ${active ? "bg-blue-600/25" : "hover:bg-white/[0.025]"}`}>
+            <button key={day.input} type="button" aria-pressed={active} onClick={() => onSelectDate(day.input)} className={`min-h-[122px] border-r border-[#2B3240] px-3 py-4 text-center last:border-r-0 ${active ? "bg-[#5B8DEF]/25 shadow-[inset_0_-3px_0_#5B8DEF]" : "hover:bg-white/[0.035]"}`}>
               <p className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${active ? "text-blue-200" : "text-slate-400"}`}>{day.dayName.slice(0, 3)}</p>
               <p className={`mt-1 text-3xl font-semibold ${active ? "text-blue-100" : "text-slate-300"}`}>{format(day.date, "d")}</p>
               <p className={`mt-1 text-[11px] ${active ? "text-blue-300" : "text-slate-500"}`}>{isToday ? "Today" : `${count} tasks`}</p>
@@ -383,8 +383,8 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
       </div>
 
       <div className="grid xl:grid-cols-[minmax(0,1fr)_418px]">
-        <section className="border-b border-[#24303d] xl:border-b-0 xl:border-r">
-          <div className="flex min-h-[72px] flex-wrap items-center justify-between gap-3 border-b border-[#24303d] px-5">
+        <section className="border-b border-[#2B3240] xl:border-b-0 xl:border-r">
+          <div className="flex min-h-[72px] flex-wrap items-center justify-between gap-3 border-b border-[#2B3240] px-5">
             <div>
               <h1 className="text-lg font-semibold text-slate-100">{format(selectedDay.date, "EEEE, MMMM d")}</h1>
               <p className="mt-1 text-xs text-slate-500">{agenda.length} items planned across work, learning, and money</p>
@@ -407,7 +407,7 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
           </details>
         </section>
 
-        <aside className="bg-[#0b121b] p-5">
+        <aside className="bg-[#171B23] p-5">
           <div className="mb-4 flex items-center justify-between"><h2 className="text-base font-semibold text-slate-100">My progress</h2><Badge tone="blue">This week</Badge></div>
           <div className="grid gap-3">
             <ProgressStat title="Weekly completion" value={`${completion}%`} detail={`${completedTasks} of ${totalTasks} tasks done`} progress={completion} tone="green" icon={Goal} />
@@ -542,9 +542,11 @@ function MiniMoney({ label, value }: { label: string; value: number }) {
 }
 
 function Metric({ title, value, hint }: { title: string; value: string | number; hint?: string }) {
+  const tone = /done|completion|savings|balance|return/i.test(title) ? "border-emerald-500/35 bg-emerald-500/[0.055]" : /pending|blocked|emi|expense/i.test(title) ? "border-amber-500/35 bg-amber-500/[0.055]" : /skill|learning|portfolio|investment/i.test(title) ? "border-fuchsia-500/35 bg-fuchsia-500/[0.055]" : "border-blue-500/35 bg-blue-500/[0.055]";
+  const dot = /done|completion|savings|balance|return/i.test(title) ? "bg-[#3ECF8E]" : /pending|blocked|emi|expense/i.test(title) ? "bg-[#F5B84B]" : /skill|learning|portfolio|investment/i.test(title) ? "bg-[#C879FF]" : "bg-[#5B8DEF]";
   return (
-    <Card className="min-h-[104px]">
-      <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#7A8499]">{title}</p>
+    <Card className={`min-h-[112px] ${tone}`}>
+      <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-[#8D98AE]"><span className={`h-2 w-2 rounded-full ${dot}`} />{title}</p>
       <p className="mt-2 text-[32px] font-bold leading-none text-[#F0F2F5]">{value}</p>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
     </Card>
@@ -767,14 +769,14 @@ function Skills({ selectedDate, onSelectDate }: { selectedDate: string; onSelect
 
 function SkillTile({ skill, tasks, done, tone, onAddTask, onEditSkill, onDeleteSkill, onEditTask, onDeleteTask, onToggleTask }: { skill: Skill; tasks: LearningTask[]; done: number; tone: number; onAddTask: () => void; onEditSkill: () => void; onDeleteSkill: () => void; onEditTask: (task: LearningTask) => void; onDeleteTask: (id: string) => void; onToggleTask: (task: LearningTask) => void }) {
   const tones = [
-    "border-blue-500/70 bg-blue-500/[0.08]",
-    "border-emerald-500/70 bg-emerald-500/[0.08]",
-    "border-fuchsia-500/70 bg-fuchsia-500/[0.08]",
-    "border-amber-500/70 bg-amber-500/[0.08]"
+    "border-blue-400/80 bg-blue-500/[0.14] shadow-[0_14px_36px_rgba(59,130,246,0.10)]",
+    "border-emerald-400/80 bg-emerald-500/[0.14] shadow-[0_14px_36px_rgba(16,185,129,0.10)]",
+    "border-fuchsia-400/80 bg-fuchsia-500/[0.14] shadow-[0_14px_36px_rgba(217,70,239,0.10)]",
+    "border-amber-400/80 bg-amber-500/[0.14] shadow-[0_14px_36px_rgba(245,158,11,0.10)]"
   ];
   const accents = ["text-blue-300", "text-emerald-300", "text-fuchsia-300", "text-amber-300"];
   return (
-    <article className={`min-h-[250px] rounded-lg border p-4 ${tones[tone]}`}>
+    <article className={`min-h-[250px] rounded-lg border p-4 transition hover:-translate-y-0.5 ${tones[tone]}`}>
       <div className="flex items-start justify-between gap-3">
         <div><p className="text-base font-semibold">{skill.skillName}</p><p className="mt-1 text-xs text-[#7A8499]">{skill.category} · {skill.weeklyTargetMinutes} min/week</p></div>
         <div className="flex items-center gap-1"><span className={`mr-2 text-xs font-medium ${accents[tone]}`}>{done}/{tasks.length} done</span><button onClick={onEditSkill} className="p-1.5 text-[#7A8499] hover:text-white" title="Edit skill"><Pencil size={14} /></button><button onClick={onDeleteSkill} className="p-1.5 text-[#7A8499] hover:text-rose-300" title="Delete skill"><Trash2 size={14} /></button></div>

@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { ReactNode } from "react";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={clsx("rounded-lg border border-[#252A35] bg-[#161920] p-4", className)}>{children}</section>;
+  return <section className={clsx("app-card rounded-lg border border-[#2B3240] bg-[#171B23] p-4", className)}>{children}</section>;
 }
 
 export function Button({ children, variant = "primary", className = "", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" | "ghost" }) {
@@ -12,7 +12,7 @@ export function Button({ children, variant = "primary", className = "", ...props
     <button
       className={clsx(
         "inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
-        variant === "primary" && "bg-[#5B8DEF] text-white hover:bg-[#6D99F1]",
+        variant === "primary" && "bg-[#5B8DEF] text-white shadow-[0_8px_24px_rgba(91,141,239,0.2)] hover:bg-[#6D99F1]",
         variant === "secondary" && "border border-[#252A35] bg-[#1E2330] text-[#F0F2F5] hover:bg-[#252B39]",
         variant === "danger" && "bg-danger text-white hover:bg-red-700",
         variant === "ghost" && "text-slate-400 hover:bg-white/[0.05] hover:text-slate-100",
@@ -64,8 +64,8 @@ export function EmptyState({ title, text }: { title: string; text: string }) {
 
 export function ProgressBar({ value }: { value: number }) {
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#202b37]">
-      <div className="h-full rounded-full bg-blue-500" style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#29303D]">
+      <div className="h-full rounded-full bg-[#5B8DEF]" style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
     </div>
   );
 }
