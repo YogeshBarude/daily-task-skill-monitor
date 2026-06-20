@@ -206,13 +206,20 @@ function normalizeAppData(data: AppData): AppData {
     skills: data.skills || defaults.skills,
     learningTasks: data.learningTasks || defaults.learningTasks,
     weeklyReviews: data.weeklyReviews || defaults.weeklyReviews,
-    workTasks: (data.workTasks || []).map((task) => ({
-      ...task,
-      productOwner: task.productOwner || task.poc || "Personal",
-      receivedDate: task.receivedDate || task.assignedDate || today,
-      dueDate: task.dueDate || task.assignedDate || today,
-      completionPercentage: task.completionPercentage ?? (task.status === "Completed" ? 100 : 0)
-    }))
+    workTasks: (data.workTasks || []).map((task) => {
+      const legacyTask = task as WorkTask & { actualMinutes?: number; workType?: string };
+      const currentTask = { ...legacyTask };
+      delete currentTask.actualMinutes;
+      delete currentTask.workType;
+      return {
+        ...currentTask,
+        priority: task.priority === "High" ? "High" : "Low",
+        productOwner: task.productOwner || task.poc || "Personal",
+        receivedDate: task.receivedDate || task.assignedDate || today,
+        dueDate: task.dueDate || task.assignedDate || today,
+        completionPercentage: task.completionPercentage ?? (task.status === "Completed" ? 100 : 0)
+      };
+    })
   };
 }
 
@@ -235,11 +242,9 @@ function toDb(collection: Collection, item: Entity) {
       due_date: task.dueDate,
       day_of_week: task.dayOfWeek,
       estimated_minutes: task.estimatedMinutes,
-      actual_minutes: task.actualMinutes,
       completion_percentage: task.completionPercentage,
       status: task.status,
       priority: task.priority,
-      work_type: task.workType,
       notes: task.notes,
       deliverable: task.deliverable,
       blockers: task.blockers,
@@ -310,11 +315,9 @@ function fromWorkTask(row: any): WorkTask {
     dueDate: row.due_date || row.assigned_date,
     dayOfWeek: row.day_of_week || "",
     estimatedMinutes: row.estimated_minutes || 0,
-    actualMinutes: row.actual_minutes || 0,
     completionPercentage: row.completion_percentage ?? (row.status === "Completed" ? 100 : 0),
     status: row.status,
-    priority: row.priority,
-    workType: row.work_type,
+    priority: row.priority === "High" ? "High" : "Low",
     notes: row.notes || "",
     deliverable: row.deliverable || "",
     blockers: row.blockers || "",

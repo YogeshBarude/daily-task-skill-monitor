@@ -2,7 +2,7 @@ export type ID = string;
 
 export type WorkStatus = "Backlog" | "Planned" | "In Progress" | "Blocked" | "Completed";
 export type LearningStatus = "Planned" | "In Progress" | "Done" | "Skipped";
-export type Priority = "Low" | "Medium" | "High";
+export type Priority = "Low" | "High";
 export type WeekStatus = "Not Started" | "In Progress" | "Completed" | "Overdue";
 
 export type UserProfile = {
@@ -26,11 +26,9 @@ export type WorkTask = {
   dueDate: string;
   dayOfWeek: string;
   estimatedMinutes: number;
-  actualMinutes: number;
   completionPercentage: number;
   status: WorkStatus;
   priority: Priority;
-  workType: "Research" | "Analysis" | "Testing" | "Documentation" | "Meeting" | "Development" | "Review" | "Other";
   notes: string;
   deliverable: string;
   blockers: string;
