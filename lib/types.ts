@@ -3,7 +3,6 @@ export type ID = string;
 export type WorkStatus = "In Progress" | "Completed";
 export type LearningStatus = "Planned" | "In Progress" | "Done" | "Skipped";
 export type Priority = "Low" | "High";
-export type WeekStatus = "Not Started" | "In Progress" | "Completed" | "Overdue";
 
 export type UserProfile = {
   id: ID;
@@ -21,10 +20,8 @@ export type WorkTask = {
   poc: string;
   category: string;
   description: string;
-  receivedDate: string;
   assignedDate: string;
   dueDate: string;
-  dayOfWeek: string;
   estimatedMinutes: number;
   status: WorkStatus;
   priority: Priority;
@@ -66,12 +63,8 @@ export type WeeklyReview = {
   weekStartDate: string;
   weekEndDate: string;
   completedSummary: string;
-  incompleteSummary: string;
   blockers: string;
   keyLearnings: string;
-  skillsImproved: string;
-  workHighlights: string;
-  improvementAreas: string;
   nextWeekPlan: string;
   autoSummaryJson: Record<string, unknown>;
   createdAt: string;

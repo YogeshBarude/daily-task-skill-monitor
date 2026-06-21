@@ -10,38 +10,13 @@ export function scopedWeekData(data: AppData, weekStartInput: string) {
   };
 }
 
-export function productivityScore(workTasks: WorkTask[], learningTasks: LearningTask[]) {
-  const completedWork = workTasks.filter((task) => task.status === "Completed").length;
-  const completionRate = workTasks.length ? completedWork / workTasks.length : 0;
-
-  const activeRate = workTasks.length ? workTasks.filter((task) => task.status === "In Progress").length / workTasks.length : 0;
-  const learningDays = new Set(learningTasks.filter((task) => task.status === "Done").map((task) => task.plannedDate)).size;
-  const consistency = Math.min(learningDays / 5, 1);
-
-  const highPriority = workTasks.filter((task) => task.priority === "High");
-  const highDone = highPriority.length ? highPriority.filter((task) => task.status === "Completed").length / highPriority.length : 1;
-
-  const score = completionRate * 50 + activeRate * 15 + consistency * 20 + highDone * 15;
-  return Math.round(score);
-}
-
-export function productivityLabel(score: number) {
-  if (score >= 80) return "Excellent week";
-  if (score >= 60) return "Good week";
-  if (score >= 40) return "Needs improvement";
-  return "Poor tracking or low completion";
-}
-
 export function dashboardMetrics(data: AppData, weekStartInput: string) {
   const week = scopedWeekData(data, weekStartInput);
-  const score = productivityScore(week.workTasks, week.learningTasks);
   return {
     totalWorkHours: minutesToHours(sum(week.workTasks.map((task) => task.estimatedMinutes))),
     totalLearningHours: minutesToHours(sum(week.learningTasks.filter((task) => task.status === "Done").map((task) => task.plannedMinutes))),
     completedWorkTasks: week.workTasks.filter((task) => task.status === "Completed").length,
-    pendingWorkTasks: week.workTasks.filter((task) => task.status !== "Completed").length,
-    productivityScore: score,
-    productivityLabel: productivityLabel(score)
+    pendingWorkTasks: week.workTasks.filter((task) => task.status !== "Completed").length
   };
 }
 
@@ -78,14 +53,6 @@ export function skillCategoryDistribution(skills: Skill[], learningTasks: Learni
   return Object.entries(grouped).map(([name, minutes]) => ({ name, value: minutesToHours(minutes) }));
 }
 
-export function statusDistribution(workTasks: WorkTask[]) {
-  return Object.entries(groupCount(workTasks, (task) => task.status)).map(([name, value]) => ({ name, value }));
-}
-
-export function priorityDistribution(workTasks: WorkTask[]) {
-  return Object.entries(groupCount(workTasks, (task) => task.priority)).map(([name, value]) => ({ name, value }));
-}
-
 export function autoWeeklySummary(data: AppData, weekStartInput: string) {
   const week = scopedWeekData(data, weekStartInput);
   const days = dailySeries(data, weekStartInput);
@@ -112,14 +79,6 @@ function groupSum<T>(items: T[], key: (item: T) => string, value: (item: T) => n
   return items.reduce<Record<string, number>>((acc, item) => {
     const group = key(item);
     acc[group] = (acc[group] || 0) + value(item);
-    return acc;
-  }, {});
-}
-
-function groupCount<T>(items: T[], key: (item: T) => string) {
-  return items.reduce<Record<string, number>>((acc, item) => {
-    const group = key(item);
-    acc[group] = (acc[group] || 0) + 1;
     return acc;
   }, {});
 }

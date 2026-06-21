@@ -42,7 +42,7 @@ import {
   X
 } from "lucide-react";
 import { addDays, addMinutes, format } from "date-fns";
-import { autoWeeklySummary, dailySeries, dashboardMetrics, priorityDistribution, productivityLabel, productivityScore, projectDistribution, scopedWeekData, skillCategoryDistribution, statusDistribution } from "@/lib/analytics";
+import { autoWeeklySummary, dailySeries, dashboardMetrics, projectDistribution, scopedWeekData, skillCategoryDistribution } from "@/lib/analytics";
 import { minutesToHours, toDateInput, weekBounds, weekDays } from "@/lib/date";
 import { newId, useStore } from "@/lib/storage";
 import { sprintCsv, sprintShareText, tasksForSprint } from "@/lib/sprint";
@@ -141,7 +141,7 @@ export function MonitorApp() {
           <div className="flex min-h-[70px] flex-wrap items-center gap-3 px-3 py-3 sm:px-4 lg:px-6">
             <WeekNavigator weekStart={weekStart} selectedDate={selectedDate} onSelectDate={selectDate} onMoveWeek={moveWeek} />
             <div className="ml-auto flex items-center gap-2">
-              <Button className="h-10 px-4" onClick={() => setShowLogTask(true)}><Plus size={17} /><span>Log Task</span></Button>
+              <Button className="h-10 px-4" onClick={() => setShowLogTask(true)}><Plus size={17} /><span>Log learning</span></Button>
               <button className="grid h-10 w-10 place-items-center rounded-md border border-[#D5EBE7] bg-[#F8FCFB] text-[#688B87] hover:bg-[#E8F6F4] hover:text-[#087F77] lg:hidden" onClick={() => setActive("Settings")} title="Profile"><UserCircle size={19} /></button>
             </div>
           </div>
@@ -327,9 +327,8 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
   const completedTasks = week.workTasks.filter((task) => task.status === "Completed").length + week.learningTasks.filter((task) => task.status === "Done").length;
   const completion = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const agenda: AgendaEntry[] = [
-    ...selectedWork.map((task, index) => ({
+    ...selectedWork.map((task) => ({
       id: task.id,
-      time: ["07:30", "09:30", "14:00", "17:00"][index % 4],
       type: "Work Task",
       title: task.title,
       meta: task.projectName || "Personal",
@@ -342,6 +341,7 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
         ["Product owner", task.productOwner],
         ["Assigned date", task.assignedDate],
         ["Due date", task.dueDate],
+        ["Planned minutes", String(task.estimatedMinutes)],
         ["Status", task.status],
         ["Category", task.category],
         ["Platform", task.platform],
@@ -353,8 +353,8 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
       onToggle: () => void upsert("workTasks", { ...task, status: task.status === "Completed" ? "In Progress" : "Completed", updatedAt: new Date().toISOString() }),
       onDelete: () => confirmDelete(() => void remove("workTasks", task.id))
     })),
-    ...selectedLearning.map((task, index) => ({ id: task.id, time: ["11:30", "16:00", "19:00"][index % 3], type: "Learning Session", title: task.title, meta: `${task.plannedMinutes} min`, accent: "amber", done: task.status === "Done", icon: BookOpen, onToggle: () => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", updatedAt: new Date().toISOString() }), onDelete: () => confirmDelete(() => void remove("learningTasks", task.id)) }))
-  ].sort((a, b) => a.time.localeCompare(b.time));
+    ...selectedLearning.map((task) => ({ id: task.id, type: "Learning Session", title: task.title, meta: `${task.plannedMinutes} min`, accent: "amber", done: task.status === "Done", icon: BookOpen, onToggle: () => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", updatedAt: new Date().toISOString() }), onDelete: () => confirmDelete(() => void remove("learningTasks", task.id)) }))
+  ];
 
   return (
     <div className="overflow-hidden rounded-xl border border-[#D5EBE7] bg-white shadow-[0_18px_50px_rgba(41,112,103,0.08)]">
@@ -419,7 +419,6 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
 
 type AgendaEntry = {
   id: string;
-  time: string;
   type: string;
   title: string;
   meta: string;
@@ -432,12 +431,11 @@ type AgendaEntry = {
   onDelete?: () => void;
 };
 
-function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, priority, details, onToggle, onDelete }: AgendaEntry) {
+function AgendaItem({ type, title, meta, accent, done, icon: Icon, priority, details, onToggle, onDelete }: AgendaEntry) {
   const tone = accent === "blue" ? "border-blue-500/40 bg-blue-500/10 text-blue-300" : accent === "amber" ? "border-amber-500/40 bg-amber-500/10 text-amber-300" : "border-rose-500/40 bg-rose-500/10 text-rose-300";
   return (
     <div className="border-b border-[#1e2935] py-3 last:border-b-0">
-      <div className="grid min-h-[44px] grid-cols-[64px_1fr_auto] items-center gap-3">
-        <p className="text-xs tabular-nums text-slate-500">{time}</p>
+      <div className="grid min-h-[44px] grid-cols-[1fr_auto] items-center gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-md border ${tone}`}><Icon size={17} /></div>
           <div className="min-w-0">
@@ -451,7 +449,7 @@ function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, priorit
           {onDelete && <button type="button" onClick={onDelete} className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[#F0D6DA] bg-[#FFF7F8] text-[#BD3345] transition hover:bg-[#FFEBED]" title="Delete task" aria-label={`Delete ${title}`}><Trash2 size={15} /></button>}
         </div>
       </div>
-      {details?.length ? <details className="ml-[76px] mt-2">
+      {details?.length ? <details className="ml-12 mt-2">
         <summary className="w-fit cursor-pointer text-xs font-semibold text-[#10A89A] hover:text-[#087F77]">View task details</summary>
         <div className="mt-3 grid gap-x-5 gap-y-3 rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] p-4 sm:grid-cols-2">
           {details.map(([label, value]) => <div key={label} className={["Description", "Notes", "Blockers"].includes(label) ? "sm:col-span-2" : ""}><p className="text-[10px] font-bold uppercase text-[#688B87]">{label}</p><p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#123F3B]">{value}</p></div>)}
@@ -473,39 +471,6 @@ function ProgressStat({ title, value, detail, progress, tone, icon: Icon }: { ti
   );
 }
 
-function CompletedWorkPanel({ completedWork, pendingWork, setActive }: { completedWork: WorkTask[]; pendingWork: WorkTask[]; setActive: (tab: Tab) => void }) {
-  const [filter, setFilter] = useState<"Completed" | "Pending">("Completed");
-  const items = filter === "Completed" ? completedWork : pendingWork;
-  return (
-    <Card>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-semibold">Work status this week</h2>
-          <p className="text-sm text-slate-500">Use this to quickly see what is done and what still needs attention.</p>
-        </div>
-        <div className="flex gap-2">
-          <select className={inputClass} value={filter} onChange={(event) => setFilter(event.target.value as "Completed" | "Pending")}>
-            <option value="Completed">Completed work</option>
-            <option value="Pending">Pending work</option>
-          </select>
-          <Button variant="secondary" onClick={() => setActive("Work Tasks")}>Open tasks</Button>
-        </div>
-      </div>
-      <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-        {items.length ? items.slice(0, 6).map((task) => (
-          <div key={task.id} className="rounded-md border border-line p-3 text-sm">
-            <div className="flex items-start justify-between gap-2">
-              <p className="font-semibold">{task.title}</p>
-              <Badge tone={filter === "Completed" ? "green" : badgeTone(task.status)}>{task.status}</Badge>
-            </div>
-            <p className="mt-1 text-slate-500">{task.projectName || "No project"} - {task.dayOfWeek}</p>
-          </div>
-        )) : <EmptyState title={`No ${filter.toLowerCase()} work`} text={filter === "Completed" ? "Mark tasks completed to see them here." : "Nice, nothing pending for this week."} />}
-      </div>
-    </Card>
-  );
-}
-
 function Metric({ title, value, hint }: { title: string; value: string | number; hint?: string }) {
   const tone = /done|completion/i.test(title) ? "border-[#BDE7D8] bg-[#F1FBF7]" : /pending|blocked/i.test(title) ? "border-[#F1D99B] bg-[#FFFAEC]" : /skill|learning/i.test(title) ? "border-[#CDE9E5] bg-[#F4FBFA]" : "border-[#CDE9E5] bg-white";
   const dot = /done|completion/i.test(title) ? "bg-[#22B884]" : /pending|blocked/i.test(title) ? "bg-[#F0B95A]" : "bg-[#10A89A]";
@@ -515,17 +480,6 @@ function Metric({ title, value, hint }: { title: string; value: string | number;
       <p className="mt-2 text-[32px] font-bold leading-none text-[#123F3B]">{value}</p>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
     </Card>
-  );
-}
-
-function TaskMiniList({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div>
-      <p className="text-sm font-semibold">{title}</p>
-      <div className="mt-2 grid gap-2">
-        {items.length ? items.slice(0, 4).map((item) => <div key={item} className="rounded-md border border-line px-3 py-2 text-sm">{item}</div>) : <p className="text-sm text-slate-500">Nothing planned yet.</p>}
-      </div>
-    </div>
   );
 }
 
@@ -614,6 +568,7 @@ function WorkTaskCard({ task, onChange, onEdit, onDelete }: { task: WorkTask; on
     ["Product owner", task.productOwner],
     ["Assigned", task.assignedDate],
     ["Due", task.dueDate],
+    ["Planned minutes", String(task.estimatedMinutes)],
     ["Status", task.status],
     ["Category", task.category],
     ["Platform", task.platform],
@@ -675,7 +630,7 @@ function SprintPlanPage({ weekStart }: { weekStart: string }) {
       return true;
     });
     const now = new Date().toISOString();
-    await Promise.all(toCreate.map((task) => upsert("workTasks", { ...task, id: newId("wt"), userId: user.id, assignedDate: nextWeek, dayOfWeek: "Monday", status: "In Progress", createdAt: now, updatedAt: now })));
+    await Promise.all(toCreate.map((task) => upsert("workTasks", { ...task, id: newId("wt"), userId: user.id, assignedDate: nextWeek, status: "In Progress", createdAt: now, updatedAt: now })));
     const skipped = pending.length - toCreate.length;
     setCarryMessage(`${toCreate.length} task${toCreate.length === 1 ? "" : "s"} carried to ${format(new Date(`${nextWeek}T00:00:00`), "MMM d")}${skipped ? `; ${skipped} already there` : ""}.`);
   }
@@ -807,7 +762,7 @@ function SkillTile({ skill, tasks, done, tone, onAddTask, onEditSkill, onDeleteS
   return (
     <article className={`min-h-[250px] rounded-lg border p-4 transition hover:-translate-y-0.5 ${tones[tone]}`}>
       <div className="flex items-start justify-between gap-3">
-        <div><p className="text-base font-semibold">{skill.skillName}</p><p className="mt-1 text-xs text-[#7A8499]">{skill.category} · {skill.weeklyTargetMinutes} min/week</p></div>
+        <div><p className="text-base font-semibold">{skill.skillName}</p><p className="mt-1 text-xs text-[#7A8499]">{skill.category} · {skill.currentLevel} to {skill.targetLevel}</p><p className="mt-1 text-[10px] text-[#789793]">{skill.weeklyTargetMinutes} min/week · deadline {skill.deadline}</p></div>
         <div className="flex items-center gap-1"><span className={`mr-2 text-xs font-medium ${accents[tone]}`}>{done}/{tasks.length} done</span><button onClick={onEditSkill} className="p-1.5 text-[#7A8499] hover:text-white" title="Edit skill"><Pencil size={14} /></button><button onClick={onDeleteSkill} className="p-1.5 text-[#7A8499] hover:text-rose-300" title="Delete skill"><Trash2 size={14} /></button></div>
       </div>
       <div className="mt-4 grid gap-2">
@@ -830,17 +785,13 @@ function ModalShell({ title, onClose, children }: { title: string; onClose: () =
 function WorkAnalytics({ weekStart }: { weekStart: string }) {
   const { data } = useStore();
   const week = scopedWeekData(data, weekStart);
-  const score = productivityScore(week.workTasks, week.learningTasks);
   return (
     <AnalyticsGrid>
       <Metric title="Planned work hours" value={`${minutesToHours(week.workTasks.reduce((total, task) => total + task.estimatedMinutes, 0))}h`} />
       <Metric title="Active tasks" value={week.workTasks.filter((task) => task.status === "In Progress").length} />
       <Metric title="High priority pending" value={week.workTasks.filter((task) => task.priority === "High" && task.status !== "Completed").length} />
-      <Metric title="Weekly productivity" value={`${score}/100`} hint={productivityLabel(score)} />
       <ChartCard title="Daily work hours"><BarChartBox data={dailySeries(data, weekStart)} bars={[["workHours", "#10A89A"]]} /></ChartCard>
       <ChartCard title="Time by project"><PieChartBox data={projectDistribution(week.workTasks)} /></ChartCard>
-      <ChartCard title="Status distribution"><PieChartBox data={statusDistribution(week.workTasks)} /></ChartCard>
-      <ChartCard title="Priority distribution"><PieChartBox data={priorityDistribution(week.workTasks)} /></ChartCard>
     </AnalyticsGrid>
   );
 }
@@ -854,35 +805,13 @@ function LearningAnalytics({ weekStart }: { weekStart: string }) {
   const dailyData = dailySeries(data, weekStart);
   const categoryData = skillCategoryDistribution(week.skills, week.learningTasks);
   const hasDailyData = dailyData.some((item) => item.learningHours > 0);
-  const completion = week.learningTasks.length ? Math.round((completed / week.learningTasks.length) * 100) : 0;
-  const totalPlannedMinutes = week.learningTasks.reduce((total, task) => total + task.plannedMinutes, 0);
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-      <section className="grid gap-4">
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3"><Metric title="Learning hours" value={`${learningHours}h`} /><Metric title="Tasks done" value={completed} /><Metric title="Pending tasks" value={pending} /></div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Daily learning hours">{hasDailyData ? <BarChartBox data={dailyData} bars={[["learningHours", "#10A89A"]]} /> : <ChartEmptyState />}</ChartCard>
-          <ChartCard title="Time by skill category">{categoryData.some((item) => item.value > 0) ? <PieChartBox data={categoryData} /> : <ChartEmptyState />}</ChartCard>
-        </div>
-        <div>
-          <h2 className="mb-3 text-base font-semibold">Skill performance</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {data.skills.map((skill, index) => {
-              const tasks = week.learningTasks.filter((task) => task.skillId === skill.id);
-              const done = tasks.filter((task) => task.status === "Done").length;
-              const completedMinutes = tasks.filter((task) => task.status === "Done").reduce((total, task) => total + task.plannedMinutes, 0);
-              return <div key={skill.id} className={`rounded-lg border p-4 ${["border-[#CDE9E5] bg-[#F4FBFA]", "border-[#BDE7D8] bg-[#F1FBF7]", "border-[#D3E6E3] bg-[#FAFDFC]", "border-[#F1D99B] bg-[#FFFAEC]"][index % 4]}`}><div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{skill.skillName}</p><p className="mt-1 text-xs text-[#688B87]">{skill.category} · {minutesToHours(completedMinutes)}h completed</p></div><span className="text-xs font-medium text-[#087F5B]">{done}/{tasks.length} done</span></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-[#DCEFEB]"><div className="h-full bg-[#10A89A]" style={{ width: `${tasks.length ? (done / tasks.length) * 100 : 0}%` }} /></div></div>;
-            })}
-          </div>
-        </div>
-      </section>
-      <Card className="h-fit xl:sticky xl:top-[90px]">
-        <h2 className="text-base font-semibold">Weekly progress</h2>
-        <div className="mt-4 rounded-lg bg-[#10A89A] p-5 text-white shadow-[0_14px_32px_rgba(16,168,154,0.16)]"><p className="text-[11px] font-bold uppercase text-white/75">Completion</p><p className="mt-2 text-4xl font-extrabold tabular-nums">{completion}%</p><p className="mt-1 text-xs text-white/75">{completed} of {week.learningTasks.length} tasks done</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-white" style={{ width: `${completion}%` }} /></div></div>
-        <div className="mt-5"><ProgressMiniStat value={`${minutesToHours(totalPlannedMinutes)}h`} label="Planned learning" /></div>
-        <h3 className="mt-6 text-sm font-semibold">Category breakdown</h3>
-        <div className="mt-3 grid gap-3">{categoryData.map((category, index) => <div key={category.name} className="rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] p-3"><div className="flex items-center justify-between text-xs"><span>{category.name}</span><span className="font-medium text-[#087F5B]">{category.value}h</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#DCEFEB]"><div className="h-full" style={{ width: `${totalPlannedMinutes ? Math.min(100, (category.value * 60 / totalPlannedMinutes) * 100) : 0}%`, backgroundColor: colors[index % colors.length] }} /></div></div>)}</div>
-      </Card>
+    <div className="grid gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3"><Metric title="Learning hours" value={`${learningHours}h`} /><Metric title="Tasks done" value={completed} /><Metric title="Pending tasks" value={pending} /></div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ChartCard title="Daily learning hours">{hasDailyData ? <BarChartBox data={dailyData} bars={[["learningHours", "#10A89A"]]} /> : <ChartEmptyState />}</ChartCard>
+        <ChartCard title="Time by skill category">{categoryData.some((item) => item.value > 0) ? <PieChartBox data={categoryData} /> : <ChartEmptyState />}</ChartCard>
+      </div>
     </div>
   );
 }
@@ -897,12 +826,8 @@ function WeeklyReviewPage({ weekStart }: { weekStart: string }) {
     weekStartDate: bounds.startInput,
     weekEndDate: bounds.endInput,
     completedSummary: "",
-    incompleteSummary: "",
     blockers: "",
     keyLearnings: "",
-    skillsImproved: "",
-    workHighlights: "",
-    improvementAreas: "",
     nextWeekPlan: "",
     autoSummaryJson: {},
     createdAt: new Date().toISOString(),
@@ -921,12 +846,11 @@ function WeeklyReviewPage({ weekStart }: { weekStart: string }) {
         <div className="mt-4 grid gap-2 text-sm">
           {Object.entries(summary).map(([key, value]) => <div key={key} className="rounded-md bg-soft p-2"><span className="font-medium">{labelize(key)}: </span>{Array.isArray(value) ? value.join(", ") || "None" : String(value)}</div>)}
         </div>
-        <Button className="mt-4 w-full" onClick={() => setReview((current) => ({ ...current, autoSummaryJson: summary }))}>Attach summary</Button>
       </Card>
       <Card>
         <h2 className="font-semibold">Weekly review notes</h2>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {(["completedSummary", "incompleteSummary", "blockers", "keyLearnings", "skillsImproved", "workHighlights", "improvementAreas", "nextWeekPlan"] as const).map((field) => (
+          {(["completedSummary", "blockers", "keyLearnings", "nextWeekPlan"] as const).map((field) => (
             <Field key={field} label={labelize(field)}>
               <textarea className={inputClass} rows={4} value={String(review[field])} onChange={(e) => setField(field, e.target.value)} />
             </Field>
@@ -939,7 +863,7 @@ function WeeklyReviewPage({ weekStart }: { weekStart: string }) {
 }
 
 function SettingsPage() {
-  const { mode, user, resetDemo, data, changePassword } = useStore();
+  const { mode, user, data, changePassword } = useStore();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -986,7 +910,6 @@ function SettingsPage() {
           <p><span className="font-medium">Storage mode:</span> {mode}</p>
           <p><span className="font-medium">Records:</span> {data.workTasks.length} work tasks, {data.skills.length} skills, {data.learningTasks.length} learning tasks</p>
         </div>
-        <Button className="mt-4" variant="secondary" onClick={resetDemo}>Reload sample data</Button>
       </Card>
       <Card>
         <div className="flex items-center gap-2"><LockKeyhole size={18} className="text-blue-300" /><h2 className="font-semibold">Change password</h2></div>
@@ -1022,11 +945,12 @@ function CrudLayout({ title, filters, form, children }: { title: string; filters
 function WorkTaskForm({ item, onSave, onCancel }: { item: WorkTask | null; onSave: (item: WorkTask) => void; onCancel: () => void }) {
   const stamp = new Date().toISOString();
   const [task, setTask] = useState<WorkTask>(item || {
-    id: newId("wt"), userId: "", title: "", projectName: "Personal", productOwner: "Personal", platform: "Other", poc: "Personal", category: "General", description: "", receivedDate: toDateInput(new Date()), assignedDate: toDateInput(new Date()), dueDate: toDateInput(new Date()), dayOfWeek: format(new Date(), "EEEE"), estimatedMinutes: 60, status: "In Progress", priority: "Low", notes: "", blockers: "", createdAt: stamp, updatedAt: stamp
+    id: newId("wt"), userId: "", title: "", projectName: "Personal", productOwner: "Personal", platform: "Other", poc: "Personal", category: "General", description: "", assignedDate: toDateInput(new Date()), dueDate: toDateInput(new Date()), estimatedMinutes: 60, status: "In Progress", priority: "Low", notes: "", blockers: "", createdAt: stamp, updatedAt: stamp
   });
-  return <FormGrid onSubmit={() => task.title.trim() && onSave({ ...task, dayOfWeek: format(new Date(`${task.assignedDate}T00:00:00`), "EEEE"), updatedAt: new Date().toISOString() })} onCancel={onCancel}>
+  return <FormGrid onSubmit={() => task.title.trim() && onSave({ ...task, updatedAt: new Date().toISOString() })} onCancel={onCancel}>
     <TextField label="Task title" value={task.title} onChange={(v) => setTask({ ...task, title: v })} required />
     <SelectField label="Priority" value={task.priority} options={["Low", "High"]} onChange={(v) => setTask({ ...task, priority: v as WorkTask["priority"] })} />
+    <NumberField label="Planned minutes" value={task.estimatedMinutes} onChange={(v) => setTask({ ...task, estimatedMinutes: v })} />
     <details className="rounded-md border border-line p-3">
       <summary className="cursor-pointer text-sm font-semibold text-slate-200">Task details</summary>
       <div className="mt-3 grid gap-3">

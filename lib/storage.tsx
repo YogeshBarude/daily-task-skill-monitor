@@ -21,7 +21,6 @@ type AppStore = {
   signOut: () => Promise<void>;
   upsert: <T extends Entity>(collection: Collection, item: T) => Promise<void>;
   remove: (collection: Collection, id: string) => Promise<void>;
-  resetDemo: () => void;
 };
 
 const StoreContext = createContext<AppStore | null>(null);
@@ -173,12 +172,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const resetDemo = useCallback(() => {
-    const next = createSampleData(user?.id || demoUser.id);
-    setData(next);
-  }, [user?.id]);
-
-  const value = useMemo<AppStore>(() => ({ user, session, data, loading, mode, signUp, signIn, changePassword, signOut, upsert, remove, resetDemo }), [user, session, data, loading, mode, signUp, signIn, changePassword, signOut, upsert, remove, resetDemo]);
+  const value = useMemo<AppStore>(() => ({ user, session, data, loading, mode, signUp, signIn, changePassword, signOut, upsert, remove }), [user, session, data, loading, mode, signUp, signIn, changePassword, signOut, upsert, remove]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
@@ -200,27 +194,27 @@ function upsertLocal(items: Entity[], item: Entity) {
 }
 
 function normalizeAppData(data: AppData): AppData {
-  const today = new Date().toISOString().slice(0, 10);
   const defaults = createSampleData(demoUser.id);
   return {
     skills: data.skills || defaults.skills,
     learningTasks: data.learningTasks || defaults.learningTasks,
     weeklyReviews: data.weeklyReviews || defaults.weeklyReviews,
     workTasks: (data.workTasks || []).map((task) => {
-      const legacyTask = task as WorkTask & { actualMinutes?: number; workType?: string; completionPercentage?: number; deliverable?: string; learnings?: string };
+      const legacyTask = task as WorkTask & { actualMinutes?: number; workType?: string; completionPercentage?: number; deliverable?: string; learnings?: string; receivedDate?: string; dayOfWeek?: string };
       const currentTask = { ...legacyTask };
       delete currentTask.actualMinutes;
       delete currentTask.workType;
       delete currentTask.completionPercentage;
       delete currentTask.deliverable;
       delete currentTask.learnings;
+      delete currentTask.receivedDate;
+      delete currentTask.dayOfWeek;
       return {
         ...currentTask,
         status: task.status === "Completed" ? "Completed" : "In Progress",
         priority: task.priority === "High" ? "High" : "Low",
         productOwner: task.productOwner || task.poc || "Personal",
-        receivedDate: task.receivedDate || task.assignedDate || today,
-        dueDate: task.dueDate || task.assignedDate || today
+        dueDate: task.dueDate || task.assignedDate
       };
     })
   };
@@ -240,10 +234,8 @@ function toDb(collection: Collection, item: Entity) {
       poc: task.poc,
       category: task.category,
       description: task.description,
-      received_date: task.receivedDate,
       assigned_date: task.assignedDate,
       due_date: task.dueDate,
-      day_of_week: task.dayOfWeek,
       estimated_minutes: task.estimatedMinutes,
       status: task.status,
       priority: task.priority,
@@ -285,12 +277,8 @@ function toDb(collection: Collection, item: Entity) {
       week_start_date: review.weekStartDate,
       week_end_date: review.weekEndDate,
       completed_summary: review.completedSummary,
-      incomplete_summary: review.incompleteSummary,
       blockers: review.blockers,
       key_learnings: review.keyLearnings,
-      skills_improved: review.skillsImproved,
-      work_highlights: review.workHighlights,
-      improvement_areas: review.improvementAreas,
       next_week_plan: review.nextWeekPlan,
       auto_summary_json: review.autoSummaryJson
     };
@@ -309,10 +297,8 @@ function fromWorkTask(row: any): WorkTask {
     poc: row.poc || "",
     category: row.category || "",
     description: row.description || "",
-    receivedDate: row.received_date || row.assigned_date,
     assignedDate: row.assigned_date,
     dueDate: row.due_date || row.assigned_date,
-    dayOfWeek: row.day_of_week || "",
     estimatedMinutes: row.estimated_minutes || 0,
     status: row.status === "Completed" ? "Completed" : "In Progress",
     priority: row.priority === "High" ? "High" : "Low",
@@ -368,12 +354,8 @@ function fromWeeklyReview(row: any): WeeklyReview {
     weekStartDate: row.week_start_date,
     weekEndDate: row.week_end_date,
     completedSummary: row.completed_summary || "",
-    incompleteSummary: row.incomplete_summary || "",
     blockers: row.blockers || "",
     keyLearnings: row.key_learnings || "",
-    skillsImproved: row.skills_improved || "",
-    workHighlights: row.work_highlights || "",
-    improvementAreas: row.improvement_areas || "",
     nextWeekPlan: row.next_week_plan || "",
     autoSummaryJson: row.auto_summary_json || {},
     createdAt: row.created_at,
