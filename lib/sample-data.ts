@@ -27,13 +27,10 @@ export function createSampleData(userId = demoUser.id): AppData {
       dueDate: days[1].input,
       dayOfWeek: days[0].dayName,
       estimatedMinutes: 120,
-      completionPercentage: 100,
       status: "Completed",
       priority: "High",
       notes: "Validated upload, mapping, and score output behavior.",
-      deliverable: "Testing notes and defect list",
       blockers: "",
-      learnings: "Model validation flows need clearer error states.",
       createdAt: now,
       updatedAt: now
     },
@@ -52,13 +49,10 @@ export function createSampleData(userId = demoUser.id): AppData {
       dueDate: days[4].input,
       dayOfWeek: days[2].dayName,
       estimatedMinutes: 180,
-      completionPercentage: 50,
       status: "In Progress",
       priority: "Low",
       notes: "Charts drafted, narrative pending.",
-      deliverable: "Analysis deck",
       blockers: "Waiting on final benchmark numbers",
-      learnings: "Need reusable deck structure.",
       createdAt: now,
       updatedAt: now
     },
@@ -77,13 +71,10 @@ export function createSampleData(userId = demoUser.id): AppData {
       dueDate: days[6].input,
       dayOfWeek: days[4].dayName,
       estimatedMinutes: 150,
-      completionPercentage: 0,
-      status: "Planned",
+      status: "In Progress",
       priority: "High",
       notes: "",
-      deliverable: "Benchmark table",
       blockers: "",
-      learnings: "",
       createdAt: now,
       updatedAt: now
     },
@@ -102,13 +93,10 @@ export function createSampleData(userId = demoUser.id): AppData {
       dueDate: days[3].input,
       dayOfWeek: days[1].dayName,
       estimatedMinutes: 90,
-      completionPercentage: 45,
       status: "In Progress",
       priority: "Low",
       notes: "Intro and setup sections done.",
-      deliverable: "Demo script",
       blockers: "",
-      learnings: "",
       createdAt: now,
       updatedAt: now
     }
@@ -122,10 +110,10 @@ export function createSampleData(userId = demoUser.id): AppData {
   ];
 
   const learningTasks: LearningTask[] = [
-    learning("lt-1", userId, "sk-1", "Build simple API with GET and POST endpoints", days[1].input, 90, 120, "Done", "Build"),
-    learning("lt-2", userId, "sk-2", "Review dashboard layout patterns", days[3].input, 75, 0, "Planned", "Read"),
-    learning("lt-3", userId, "sk-3", "Practice production-ready error handling", days[4].input, 90, 30, "In Progress", "Practice"),
-    learning("lt-4", userId, "sk-4", "Watch business presentation lesson", days[5].input, 120, 0, "Planned", "Watch")
+    learning("lt-1", userId, "sk-1", "Build simple API with GET and POST endpoints", days[1].input, 90, "Done", "Build"),
+    learning("lt-2", userId, "sk-2", "Review dashboard layout patterns", days[3].input, 75, "Planned", "Read"),
+    learning("lt-3", userId, "sk-3", "Practice production-ready error handling", days[4].input, 90, "In Progress", "Practice"),
+    learning("lt-4", userId, "sk-4", "Watch business presentation lesson", days[5].input, 120, "Planned", "Watch")
   ];
 
   const weeklyReviews: WeeklyReview[] = [
@@ -166,7 +154,7 @@ function skill(id: string, userId: string, skillName: Skill["skillName"], catego
   };
 }
 
-function learning(id: string, userId: string, skillId: string, title: string, plannedDate: string, plannedMinutes: number, actualMinutes: number, status: LearningTask["status"], learningType: LearningTask["learningType"]): LearningTask {
+function learning(id: string, userId: string, skillId: string, title: string, plannedDate: string, plannedMinutes: number, status: LearningTask["status"], learningType: LearningTask["learningType"]): LearningTask {
   return {
     id,
     userId,
@@ -175,7 +163,6 @@ function learning(id: string, userId: string, skillId: string, title: string, pl
     learningType,
     plannedDate,
     plannedMinutes,
-    actualMinutes,
     status,
     createdAt: now,
     updatedAt: now

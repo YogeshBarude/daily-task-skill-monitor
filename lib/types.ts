@@ -1,6 +1,6 @@
 export type ID = string;
 
-export type WorkStatus = "Backlog" | "Planned" | "In Progress" | "Blocked" | "Completed";
+export type WorkStatus = "In Progress" | "Completed";
 export type LearningStatus = "Planned" | "In Progress" | "Done" | "Skipped";
 export type Priority = "Low" | "High";
 export type WeekStatus = "Not Started" | "In Progress" | "Completed" | "Overdue";
@@ -26,13 +26,10 @@ export type WorkTask = {
   dueDate: string;
   dayOfWeek: string;
   estimatedMinutes: number;
-  completionPercentage: number;
   status: WorkStatus;
   priority: Priority;
   notes: string;
-  deliverable: string;
   blockers: string;
-  learnings: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -58,7 +55,6 @@ export type LearningTask = {
   learningType: "Read" | "Watch" | "Practice" | "Build" | "Review";
   plannedDate: string;
   plannedMinutes: number;
-  actualMinutes: number;
   status: LearningStatus;
   createdAt: string;
   updatedAt: string;

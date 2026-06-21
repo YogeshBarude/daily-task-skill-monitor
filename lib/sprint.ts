@@ -1,7 +1,7 @@
 import { addDays, format, parseISO } from "date-fns";
 import { WorkTask } from "./types";
 
-export const sprintColumns = ["Project", "Task", "Product Owner", "Priority", "Completion", "Assigned Date", "Due Date", "Status"];
+export const sprintColumns = ["Project", "Task", "Product Owner", "Priority", "Assigned Date", "Due Date", "Status"];
 
 export function tasksForSprint(tasks: WorkTask[], weekStart: string) {
   const start = parseISO(weekStart);
@@ -23,7 +23,6 @@ export function sprintCsv(tasks: WorkTask[]) {
       task.title,
       task.productOwner,
       task.priority,
-      `${task.completionPercentage}%`,
       task.assignedDate,
       task.dueDate,
       task.status
@@ -35,7 +34,7 @@ export function sprintShareText(tasks: WorkTask[], weekStart: string) {
   const end = format(addDays(parseISO(weekStart), 6), "dd MMM yyyy");
   const start = format(parseISO(weekStart), "dd MMM yyyy");
   const lines = tasks.map((task, index) =>
-    `${index + 1}. ${task.projectName} | ${task.title} | PO: ${task.productOwner} | ${task.priority} priority | ${task.completionPercentage}% | Assigned: ${task.assignedDate} | Due: ${task.dueDate} | ${task.status}`
+    `${index + 1}. ${task.projectName} | ${task.title} | PO: ${task.productOwner} | ${task.priority} priority | Assigned: ${task.assignedDate} | Due: ${task.dueDate} | ${task.status}`
   );
   return `Sprint Plan: ${start} - ${end}\n\n${lines.join("\n")}`;
 }

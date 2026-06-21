@@ -73,6 +73,7 @@ supabase/migrations/20260620_remove_finance_module.sql
 supabase/migrations/20260620_remove_time_tracker.sql
 supabase/migrations/20260620_default_work_tasks_in_progress.sql
 supabase/migrations/20260621_simplify_work_tasks.sql
+supabase/migrations/20260621_remove_unused_task_fields.sql
 ```
 
 These migrations add the current task and learning fields, secure the profile trigger, and remove retired finance and time-tracker tables.
@@ -91,7 +92,6 @@ Sprint columns:
 - Task
 - Product owner
 - Work hours
-- Completion percentage
 - Assigned date
 - Due date
 - Status

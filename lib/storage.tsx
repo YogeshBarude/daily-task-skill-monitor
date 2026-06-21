@@ -96,7 +96,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [workTasks, skills, learningTasks, weeklyReviews] = await Promise.all([
       supabase.from("work_tasks").select("*").eq("user_id", userId),
       supabase.from("skills").select("id,user_id,skill_name,category,current_level,target_level,weekly_target_minutes,deadline,created_at,updated_at").eq("user_id", userId),
-      supabase.from("learning_tasks").select("id,user_id,skill_id,title,learning_type,planned_date,planned_minutes,actual_minutes,status,created_at,updated_at").eq("user_id", userId),
+      supabase.from("learning_tasks").select("id,user_id,skill_id,title,learning_type,planned_date,planned_minutes,status,created_at,updated_at").eq("user_id", userId),
       supabase.from("weekly_reviews").select("*").eq("user_id", userId)
     ]);
     setData({
@@ -207,17 +207,20 @@ function normalizeAppData(data: AppData): AppData {
     learningTasks: data.learningTasks || defaults.learningTasks,
     weeklyReviews: data.weeklyReviews || defaults.weeklyReviews,
     workTasks: (data.workTasks || []).map((task) => {
-      const legacyTask = task as WorkTask & { actualMinutes?: number; workType?: string };
+      const legacyTask = task as WorkTask & { actualMinutes?: number; workType?: string; completionPercentage?: number; deliverable?: string; learnings?: string };
       const currentTask = { ...legacyTask };
       delete currentTask.actualMinutes;
       delete currentTask.workType;
+      delete currentTask.completionPercentage;
+      delete currentTask.deliverable;
+      delete currentTask.learnings;
       return {
         ...currentTask,
+        status: task.status === "Completed" ? "Completed" : "In Progress",
         priority: task.priority === "High" ? "High" : "Low",
         productOwner: task.productOwner || task.poc || "Personal",
         receivedDate: task.receivedDate || task.assignedDate || today,
-        dueDate: task.dueDate || task.assignedDate || today,
-        completionPercentage: task.completionPercentage ?? (task.status === "Completed" ? 100 : 0)
+        dueDate: task.dueDate || task.assignedDate || today
       };
     })
   };
@@ -242,13 +245,10 @@ function toDb(collection: Collection, item: Entity) {
       due_date: task.dueDate,
       day_of_week: task.dayOfWeek,
       estimated_minutes: task.estimatedMinutes,
-      completion_percentage: task.completionPercentage,
       status: task.status,
       priority: task.priority,
       notes: task.notes,
-      deliverable: task.deliverable,
-      blockers: task.blockers,
-      learnings: task.learnings
+      blockers: task.blockers
     };
   }
   if (collection === "skills") {
@@ -274,7 +274,6 @@ function toDb(collection: Collection, item: Entity) {
       learning_type: task.learningType,
       planned_date: task.plannedDate,
       planned_minutes: task.plannedMinutes,
-      actual_minutes: task.actualMinutes,
       status: task.status
     };
   }
@@ -315,13 +314,10 @@ function fromWorkTask(row: any): WorkTask {
     dueDate: row.due_date || row.assigned_date,
     dayOfWeek: row.day_of_week || "",
     estimatedMinutes: row.estimated_minutes || 0,
-    completionPercentage: row.completion_percentage ?? (row.status === "Completed" ? 100 : 0),
-    status: row.status,
+    status: row.status === "Completed" ? "Completed" : "In Progress",
     priority: row.priority === "High" ? "High" : "Low",
     notes: row.notes || "",
-    deliverable: row.deliverable || "",
     blockers: row.blockers || "",
-    learnings: row.learnings || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -351,7 +347,6 @@ function fromLearningTask(row: any): LearningTask {
     learningType: normalizeLearningType(row.learning_type),
     plannedDate: row.planned_date,
     plannedMinutes: row.planned_minutes || 0,
-    actualMinutes: row.actual_minutes || 0,
     status: row.status === "Completed" ? "Done" : row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at

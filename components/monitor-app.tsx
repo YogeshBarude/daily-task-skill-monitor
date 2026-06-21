@@ -262,7 +262,6 @@ function QuickLearningTaskModal({ onClose }: { onClose: () => void }) {
     learningType: "Practice",
     plannedDate: toDateInput(new Date()),
     plannedMinutes: 30,
-    actualMinutes: 30,
     status: "Done",
     createdAt: stamp,
     updatedAt: stamp
@@ -287,7 +286,6 @@ function QuickLearningTaskModal({ onClose }: { onClose: () => void }) {
           <TextField label="Task title" value={task.title} onChange={(value) => setTask({ ...task, title: value })} required />
           <TextField label="Planned date" type="date" value={task.plannedDate} onChange={(value) => setTask({ ...task, plannedDate: value })} />
           <NumberField label="Planned minutes" value={task.plannedMinutes} onChange={(value) => setTask({ ...task, plannedMinutes: value })} />
-          <NumberField label="Actual minutes" value={task.actualMinutes} onChange={(value) => setTask({ ...task, actualMinutes: value })} />
           <SelectField label="Status" value={task.status} options={["Planned", "In Progress", "Done", "Skipped"]} onChange={(value) => setTask({ ...task, status: value as LearningTask["status"] })} />
           <Button type="submit" disabled={!data.skills.length}>Save</Button>
           {!data.skills.length && <p className="text-xs text-[#7A8499]">Add a skill before logging a learning task.</p>}
@@ -350,11 +348,9 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
         ["Stakeholder", task.poc],
         ["Description", task.description],
         ["Notes", task.notes],
-        ["Deliverable", task.deliverable],
         ["Blockers", task.blockers],
-        ["Learning", task.learnings]
       ].filter((detail) => detail[1]),
-      onToggle: () => void upsert("workTasks", { ...task, status: task.status === "Completed" ? "In Progress" : "Completed", completionPercentage: task.status === "Completed" ? Math.min(task.completionPercentage, 99) : 100, updatedAt: new Date().toISOString() }),
+      onToggle: () => void upsert("workTasks", { ...task, status: task.status === "Completed" ? "In Progress" : "Completed", updatedAt: new Date().toISOString() }),
       onDelete: () => confirmDelete(() => void remove("workTasks", task.id))
     })),
     ...selectedLearning.map((task, index) => ({ id: task.id, time: ["11:30", "16:00", "19:00"][index % 3], type: "Learning Session", title: task.title, meta: `${task.plannedMinutes} min`, accent: "amber", done: task.status === "Done", icon: BookOpen, onToggle: () => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", updatedAt: new Date().toISOString() }), onDelete: () => confirmDelete(() => void remove("learningTasks", task.id)) }))
@@ -458,7 +454,7 @@ function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, priorit
       {details?.length ? <details className="ml-[76px] mt-2">
         <summary className="w-fit cursor-pointer text-xs font-semibold text-[#10A89A] hover:text-[#087F77]">View task details</summary>
         <div className="mt-3 grid gap-x-5 gap-y-3 rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] p-4 sm:grid-cols-2">
-          {details.map(([label, value]) => <div key={label} className={["Description", "Notes", "Deliverable", "Blockers", "Learning"].includes(label) ? "sm:col-span-2" : ""}><p className="text-[10px] font-bold uppercase text-[#688B87]">{label}</p><p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#123F3B]">{value}</p></div>)}
+          {details.map(([label, value]) => <div key={label} className={["Description", "Notes", "Blockers"].includes(label) ? "sm:col-span-2" : ""}><p className="text-[10px] font-bold uppercase text-[#688B87]">{label}</p><p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#123F3B]">{value}</p></div>)}
         </div>
       </details> : null}
     </div>
@@ -593,7 +589,7 @@ function WorkTasks() {
   return (
     <CrudLayout
       title="Work task management"
-      filters={<><input className={inputClass} placeholder="Search tasks" value={query} onChange={(e) => setQuery(e.target.value)} /><select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)}><option>Active</option><option>Completed</option><option>All</option><option>Backlog</option><option>Planned</option><option>In Progress</option><option>Blocked</option></select></>}
+      filters={<><input className={inputClass} placeholder="Search tasks" value={query} onChange={(e) => setQuery(e.target.value)} /><select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)}><option>Active</option><option>Completed</option><option>All</option></select></>}
       form={<WorkTaskForm item={editing} onCancel={() => setEditing(null)} onSave={(item) => { if (user) void upsert("workTasks", { ...item, userId: user.id }); setEditing(null); }} />}
     >
       {filtered.length ? <FastTaskTable tasks={filtered} onChange={(task) => void upsert("workTasks", task)} onEdit={setEditing} onDelete={(id) => confirmDelete(() => remove("workTasks", id))} /> : <EmptyState title="No work tasks found" text="Add a task or adjust your filters." />}
@@ -624,13 +620,11 @@ function WorkTaskCard({ task, onChange, onEdit, onDelete }: { task: WorkTask; on
     ["Stakeholder", task.poc],
     ["Description", task.description],
     ["Notes", task.notes],
-    ["Deliverable", task.deliverable],
     ["Blockers", task.blockers],
-    ["Learning", task.learnings]
   ].filter(([, value]) => value);
 
   function toggleComplete() {
-    onChange({ ...task, status: done ? "In Progress" : "Completed", completionPercentage: done ? Math.min(task.completionPercentage, 99) : 100, updatedAt: new Date().toISOString() });
+    onChange({ ...task, status: done ? "In Progress" : "Completed", updatedAt: new Date().toISOString() });
   }
 
   return (
@@ -641,13 +635,9 @@ function WorkTaskCard({ task, onChange, onEdit, onDelete }: { task: WorkTask; on
           <div className="flex flex-wrap items-center gap-2">
             <h3 className={`text-sm font-semibold ${done ? "text-[#789793] line-through" : "text-[#123F3B]"}`}>{task.title}</h3>
             <Badge tone={task.priority === "High" ? "red" : "amber"}>{task.priority}</Badge>
-            <Badge tone={done ? "green" : task.status === "Blocked" ? "red" : "blue"}>{task.status}</Badge>
+            <Badge tone={done ? "green" : "blue"}>{task.status}</Badge>
           </div>
           <p className="mt-1 text-xs text-[#7A8499]">{task.projectName || "Personal"} · {task.productOwner || "No owner"} · due {task.dueDate}</p>
-          <div className="mt-3 flex items-center gap-3">
-            <ProgressBar value={task.completionPercentage} />
-            <span className="w-10 text-right text-xs text-[#7A8499]">{task.completionPercentage}%</span>
-          </div>
         </div>
         <button type="button" onClick={toggleComplete} className={`grid h-9 w-9 place-items-center rounded-md border ${done ? "border-emerald-400 bg-emerald-400 text-[#07110c]" : "border-[#465064] text-transparent hover:border-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300"}`} title={done ? "Mark in progress" : "Mark complete"}><CheckCircle2 size={18} /></button>
       </div>
@@ -671,7 +661,7 @@ function SprintPlanPage({ weekStart }: { weekStart: string }) {
   const { data, upsert, user } = useStore();
   const [carryMessage, setCarryMessage] = useState("");
   const tasks = tasksForSprint(data.workTasks, weekStart);
-  const pending = tasks.filter((task) => task.completionPercentage < 100);
+  const pending = tasks.filter((task) => task.status !== "Completed");
   const nextWeek = format(addMinutes(new Date(`${weekStart}T00:00:00`), 7 * 24 * 60), "yyyy-MM-dd");
 
   async function carryForward() {
@@ -685,7 +675,7 @@ function SprintPlanPage({ weekStart }: { weekStart: string }) {
       return true;
     });
     const now = new Date().toISOString();
-    await Promise.all(toCreate.map((task) => upsert("workTasks", { ...task, id: newId("wt"), userId: user.id, assignedDate: nextWeek, dayOfWeek: "Monday", status: task.status === "Blocked" ? "Blocked" : "In Progress", createdAt: now, updatedAt: now })));
+    await Promise.all(toCreate.map((task) => upsert("workTasks", { ...task, id: newId("wt"), userId: user.id, assignedDate: nextWeek, dayOfWeek: "Monday", status: "In Progress", createdAt: now, updatedAt: now })));
     const skipped = pending.length - toCreate.length;
     setCarryMessage(`${toCreate.length} task${toCreate.length === 1 ? "" : "s"} carried to ${format(new Date(`${nextWeek}T00:00:00`), "MMM d")}${skipped ? `; ${skipped} already there` : ""}.`);
   }
@@ -734,7 +724,7 @@ function WorkHistory() {
             {projects.map((project) => {
               const projectTasks = tasks.filter((task) => (task.projectName || "Unassigned") === project);
               const completed = projectTasks.filter((task) => task.status === "Completed").length;
-              return <Card key={project}><div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold">{project}</h3><p className="mt-1 text-xs text-[#7A8499]">{completed}/{projectTasks.length} completed</p></div><Badge tone={completed === projectTasks.length ? "green" : "blue"}>{Math.round((completed / projectTasks.length) * 100)}%</Badge></div><div className="mt-4 grid gap-2">{projectTasks.map((task) => <div key={task.id} className="rounded-md border border-[#252A35] bg-[#11151C] p-3"><div className="flex items-start gap-2"><span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${task.priority === "High" ? "bg-rose-500" : "bg-amber-400"}`} /><div><p className="text-sm font-medium text-[#F0F2F5]">{task.title}</p><p className="mt-1 text-xs text-[#7A8499]">{format(new Date(`${task.assignedDate}T00:00:00`), "MMM d")} · {task.status} · {task.completionPercentage}%</p></div></div></div>)}</div></Card>;
+              return <Card key={project}><div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold">{project}</h3><p className="mt-1 text-xs text-[#7A8499]">{completed}/{projectTasks.length} completed</p></div><Badge tone={completed === projectTasks.length ? "green" : "blue"}>{Math.round((completed / projectTasks.length) * 100)}%</Badge></div><div className="mt-4 grid gap-2">{projectTasks.map((task) => <div key={task.id} className="rounded-md border border-[#252A35] bg-[#11151C] p-3"><div className="flex items-start gap-2"><span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${task.priority === "High" ? "bg-rose-500" : "bg-amber-400"}`} /><div><p className="text-sm font-medium text-[#F0F2F5]">{task.title}</p><p className="mt-1 text-xs text-[#7A8499]">{format(new Date(`${task.assignedDate}T00:00:00`), "MMM d")} · {task.status}</p></div></div></div>)}</div></Card>;
             })}
           </div>
         </>
@@ -752,7 +742,6 @@ function Skills({ selectedDate, onSelectDate }: { selectedDate: string; onSelect
   const days = weekDays(new Date(`${selectedDate}T00:00:00`));
   const selectedTasks = data.learningTasks.filter((task) => task.plannedDate === selectedDate);
   const completed = selectedTasks.filter((task) => task.status === "Done").length;
-  const totalMinutes = selectedTasks.reduce((total, task) => total + task.actualMinutes, 0);
   const plannedMinutes = selectedTasks.reduce((total, task) => total + task.plannedMinutes, 0);
   const completion = selectedTasks.length ? Math.round((completed / selectedTasks.length) * 100) : 0;
   const skillGroups = data.skills.map((skill) => {
@@ -763,7 +752,7 @@ function Skills({ selectedDate, onSelectDate }: { selectedDate: string; onSelect
   function openNewTask(skillId?: string) {
     setEditingLearning({
       id: newId("lt"), userId: user?.id || "", skillId: skillId || data.skills[0]?.id || "", title: "", learningType: "Practice", plannedDate: selectedDate,
-      plannedMinutes: 30, actualMinutes: 0, status: "Planned", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+      plannedMinutes: 30, status: "Planned", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
     });
     setShowTaskForm(true);
   }
@@ -787,7 +776,7 @@ function Skills({ selectedDate, onSelectDate }: { selectedDate: string; onSelect
           <div className="flex gap-2"><Button variant="secondary" onClick={() => { setEditingSkill(null); setShowSkillForm(true); }}><Plus size={16} /> Skill</Button><Button onClick={() => openNewTask()}><Plus size={16} /> Task</Button></div>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          {skillGroups.map(({ skill, tasks, done }, index) => <SkillTile key={skill.id} skill={skill} tasks={tasks} done={done} tone={index % 4} onAddTask={() => openNewTask(skill.id)} onEditSkill={() => { setEditingSkill(skill); setShowSkillForm(true); }} onDeleteSkill={() => confirmDelete(() => remove("skills", skill.id))} onEditTask={(task) => { setEditingLearning(task); setShowTaskForm(true); }} onDeleteTask={(id) => confirmDelete(() => remove("learningTasks", id))} onToggleTask={(task) => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", actualMinutes: task.status === "Done" ? task.actualMinutes : Math.max(task.actualMinutes, task.plannedMinutes), updatedAt: new Date().toISOString() })} />)}
+          {skillGroups.map(({ skill, tasks, done }, index) => <SkillTile key={skill.id} skill={skill} tasks={tasks} done={done} tone={index % 4} onAddTask={() => openNewTask(skill.id)} onEditSkill={() => { setEditingSkill(skill); setShowSkillForm(true); }} onDeleteSkill={() => confirmDelete(() => remove("skills", skill.id))} onEditTask={(task) => { setEditingLearning(task); setShowTaskForm(true); }} onDeleteTask={(id) => confirmDelete(() => remove("learningTasks", id))} onToggleTask={(task) => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", updatedAt: new Date().toISOString() })} />)}
           {!data.skills.length && <div className="md:col-span-2"><EmptyState title="No skills yet" text="Add your first skill to create a learning tile." /></div>}
         </div>
       </section>
@@ -795,7 +784,7 @@ function Skills({ selectedDate, onSelectDate }: { selectedDate: string; onSelect
       <Card className="h-fit xl:sticky xl:top-[90px]">
         <h2 className="text-base font-semibold">Day&apos;s progress</h2>
         <div className="mt-4 rounded-lg bg-[#10A89A] p-5 text-white shadow-[0_14px_32px_rgba(16,168,154,0.16)]"><p className="text-[11px] font-bold uppercase text-white/75">Completed</p><p className="mt-2 text-4xl font-extrabold tabular-nums">{completed}/{selectedTasks.length}</p><p className="mt-1 text-xs text-white/75">tasks completed today</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-white" style={{ width: `${completion}%` }} /></div></div>
-        <div className="mt-5 grid grid-cols-2 gap-3"><ProgressMiniStat value={`${minutesToHours(totalMinutes)}h`} label="Actual" /><ProgressMiniStat value={`${minutesToHours(plannedMinutes)}h`} label="Planned" /></div>
+        <div className="mt-5"><ProgressMiniStat value={`${minutesToHours(plannedMinutes)}h`} label="Planned learning" /></div>
         <h3 className="mt-6 text-sm font-semibold">Skill breakdown</h3>
         <div className="mt-3 grid gap-3">{skillGroups.filter((item) => item.tasks.length).map(({ skill, tasks, done }) => <div key={skill.id} className="rounded-lg border border-[#252A35] bg-[#1E2330] p-3"><div className="flex justify-between text-xs"><span className="font-medium">{skill.skillName}</span><span className="text-[#3ECF8E]">{done}/{tasks.length}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#343A48]"><div className="h-full bg-[#5B8DEF]" style={{ width: `${(done / tasks.length) * 100}%` }} /></div></div>)}</div>
         {!selectedTasks.length && <p className="mt-5 text-center text-xs text-[#7A8499]">No tasks planned for this date.</p>}
@@ -822,7 +811,7 @@ function SkillTile({ skill, tasks, done, tone, onAddTask, onEditSkill, onDeleteS
         <div className="flex items-center gap-1"><span className={`mr-2 text-xs font-medium ${accents[tone]}`}>{done}/{tasks.length} done</span><button onClick={onEditSkill} className="p-1.5 text-[#7A8499] hover:text-white" title="Edit skill"><Pencil size={14} /></button><button onClick={onDeleteSkill} className="p-1.5 text-[#7A8499] hover:text-rose-300" title="Delete skill"><Trash2 size={14} /></button></div>
       </div>
       <div className="mt-4 grid gap-2">
-        {tasks.map((task) => <div key={task.id} className={`group flex min-h-12 items-center gap-3 rounded-lg border px-3 py-2 ${task.status === "Done" ? "border-[#BDE7D8] bg-white/70" : "border-[#D5EBE7] bg-white"}`}><button onClick={() => onToggleTask(task)} className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${task.status === "Done" ? "border-[#22B884] bg-[#22B884] text-white" : "border-[#A8C8C3] text-transparent hover:border-[#10A89A]"}`} title={task.status === "Done" ? "Mark in progress" : "Mark done"}><CheckCircle2 size={13} /></button><button onClick={() => onEditTask(task)} className="min-w-0 flex-1 text-left"><p className={`truncate text-sm ${task.status === "Done" ? "text-[#789793] line-through" : "text-[#123F3B]"}`}>{task.title}</p><p className="mt-0.5 text-[10px] text-[#688B87]">{task.learningType} · {task.actualMinutes}/{task.plannedMinutes} min</p></button><button onClick={() => onDeleteTask(task.id)} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-[#789793] hover:bg-[#FFEBED] hover:text-[#BD3345]" title="Delete task" aria-label={`Delete ${task.title}`}><Trash2 size={14} /></button></div>)}
+        {tasks.map((task) => <div key={task.id} className={`group flex min-h-12 items-center gap-3 rounded-lg border px-3 py-2 ${task.status === "Done" ? "border-[#BDE7D8] bg-white/70" : "border-[#D5EBE7] bg-white"}`}><button onClick={() => onToggleTask(task)} className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${task.status === "Done" ? "border-[#22B884] bg-[#22B884] text-white" : "border-[#A8C8C3] text-transparent hover:border-[#10A89A]"}`} title={task.status === "Done" ? "Mark in progress" : "Mark done"}><CheckCircle2 size={13} /></button><button onClick={() => onEditTask(task)} className="min-w-0 flex-1 text-left"><p className={`truncate text-sm ${task.status === "Done" ? "text-[#789793] line-through" : "text-[#123F3B]"}`}>{task.title}</p><p className="mt-0.5 text-[10px] text-[#688B87]">{task.learningType} · {task.plannedMinutes} min planned</p></button><button onClick={() => onDeleteTask(task.id)} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-[#789793] hover:bg-[#FFEBED] hover:text-[#BD3345]" title="Delete task" aria-label={`Delete ${task.title}`}><Trash2 size={14} /></button></div>)}
         {!tasks.length && <p className="rounded-lg border border-dashed border-[#3B4250] px-3 py-7 text-center text-xs text-[#7A8499]">No tasks for this date</p>}
       </div>
       <button onClick={onAddTask} className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-[#B9DDD7] bg-white text-xs font-semibold text-[#087F77] hover:bg-[#E8F6F4]"><Plus size={14} /> Add task</button>
@@ -845,7 +834,7 @@ function WorkAnalytics({ weekStart }: { weekStart: string }) {
   return (
     <AnalyticsGrid>
       <Metric title="Planned work hours" value={`${minutesToHours(week.workTasks.reduce((total, task) => total + task.estimatedMinutes, 0))}h`} />
-      <Metric title="Blocked tasks" value={week.workTasks.filter((task) => task.status === "Blocked").length} />
+      <Metric title="Active tasks" value={week.workTasks.filter((task) => task.status === "In Progress").length} />
       <Metric title="High priority pending" value={week.workTasks.filter((task) => task.priority === "High" && task.status !== "Completed").length} />
       <Metric title="Weekly productivity" value={`${score}/100`} hint={productivityLabel(score)} />
       <ChartCard title="Daily work hours"><BarChartBox data={dailySeries(data, weekStart)} bars={[["workHours", "#10A89A"]]} /></ChartCard>
@@ -861,17 +850,16 @@ function LearningAnalytics({ weekStart }: { weekStart: string }) {
   const week = scopedWeekData(data, weekStart);
   const completed = week.learningTasks.filter((task) => task.status === "Done").length;
   const pending = week.learningTasks.filter((task) => task.status === "Planned" || task.status === "In Progress").length;
-  const learningHours = minutesToHours(week.learningTasks.reduce((total, task) => total + task.actualMinutes, 0));
+  const learningHours = minutesToHours(week.learningTasks.filter((task) => task.status === "Done").reduce((total, task) => total + task.plannedMinutes, 0));
   const dailyData = dailySeries(data, weekStart);
   const categoryData = skillCategoryDistribution(week.skills, week.learningTasks);
   const hasDailyData = dailyData.some((item) => item.learningHours > 0);
   const completion = week.learningTasks.length ? Math.round((completed / week.learningTasks.length) * 100) : 0;
-  const totalActualMinutes = week.learningTasks.reduce((total, task) => total + task.actualMinutes, 0);
   const totalPlannedMinutes = week.learningTasks.reduce((total, task) => total + task.plannedMinutes, 0);
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
       <section className="grid gap-4">
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4"><Metric title="Learning hours" value={`${learningHours}h`} /><Metric title="Tasks done" value={completed} /><Metric title="Pending tasks" value={pending} /><Metric title="Sessions logged" value={week.learningTasks.filter((task) => task.actualMinutes > 0).length} /></div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3"><Metric title="Learning hours" value={`${learningHours}h`} /><Metric title="Tasks done" value={completed} /><Metric title="Pending tasks" value={pending} /></div>
         <div className="grid gap-4 lg:grid-cols-2">
           <ChartCard title="Daily learning hours">{hasDailyData ? <BarChartBox data={dailyData} bars={[["learningHours", "#10A89A"]]} /> : <ChartEmptyState />}</ChartCard>
           <ChartCard title="Time by skill category">{categoryData.some((item) => item.value > 0) ? <PieChartBox data={categoryData} /> : <ChartEmptyState />}</ChartCard>
@@ -882,8 +870,8 @@ function LearningAnalytics({ weekStart }: { weekStart: string }) {
             {data.skills.map((skill, index) => {
               const tasks = week.learningTasks.filter((task) => task.skillId === skill.id);
               const done = tasks.filter((task) => task.status === "Done").length;
-              const actual = tasks.reduce((total, task) => total + task.actualMinutes, 0);
-              return <div key={skill.id} className={`rounded-lg border p-4 ${["border-[#CDE9E5] bg-[#F4FBFA]", "border-[#BDE7D8] bg-[#F1FBF7]", "border-[#D3E6E3] bg-[#FAFDFC]", "border-[#F1D99B] bg-[#FFFAEC]"][index % 4]}`}><div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{skill.skillName}</p><p className="mt-1 text-xs text-[#688B87]">{skill.category} · {minutesToHours(actual)}h logged</p></div><span className="text-xs font-medium text-[#087F5B]">{done}/{tasks.length} done</span></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-[#DCEFEB]"><div className="h-full bg-[#10A89A]" style={{ width: `${tasks.length ? (done / tasks.length) * 100 : 0}%` }} /></div></div>;
+              const completedMinutes = tasks.filter((task) => task.status === "Done").reduce((total, task) => total + task.plannedMinutes, 0);
+              return <div key={skill.id} className={`rounded-lg border p-4 ${["border-[#CDE9E5] bg-[#F4FBFA]", "border-[#BDE7D8] bg-[#F1FBF7]", "border-[#D3E6E3] bg-[#FAFDFC]", "border-[#F1D99B] bg-[#FFFAEC]"][index % 4]}`}><div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{skill.skillName}</p><p className="mt-1 text-xs text-[#688B87]">{skill.category} · {minutesToHours(completedMinutes)}h completed</p></div><span className="text-xs font-medium text-[#087F5B]">{done}/{tasks.length} done</span></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-[#DCEFEB]"><div className="h-full bg-[#10A89A]" style={{ width: `${tasks.length ? (done / tasks.length) * 100 : 0}%` }} /></div></div>;
             })}
           </div>
         </div>
@@ -891,9 +879,9 @@ function LearningAnalytics({ weekStart }: { weekStart: string }) {
       <Card className="h-fit xl:sticky xl:top-[90px]">
         <h2 className="text-base font-semibold">Weekly progress</h2>
         <div className="mt-4 rounded-lg bg-[#10A89A] p-5 text-white shadow-[0_14px_32px_rgba(16,168,154,0.16)]"><p className="text-[11px] font-bold uppercase text-white/75">Completion</p><p className="mt-2 text-4xl font-extrabold tabular-nums">{completion}%</p><p className="mt-1 text-xs text-white/75">{completed} of {week.learningTasks.length} tasks done</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-white" style={{ width: `${completion}%` }} /></div></div>
-        <div className="mt-5 grid grid-cols-2 gap-3"><ProgressMiniStat value={`${minutesToHours(totalActualMinutes)}h`} label="Actual" /><ProgressMiniStat value={`${minutesToHours(totalPlannedMinutes)}h`} label="Planned" /></div>
+        <div className="mt-5"><ProgressMiniStat value={`${minutesToHours(totalPlannedMinutes)}h`} label="Planned learning" /></div>
         <h3 className="mt-6 text-sm font-semibold">Category breakdown</h3>
-        <div className="mt-3 grid gap-3">{categoryData.map((category, index) => <div key={category.name} className="rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] p-3"><div className="flex items-center justify-between text-xs"><span>{category.name}</span><span className="font-medium text-[#087F5B]">{category.value}h</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#DCEFEB]"><div className="h-full" style={{ width: `${totalActualMinutes ? Math.min(100, (category.value * 60 / totalActualMinutes) * 100) : 0}%`, backgroundColor: colors[index % colors.length] }} /></div></div>)}</div>
+        <div className="mt-3 grid gap-3">{categoryData.map((category, index) => <div key={category.name} className="rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] p-3"><div className="flex items-center justify-between text-xs"><span>{category.name}</span><span className="font-medium text-[#087F5B]">{category.value}h</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#DCEFEB]"><div className="h-full" style={{ width: `${totalPlannedMinutes ? Math.min(100, (category.value * 60 / totalPlannedMinutes) * 100) : 0}%`, backgroundColor: colors[index % colors.length] }} /></div></div>)}</div>
       </Card>
     </div>
   );
@@ -1034,12 +1022,11 @@ function CrudLayout({ title, filters, form, children }: { title: string; filters
 function WorkTaskForm({ item, onSave, onCancel }: { item: WorkTask | null; onSave: (item: WorkTask) => void; onCancel: () => void }) {
   const stamp = new Date().toISOString();
   const [task, setTask] = useState<WorkTask>(item || {
-    id: newId("wt"), userId: "", title: "", projectName: "Personal", productOwner: "Personal", platform: "Other", poc: "Personal", category: "General", description: "", receivedDate: toDateInput(new Date()), assignedDate: toDateInput(new Date()), dueDate: toDateInput(new Date()), dayOfWeek: format(new Date(), "EEEE"), estimatedMinutes: 60, completionPercentage: 0, status: "In Progress", priority: "Low", notes: "", deliverable: "", blockers: "", learnings: "", createdAt: stamp, updatedAt: stamp
+    id: newId("wt"), userId: "", title: "", projectName: "Personal", productOwner: "Personal", platform: "Other", poc: "Personal", category: "General", description: "", receivedDate: toDateInput(new Date()), assignedDate: toDateInput(new Date()), dueDate: toDateInput(new Date()), dayOfWeek: format(new Date(), "EEEE"), estimatedMinutes: 60, status: "In Progress", priority: "Low", notes: "", blockers: "", createdAt: stamp, updatedAt: stamp
   });
   return <FormGrid onSubmit={() => task.title.trim() && onSave({ ...task, dayOfWeek: format(new Date(`${task.assignedDate}T00:00:00`), "EEEE"), updatedAt: new Date().toISOString() })} onCancel={onCancel}>
     <TextField label="Task title" value={task.title} onChange={(v) => setTask({ ...task, title: v })} required />
     <SelectField label="Priority" value={task.priority} options={["Low", "High"]} onChange={(v) => setTask({ ...task, priority: v as WorkTask["priority"] })} />
-    <NumberField label="Completion percentage" value={task.completionPercentage} onChange={(v) => setTask({ ...task, completionPercentage: Math.min(100, v), status: v >= 100 ? "Completed" : "In Progress" })} />
     <details className="rounded-md border border-line p-3">
       <summary className="cursor-pointer text-sm font-semibold text-slate-200">Task details</summary>
       <div className="mt-3 grid gap-3">
@@ -1053,9 +1040,7 @@ function WorkTaskForm({ item, onSave, onCancel }: { item: WorkTask | null; onSav
         <SuggestionField storageKey="stakeholders" label="Stakeholder" value={task.poc} defaults={pocOptions} onChange={(v) => setTask({ ...task, poc: v })} />
         <TextField label="Description" value={task.description} onChange={(v) => setTask({ ...task, description: v })} textarea />
         <TextField label="Notes" value={task.notes} onChange={(v) => setTask({ ...task, notes: v })} textarea />
-        <TextField label="Deliverable" value={task.deliverable} onChange={(v) => setTask({ ...task, deliverable: v })} />
         <TextField label="Blockers" value={task.blockers} onChange={(v) => setTask({ ...task, blockers: v })} />
-        <TextField label="Learnings" value={task.learnings} onChange={(v) => setTask({ ...task, learnings: v })} />
       </div>
     </details>
   </FormGrid>;
@@ -1111,14 +1096,13 @@ function SkillForm({ item, onSave, onCancel }: { item: Skill | null; onSave: (it
 
 function LearningTaskForm({ item, skills, onSave, onCancel }: { item: LearningTask | null; skills: Skill[]; onSave: (item: LearningTask) => void; onCancel: () => void }) {
   const stamp = new Date().toISOString();
-  const [task, setTask] = useState<LearningTask>(item || { id: newId("lt"), userId: "", skillId: skills[0]?.id || "", title: "", learningType: "Practice", plannedDate: toDateInput(new Date()), plannedMinutes: 60, actualMinutes: 0, status: "Planned", createdAt: stamp, updatedAt: stamp });
+  const [task, setTask] = useState<LearningTask>(item || { id: newId("lt"), userId: "", skillId: skills[0]?.id || "", title: "", learningType: "Practice", plannedDate: toDateInput(new Date()), plannedMinutes: 60, status: "Planned", createdAt: stamp, updatedAt: stamp });
   return <FormGrid onSubmit={() => task.title.trim() && onSave({ ...task, updatedAt: new Date().toISOString() })} onCancel={onCancel}>
     <SelectField label="Linked skill" value={task.skillId} options={skills.map((skill) => skill.id)} labels={Object.fromEntries(skills.map((skill) => [skill.id, skill.skillName]))} onChange={(v) => setTask({ ...task, skillId: v })} />
     <TextField label="Learning task title" value={task.title} onChange={(v) => setTask({ ...task, title: v })} required />
     <SelectField label="Type" value={task.learningType} options={["Read", "Watch", "Practice", "Build", "Review"]} onChange={(v) => setTask({ ...task, learningType: v as LearningTask["learningType"] })} />
     <TextField label="Planned date" type="date" value={task.plannedDate} onChange={(v) => setTask({ ...task, plannedDate: v })} />
     <NumberField label="Planned minutes" value={task.plannedMinutes} onChange={(v) => setTask({ ...task, plannedMinutes: v })} />
-    <NumberField label="Actual minutes" value={task.actualMinutes} onChange={(v) => setTask({ ...task, actualMinutes: v })} />
     <SelectField label="Status" value={task.status} options={["Planned", "In Progress", "Done", "Skipped"]} onChange={(v) => setTask({ ...task, status: v as LearningTask["status"] })} />
   </FormGrid>;
 }
@@ -1187,9 +1171,9 @@ function PieChartBox({ data }: { data: { name: string; value: number }[] }) {
 
 function badgeTone(label: string): "slate" | "blue" | "green" | "amber" | "red" {
   if (["Completed", "Done", "Low", "work"].includes(label)) return "green";
-  if (["High", "Blocked", "Hard"].includes(label)) return "red";
+  if (["High", "Hard"].includes(label)) return "red";
   if (["In Progress", "learning"].includes(label)) return "amber";
-  if (["Planned", "Backlog"].includes(label)) return "blue";
+  if (["Planned"].includes(label)) return "blue";
   return "slate";
 }
 
@@ -1198,12 +1182,10 @@ function confirmDelete(action: () => void) {
 }
 
 function taskSummary(task: WorkTask) {
-  const progress = task.status === "Completed" ? "has been completed" : `is currently ${task.completionPercentage}% complete and remains ${task.status.toLowerCase()}`;
+  const progress = task.status === "Completed" ? "has been completed" : `is currently ${task.status.toLowerCase()}`;
   const context = task.description ? ` The work focuses on ${sentenceCase(task.description)}.` : "";
-  const deliverable = task.deliverable ? ` The expected deliverable is ${sentenceCase(task.deliverable)}.` : "";
   const blocker = task.blockers ? ` Progress is affected by ${sentenceCase(task.blockers)}.` : " No blockers have been recorded.";
-  const learning = task.learnings ? ` A key learning from this task is ${sentenceCase(task.learnings)}.` : "";
-  return `${task.title} is a ${task.priority.toLowerCase()}-priority task under ${task.projectName || "the unassigned project"}, owned by ${task.productOwner || "the assigned owner"}. It was assigned on ${readableDate(task.assignedDate)}, is due on ${readableDate(task.dueDate)}, and ${progress}.${context}${deliverable}${blocker}${learning}`;
+  return `${task.title} is a ${task.priority.toLowerCase()}-priority task under ${task.projectName || "the unassigned project"}, owned by ${task.productOwner || "the assigned owner"}. It was assigned on ${readableDate(task.assignedDate)}, is due on ${readableDate(task.dueDate)}, and ${progress}.${context}${blocker}`;
 }
 
 function workHistorySummary(tasks: WorkTask[], startDate: string, endDate: string) {

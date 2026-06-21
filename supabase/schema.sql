@@ -46,13 +46,10 @@ create table if not exists public.work_tasks (
   due_date date,
   day_of_week text,
   estimated_minutes integer not null default 0,
-  completion_percentage integer not null default 0,
   status text not null default 'In Progress',
   priority text not null default 'Low',
   notes text,
-  deliverable text,
   blockers text,
-  learnings text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -78,7 +75,6 @@ create table if not exists public.learning_tasks (
   learning_type text not null default 'Practice',
   planned_date date not null,
   planned_minutes integer not null default 0,
-  actual_minutes integer not null default 0,
   status text not null default 'Planned',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
