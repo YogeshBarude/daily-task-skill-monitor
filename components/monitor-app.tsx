@@ -102,10 +102,10 @@ export function MonitorApp() {
   if (!store.user) return <AuthScreen />;
 
   return (
-    <div className="min-h-screen bg-[#0D0F12] text-ink">
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[238px] border-r border-[#2B3240] bg-[#12161D] lg:flex lg:flex-col">
+    <div className="min-h-screen bg-[#EEF9F8] text-ink">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[238px] border-r border-[#D5EBE7] bg-white lg:flex lg:flex-col">
         <div className="flex h-[70px] items-center gap-3 border-b border-[#252A35] px-5">
-          <div className="grid h-8 w-8 place-items-center rounded-full border border-slate-500 text-slate-100"><CheckCircle2 size={19} /></div>
+          <div className="grid h-8 w-8 place-items-center rounded-lg border border-[#B9DDD7] bg-[#E3F5F3] text-[#10A89A]"><CheckCircle2 size={19} /></div>
           <div><p className="text-[15px] font-bold leading-tight text-slate-100">Daily Task &</p><p className="text-[15px] font-bold leading-tight text-slate-100">Skill Monitor</p></div>
         </div>
 
@@ -115,7 +115,7 @@ export function MonitorApp() {
               {group.label && <p className="mb-2 px-3 text-[10px] font-bold uppercase text-slate-500">{group.label}</p>}
               <div className="grid gap-1">
                 {group.items.map(({ tab, label, icon: Icon }) => (
-                  <button key={tab} onClick={() => setActive(tab)} className={`flex h-9 w-full items-center gap-3 rounded-md border px-3 text-left text-[13px] transition ${active === tab ? "border-[#5B8DEF]/70 bg-[#5B8DEF]/20 font-medium text-blue-100 shadow-[inset_3px_0_0_#5B8DEF]" : "border-transparent text-slate-400 hover:bg-white/[0.05] hover:text-slate-100"}`}>
+                  <button key={tab} onClick={() => setActive(tab)} className={`flex h-9 w-full items-center gap-3 rounded-md border px-3 text-left text-[13px] transition ${active === tab ? "border-[#B9DDD7] bg-[#E3F5F3] font-semibold text-[#087F77] shadow-[inset_3px_0_0_#10A89A]" : "border-transparent text-slate-500 hover:bg-[#F4FBFA] hover:text-[#123F3B]"}`}>
                     <Icon size={17} strokeWidth={1.8} />
                     <span className="truncate">{label}</span>
                   </button>
@@ -128,8 +128,8 @@ export function MonitorApp() {
         <div className="border-t border-[#252A35] p-3">
           <button onClick={() => setActive("Settings")} className="flex h-9 w-full items-center gap-3 rounded-md px-3 text-[13px] text-slate-400 hover:bg-white/[0.04] hover:text-slate-100"><Settings size={17} /> Settings</button>
           <button onClick={() => store.signOut()} className="mt-1 flex h-9 w-full items-center gap-3 rounded-md px-3 text-[13px] text-slate-500 hover:bg-white/[0.04] hover:text-slate-200"><LogOut size={17} /> Sign out</button>
-          <div className="mt-3 flex items-center gap-3 rounded-md border border-[#252A35] bg-[#1E2330] p-2.5">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-blue-600/30 text-sm font-semibold text-blue-100">{store.user.name.slice(0, 2).toUpperCase()}</div>
+          <div className="mt-3 flex items-center gap-3 rounded-md border border-[#D5EBE7] bg-[#F4FBFA] p-2.5">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#DDF4F1] text-sm font-semibold text-[#087F77]">{store.user.name.slice(0, 2).toUpperCase()}</div>
             <div className="min-w-0"><p className="truncate text-xs font-medium text-slate-200">{store.user.name}</p><p className="truncate text-[10px] text-slate-500">{store.mode === "supabase" ? "Cloud workspace" : "Personal workspace"}</p></div>
           </div>
         </div>
@@ -137,7 +137,7 @@ export function MonitorApp() {
       </aside>
 
       <main className="lg:pl-[238px]">
-        <header className="sticky top-0 z-10 border-b border-[#2B3240] bg-[#12161D]/95 backdrop-blur">
+        <header className="sticky top-0 z-10 border-b border-[#D5EBE7] bg-white/95 backdrop-blur">
           <div className="flex min-h-[70px] flex-wrap items-center gap-3 px-3 py-3 sm:px-4 lg:px-6">
             <WeekNavigator weekStart={weekStart} selectedDate={selectedDate} onSelectDate={selectDate} onMoveWeek={moveWeek} />
             <div className="ml-auto flex items-center gap-2">
@@ -205,39 +205,47 @@ function AuthScreen() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#080d14] px-4 py-10 text-slate-100">
-      <div className="w-full max-w-[430px]">
-        <div className="mb-7 flex items-center justify-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-lg border border-blue-400/40 bg-blue-500/10 text-blue-300"><CheckCircle2 size={24} /></div>
-          <div><p className="text-lg font-semibold leading-tight">Daily Task & Skill Monitor</p><p className="mt-1 text-xs text-slate-500">Your private productivity workspace</p></div>
-        </div>
-
-        <Card className="p-5 sm:p-6">
-          <div className="grid grid-cols-2 rounded-md border border-[#2b3947] bg-[#091019] p-1">
-            <button type="button" onClick={() => { setIsSignup(false); setError(""); setMessage(""); }} className={`h-9 rounded text-sm font-medium ${!isSignup ? "bg-blue-600 text-white" : "text-slate-400 hover:text-slate-200"}`}>Log in</button>
-            <button type="button" onClick={() => { setIsSignup(true); setError(""); setMessage(""); }} className={`h-9 rounded text-sm font-medium ${isSignup ? "bg-blue-600 text-white" : "text-slate-400 hover:text-slate-200"}`}>Sign up</button>
+    <main className="grid min-h-screen place-items-center bg-[#EAF8F7] px-4 py-8 text-[#123F3B]">
+      <div className="grid w-full max-w-[1180px] overflow-hidden rounded-[24px] border border-white bg-white/55 p-4 shadow-[0_24px_70px_rgba(46,130,119,0.12)] lg:grid-cols-[1.05fr_0.95fr] lg:gap-5">
+        <section className="hidden min-h-[610px] flex-col justify-between rounded-[20px] border border-[#D5EBE7] bg-[#F5FCFB] p-10 lg:flex">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#BFE5DF] bg-white px-3 py-1.5 text-[10px] font-bold uppercase text-[#087F77]"><ShieldCheck size={13} /> Private productivity OS</div>
+            <h1 className="mt-8 max-w-[470px] text-[42px] font-extrabold leading-[1.04] text-[#11504A]">A cleaner way to track tasks, skills, and momentum.</h1>
+            <p className="mt-5 max-w-[430px] text-sm leading-7 text-[#688B87]">Sign in to a calm command center designed for daily focus, skill growth, and secure cloud sync.</p>
           </div>
-
-          <div className="mt-6">
-            <h1 className="text-xl font-semibold">{isSignup ? "Create your workspace" : "Welcome back"}</h1>
-            <p className="mt-1.5 text-sm text-slate-500">{isSignup ? "Create an account to securely sync your data." : "Log in to continue to your workspace."}</p>
+          <div className="rounded-[18px] border border-[#CDE9E5] bg-white p-5 shadow-[0_16px_34px_rgba(41,112,103,0.06)]">
+            <div className="flex items-center justify-between"><p className="text-sm font-semibold">Today&apos;s flow</p><Badge tone="green">Synced</Badge></div>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-[#E0EFED] bg-[#FAFDFC] p-4"><p className="text-xs text-[#688B87]">Tasks done</p><p className="mt-1 text-2xl font-extrabold">18 / 24</p></div>
+              <div className="rounded-xl border border-[#E0EFED] bg-[#FAFDFC] p-4"><p className="text-xs text-[#688B87]">Skill hours</p><p className="mt-1 text-2xl font-extrabold">4.5h</p></div>
+            </div>
+            <div className="mt-3 grid gap-2 text-xs text-[#476D69]"><div className="flex items-center gap-2 rounded-lg border border-[#E0EFED] px-3 py-2"><CheckCircle2 size={14} className="text-[#22B884]" /> Review priority queue</div><div className="flex items-center gap-2 rounded-lg border border-[#E0EFED] px-3 py-2"><BookOpen size={14} className="text-[#10A89A]" /> Practice focused skill block</div></div>
           </div>
+        </section>
 
-          <form className="mt-6 grid gap-4" onSubmit={submit}>
-            {isSignup && <Field label="Name"><div className="relative"><UserRound className="pointer-events-none absolute left-3 top-3 text-slate-600" size={16} /><input className={`${inputClass} pl-10`} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Your name" required /></div></Field>}
-            <Field label="Email"><div className="relative"><Mail className="pointer-events-none absolute left-3 top-3 text-slate-600" size={16} /><input className={`${inputClass} pl-10`} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@example.com" required /></div></Field>
-            <Field label="Password"><div className="relative"><LockKeyhole className="pointer-events-none absolute left-3 top-3 text-slate-600" size={16} /><input className={`${inputClass} pl-10`} type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={isSignup ? "new-password" : "current-password"} placeholder="At least 8 characters" required /></div></Field>
-            {mode === "local" && <p className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-200">Secure cloud authentication is not configured. Add the Supabase environment variables in Vercel before using this website.</p>}
-            {error && <p className="rounded-md border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
-            {message && <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">{message}</p>}
-            <Button className="mt-1 w-full" type="submit" disabled={submitting || mode === "local"}>{submitting ? "Please wait..." : isSignup ? "Create account" : "Log in"}</Button>
-          </form>
-
-          <div className="mt-5 flex items-center justify-center gap-2 border-t border-[#263340] pt-4 text-xs text-slate-500">
-            <ShieldCheck size={15} className="text-emerald-400" />
-            <span>{mode === "supabase" ? "Protected by secure cloud authentication" : "Cloud connection required"}</span>
+        <section className="flex min-h-[610px] items-center justify-center rounded-[20px] border border-[#D5EBE7] bg-white p-5 sm:p-8">
+          <div className="w-full max-w-[430px] rounded-[18px] border border-[#D5EBE7] bg-[#FBFEFD] p-5 shadow-[0_16px_40px_rgba(41,112,103,0.08)] sm:p-7">
+            <div className="flex items-center gap-3">
+              <div className="grid h-11 w-11 place-items-center rounded-xl border border-[#BFE5DF] bg-[#E3F5F3] text-[#10A89A]"><CheckCircle2 size={23} /></div>
+              <div><p className="font-bold text-[#123F3B]">Daily Task & Skill Monitor</p><p className="mt-0.5 text-xs text-[#688B87]">Your private productivity workspace</p></div>
+            </div>
+            <div className="mt-6 grid grid-cols-2 rounded-lg border border-[#CDE9E5] bg-[#F0FAF8] p-1">
+              <button type="button" onClick={() => { setIsSignup(false); setError(""); setMessage(""); }} className={`h-9 rounded-md text-sm font-semibold transition ${!isSignup ? "bg-[#10A89A] text-white shadow-sm" : "text-[#527D78]"}`}>Log in</button>
+              <button type="button" onClick={() => { setIsSignup(true); setError(""); setMessage(""); }} className={`h-9 rounded-md text-sm font-semibold transition ${isSignup ? "bg-[#10A89A] text-white shadow-sm" : "text-[#527D78]"}`}>Sign up</button>
+            </div>
+            <div className="mt-6"><h2 className="text-2xl font-bold">{isSignup ? "Create your workspace" : "Welcome back"}</h2><p className="mt-1.5 text-sm leading-6 text-[#688B87]">{isSignup ? "Create an account to securely sync your work." : "Continue where you left off. Your tasks, skills, and progress are ready."}</p></div>
+            <form className="mt-6 grid gap-4" onSubmit={submit}>
+              {isSignup && <Field label="Name"><div className="relative"><UserRound className="pointer-events-none absolute left-3 top-3 text-[#8EAAA6]" size={16} /><input className={`${inputClass} pl-10`} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Your name" required /></div></Field>}
+              <Field label="Email"><div className="relative"><Mail className="pointer-events-none absolute left-3 top-3 text-[#8EAAA6]" size={16} /><input className={`${inputClass} pl-10`} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@example.com" required /></div></Field>
+              <Field label="Password"><div className="relative"><LockKeyhole className="pointer-events-none absolute left-3 top-3 text-[#8EAAA6]" size={16} /><input className={`${inputClass} pl-10`} type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={isSignup ? "new-password" : "current-password"} placeholder="At least 8 characters" required /></div></Field>
+              {mode === "local" && <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs leading-5 text-amber-700">Secure cloud authentication is not configured.</p>}
+              {error && <p className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+              {message && <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
+              <Button className="mt-1 w-full" type="submit" disabled={submitting || mode === "local"}>{submitting ? "Please wait..." : isSignup ? "Create account" : "Log in securely"} <CheckCircle2 size={15} /></Button>
+            </form>
+            <div className="mt-6 flex items-center justify-center gap-2 border-t border-[#E0EFED] pt-5 text-xs text-[#688B87]"><ShieldCheck size={15} className="text-[#10A89A]" /><span>{mode === "supabase" ? "Protected by secure cloud authentication" : "Cloud connection required"}</span></div>
           </div>
-        </Card>
+        </section>
       </div>
     </main>
   );
@@ -321,7 +329,32 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
   const completedTasks = week.workTasks.filter((task) => task.status === "Completed").length + week.learningTasks.filter((task) => task.status === "Done").length;
   const completion = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const agenda: AgendaEntry[] = [
-    ...selectedWork.map((task, index) => ({ id: task.id, time: ["07:30", "09:30", "14:00", "17:00"][index % 4], type: "Work Task", title: task.title, meta: task.projectName || "Personal", accent: "blue", done: task.status === "Completed", icon: BriefcaseBusiness, onToggle: () => void upsert("workTasks", { ...task, status: task.status === "Completed" ? "In Progress" : "Completed", completionPercentage: task.status === "Completed" ? Math.min(task.completionPercentage, 99) : 100, updatedAt: new Date().toISOString() }) })),
+    ...selectedWork.map((task, index) => ({
+      id: task.id,
+      time: ["07:30", "09:30", "14:00", "17:00"][index % 4],
+      type: "Work Task",
+      title: task.title,
+      meta: task.projectName || "Personal",
+      accent: "blue",
+      done: task.status === "Completed",
+      icon: BriefcaseBusiness,
+      details: [
+        ["Project name", task.projectName],
+        ["Product owner", task.productOwner],
+        ["Assigned date", task.assignedDate],
+        ["Due date", task.dueDate],
+        ["Status", task.status],
+        ["Category", task.category],
+        ["Platform", task.platform],
+        ["Stakeholder", task.poc],
+        ["Description", task.description],
+        ["Notes", task.notes],
+        ["Deliverable", task.deliverable],
+        ["Blockers", task.blockers],
+        ["Learning", task.learnings]
+      ].filter((detail) => detail[1]),
+      onToggle: () => void upsert("workTasks", { ...task, status: task.status === "Completed" ? "In Progress" : "Completed", completionPercentage: task.status === "Completed" ? Math.min(task.completionPercentage, 99) : 100, updatedAt: new Date().toISOString() })
+    })),
     ...selectedLearning.map((task, index) => ({ id: task.id, time: ["11:30", "16:00", "19:00"][index % 3], type: "Learning Session", title: task.title, meta: `${task.plannedMinutes} min`, accent: "amber", done: task.status === "Done", icon: BookOpen, onToggle: () => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", updatedAt: new Date().toISOString() }) }))
   ].sort((a, b) => a.time.localeCompare(b.time));
 
@@ -390,22 +423,31 @@ type AgendaEntry = {
   accent: string;
   done: boolean;
   icon: React.ElementType;
+  details?: string[][];
   onToggle?: () => void;
 };
 
-function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, onToggle }: AgendaEntry) {
+function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, details, onToggle }: AgendaEntry) {
   const tone = accent === "blue" ? "border-blue-500/40 bg-blue-500/10 text-blue-300" : accent === "amber" ? "border-amber-500/40 bg-amber-500/10 text-amber-300" : "border-rose-500/40 bg-rose-500/10 text-rose-300";
   return (
-    <div className="grid min-h-[68px] grid-cols-[64px_1fr_auto] items-center gap-3 border-b border-[#1e2935] last:border-b-0">
-      <p className="text-xs tabular-nums text-slate-500">{time}</p>
-      <div className="flex min-w-0 items-center gap-3">
-        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-md border ${tone}`}><Icon size={17} /></div>
-        <div className="min-w-0"><p className={`text-[11px] font-medium ${tone.split(" ").at(-1)}`}>{type}</p><p className={`truncate text-sm ${done ? "text-slate-500 line-through" : "text-slate-200"}`}>{title}</p></div>
+    <div className="border-b border-[#1e2935] py-3 last:border-b-0">
+      <div className="grid min-h-[44px] grid-cols-[64px_1fr_auto] items-center gap-3">
+        <p className="text-xs tabular-nums text-slate-500">{time}</p>
+        <div className="flex min-w-0 items-center gap-3">
+          <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-md border ${tone}`}><Icon size={17} /></div>
+          <div className="min-w-0"><p className={`text-[11px] font-medium ${tone.split(" ").at(-1)}`}>{type}</p><p className={`truncate text-sm ${done ? "text-slate-500 line-through" : "text-slate-200"}`}>{title}</p></div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="hidden max-w-[150px] truncate text-xs text-slate-500 sm:block">{meta}</span>
+          {onToggle && <button type="button" onClick={onToggle} className={`grid h-8 w-8 shrink-0 place-items-center rounded-md border transition ${done ? "border-emerald-400 bg-emerald-400 text-[#07110c]" : "border-slate-500 text-transparent hover:border-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300"}`} title={done ? "Mark in progress" : "Mark complete"} aria-label={done ? "Mark task in progress" : "Mark task complete"}><CheckCircle2 size={17} /></button>}
+        </div>
       </div>
-      <div className="flex items-center gap-3">
-        <span className="hidden max-w-[150px] truncate text-xs text-slate-500 sm:block">{meta}</span>
-        {onToggle && <button type="button" onClick={onToggle} className={`grid h-8 w-8 shrink-0 place-items-center rounded-md border transition ${done ? "border-emerald-400 bg-emerald-400 text-[#07110c]" : "border-slate-500 text-transparent hover:border-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300"}`} title={done ? "Mark in progress" : "Mark complete"} aria-label={done ? "Mark task in progress" : "Mark task complete"}><CheckCircle2 size={17} /></button>}
-      </div>
+      {details?.length ? <details className="ml-[76px] mt-2">
+        <summary className="w-fit cursor-pointer text-xs font-semibold text-[#10A89A] hover:text-[#087F77]">View task details</summary>
+        <div className="mt-3 grid gap-x-5 gap-y-3 rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] p-4 sm:grid-cols-2">
+          {details.map(([label, value]) => <div key={label} className={["Description", "Notes", "Deliverable", "Blockers", "Learning"].includes(label) ? "sm:col-span-2" : ""}><p className="text-[10px] font-bold uppercase text-[#688B87]">{label}</p><p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#123F3B]">{value}</p></div>)}
+        </div>
+      </details> : null}
     </div>
   );
 }

@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { ReactNode } from "react";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={clsx("app-card rounded-lg border border-[#2B3240] bg-[#171B23] p-4", className)}>{children}</section>;
+  return <section className={clsx("app-card rounded-lg border border-[#D5EBE7] bg-white p-4", className)}>{children}</section>;
 }
 
 export function Button({ children, variant = "primary", className = "", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" | "ghost" }) {
@@ -12,10 +12,10 @@ export function Button({ children, variant = "primary", className = "", ...props
     <button
       className={clsx(
         "inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50",
-        variant === "primary" && "bg-[#5B8DEF] text-white shadow-[0_8px_24px_rgba(91,141,239,0.2)] hover:bg-[#6D99F1]",
-        variant === "secondary" && "border border-[#252A35] bg-[#1E2330] text-[#F0F2F5] hover:bg-[#252B39]",
+        variant === "primary" && "bg-[#10A89A] text-white shadow-[0_8px_22px_rgba(16,168,154,0.16)] hover:bg-[#0D978B]",
+        variant === "secondary" && "border border-[#D5EBE7] bg-[#F4FBFA] text-[#123F3B] hover:bg-[#E8F6F4]",
         variant === "danger" && "bg-danger text-white hover:bg-red-700",
-        variant === "ghost" && "text-slate-400 hover:bg-white/[0.05] hover:text-slate-100",
+        variant === "ghost" && "text-[#688B87] hover:bg-[#E8F6F4] hover:text-[#123F3B]",
         className
       )}
       {...props}
@@ -27,14 +27,14 @@ export function Button({ children, variant = "primary", className = "", ...props
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="grid gap-1.5 text-[11px] font-semibold uppercase text-[#8792A8]">
+    <label className="grid gap-1.5 text-[11px] font-semibold uppercase text-[#527D78]">
       <span>{label}</span>
       {children}
     </label>
   );
 }
 
-export const inputClass = "min-h-10 w-full rounded-lg border border-[#252A35] bg-[#1E2330] px-3 py-2 text-sm font-normal text-[#F0F2F5] outline-none placeholder:text-[#7A8499] focus:border-[#5B8DEF] focus:ring-2 focus:ring-[#5B8DEF]/10";
+export const inputClass = "min-h-10 w-full rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] px-3 py-2 text-sm font-normal text-[#123F3B] outline-none placeholder:text-[#91AAA7] focus:border-[#10A89A] focus:ring-2 focus:ring-[#10A89A]/10";
 
 export function Badge({ children, tone = "slate" }: { children: ReactNode; tone?: "slate" | "blue" | "green" | "amber" | "red" }) {
   return (
@@ -55,7 +55,7 @@ export function Badge({ children, tone = "slate" }: { children: ReactNode; tone?
 
 export function EmptyState({ title, text }: { title: string; text: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-[#252A35] bg-transparent p-6 text-center">
+    <div className="rounded-lg border border-dashed border-[#B9DDD7] bg-[#F8FCFB] p-6 text-center">
       <p className="font-semibold text-slate-200">{title}</p>
       <p className="mt-1 text-sm text-slate-500">{text}</p>
     </div>
@@ -64,8 +64,8 @@ export function EmptyState({ title, text }: { title: string; text: string }) {
 
 export function ProgressBar({ value }: { value: number }) {
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#29303D]">
-      <div className="h-full rounded-full bg-[#5B8DEF]" style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#DCEFEB]">
+      <div className="h-full rounded-full bg-[#10A89A]" style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
     </div>
   );
 }
