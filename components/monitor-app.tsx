@@ -338,6 +338,7 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
       accent: "blue",
       done: task.status === "Completed",
       icon: BriefcaseBusiness,
+      priority: task.priority,
       details: [
         ["Project name", task.projectName],
         ["Product owner", task.productOwner],
@@ -362,7 +363,12 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
     <div className="overflow-hidden rounded-xl border border-[#D5EBE7] bg-white shadow-[0_18px_50px_rgba(41,112,103,0.08)]">
       <div className="scrollbar-thin grid min-w-[760px] grid-cols-7 border-b border-[#D5EBE7] bg-[#FBFEFD]">
         {days.map((day) => {
-          const count = data.workTasks.filter((task) => task.assignedDate === day.input).length + data.learningTasks.filter((task) => task.plannedDate === day.input).length;
+          const dayWork = data.workTasks.filter((task) => task.assignedDate === day.input);
+          const dayLearning = data.learningTasks.filter((task) => task.plannedDate === day.input);
+          const count = dayWork.length + dayLearning.length;
+          const completeCount = dayWork.filter((task) => task.status === "Completed").length + dayLearning.filter((task) => task.status === "Done").length;
+          const allComplete = count > 0 && completeCount === count;
+          const hasPending = count > 0 && !allComplete;
           const active = day.input === selectedDay.input;
           const isToday = day.input === todayInput;
           return (
@@ -370,7 +376,7 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
               <p className={`text-[10px] font-semibold uppercase ${active ? "text-[#087F77]" : "text-[#688B87]"}`}>{day.dayName.slice(0, 3)}</p>
               <p className={`mt-1 text-3xl font-bold ${active ? "text-[#11504A]" : "text-[#315E59]"}`}>{format(day.date, "d")}</p>
               <p className={`mt-1 text-[11px] ${active ? "text-[#10A89A]" : "text-[#789793]"}`}>{isToday ? "Today" : `${count} tasks`}</p>
-              <span className={`mx-auto mt-2 block h-1.5 w-1.5 rounded-full ${active ? "bg-[#10A89A]" : count ? "bg-[#A8C8C3]" : "bg-transparent"}`} />
+              <span className={`mx-auto mt-2 block h-2.5 w-2.5 rounded-full border-2 border-white shadow-sm ${allComplete ? "bg-[#22B884]" : hasPending ? "bg-[#E14D61]" : "bg-transparent"}`} title={allComplete ? "All tasks complete" : hasPending ? "Pending tasks" : "No tasks"} />
             </button>
           );
         })}
@@ -423,11 +429,12 @@ type AgendaEntry = {
   accent: string;
   done: boolean;
   icon: React.ElementType;
+  priority?: WorkTask["priority"];
   details?: string[][];
   onToggle?: () => void;
 };
 
-function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, details, onToggle }: AgendaEntry) {
+function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, priority, details, onToggle }: AgendaEntry) {
   const tone = accent === "blue" ? "border-blue-500/40 bg-blue-500/10 text-blue-300" : accent === "amber" ? "border-amber-500/40 bg-amber-500/10 text-amber-300" : "border-rose-500/40 bg-rose-500/10 text-rose-300";
   return (
     <div className="border-b border-[#1e2935] py-3 last:border-b-0">
@@ -435,7 +442,10 @@ function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, details
         <p className="text-xs tabular-nums text-slate-500">{time}</p>
         <div className="flex min-w-0 items-center gap-3">
           <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-md border ${tone}`}><Icon size={17} /></div>
-          <div className="min-w-0"><p className={`text-[11px] font-medium ${tone.split(" ").at(-1)}`}>{type}</p><p className={`truncate text-sm ${done ? "text-slate-500 line-through" : "text-slate-200"}`}>{title}</p></div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2"><p className={`text-[11px] font-medium ${tone.split(" ").at(-1)}`}>{type}</p>{priority && <span className={`h-2.5 w-2.5 rounded-full ${priority === "High" ? "bg-[#E14D61]" : "bg-[#F0B95A]"}`} title={`${priority} priority`} aria-label={`${priority} priority`} />}</div>
+            <p className={`truncate text-sm ${done ? "text-slate-500 line-through" : "text-slate-200"}`}>{title}</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <span className="hidden max-w-[150px] truncate text-xs text-slate-500 sm:block">{meta}</span>
