@@ -317,7 +317,7 @@ function WeekNavigator({ weekStart, selectedDate, onSelectDate, onMoveWeek }: { 
 }
 
 function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekStart: string; selectedDate: string; onSelectDate: (date: string) => void; setActive: (tab: Tab) => void }) {
-  const { data, upsert } = useStore();
+  const { data, upsert, remove } = useStore();
   const week = scopedWeekData(data, weekStart);
   const metrics = dashboardMetrics(data, weekStart);
   const days = weekDays(new Date(`${weekStart}T00:00:00`));
@@ -354,9 +354,10 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
         ["Blockers", task.blockers],
         ["Learning", task.learnings]
       ].filter((detail) => detail[1]),
-      onToggle: () => void upsert("workTasks", { ...task, status: task.status === "Completed" ? "In Progress" : "Completed", completionPercentage: task.status === "Completed" ? Math.min(task.completionPercentage, 99) : 100, updatedAt: new Date().toISOString() })
+      onToggle: () => void upsert("workTasks", { ...task, status: task.status === "Completed" ? "In Progress" : "Completed", completionPercentage: task.status === "Completed" ? Math.min(task.completionPercentage, 99) : 100, updatedAt: new Date().toISOString() }),
+      onDelete: () => confirmDelete(() => void remove("workTasks", task.id))
     })),
-    ...selectedLearning.map((task, index) => ({ id: task.id, time: ["11:30", "16:00", "19:00"][index % 3], type: "Learning Session", title: task.title, meta: `${task.plannedMinutes} min`, accent: "amber", done: task.status === "Done", icon: BookOpen, onToggle: () => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", updatedAt: new Date().toISOString() }) }))
+    ...selectedLearning.map((task, index) => ({ id: task.id, time: ["11:30", "16:00", "19:00"][index % 3], type: "Learning Session", title: task.title, meta: `${task.plannedMinutes} min`, accent: "amber", done: task.status === "Done", icon: BookOpen, onToggle: () => void upsert("learningTasks", { ...task, status: task.status === "Done" ? "In Progress" : "Done", updatedAt: new Date().toISOString() }), onDelete: () => confirmDelete(() => void remove("learningTasks", task.id)) }))
   ].sort((a, b) => a.time.localeCompare(b.time));
 
   return (
@@ -432,9 +433,10 @@ type AgendaEntry = {
   priority?: WorkTask["priority"];
   details?: string[][];
   onToggle?: () => void;
+  onDelete?: () => void;
 };
 
-function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, priority, details, onToggle }: AgendaEntry) {
+function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, priority, details, onToggle, onDelete }: AgendaEntry) {
   const tone = accent === "blue" ? "border-blue-500/40 bg-blue-500/10 text-blue-300" : accent === "amber" ? "border-amber-500/40 bg-amber-500/10 text-amber-300" : "border-rose-500/40 bg-rose-500/10 text-rose-300";
   return (
     <div className="border-b border-[#1e2935] py-3 last:border-b-0">
@@ -450,6 +452,7 @@ function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, priorit
         <div className="flex items-center gap-3">
           <span className="hidden max-w-[150px] truncate text-xs text-slate-500 sm:block">{meta}</span>
           {onToggle && <button type="button" onClick={onToggle} className={`grid h-8 w-8 shrink-0 place-items-center rounded-md border transition ${done ? "border-emerald-400 bg-emerald-400 text-[#07110c]" : "border-slate-500 text-transparent hover:border-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300"}`} title={done ? "Mark in progress" : "Mark complete"} aria-label={done ? "Mark task in progress" : "Mark task complete"}><CheckCircle2 size={17} /></button>}
+          {onDelete && <button type="button" onClick={onDelete} className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[#F0D6DA] bg-[#FFF7F8] text-[#BD3345] transition hover:bg-[#FFEBED]" title="Delete task" aria-label={`Delete ${title}`}><Trash2 size={15} /></button>}
         </div>
       </div>
       {details?.length ? <details className="ml-[76px] mt-2">
@@ -819,7 +822,7 @@ function SkillTile({ skill, tasks, done, tone, onAddTask, onEditSkill, onDeleteS
         <div className="flex items-center gap-1"><span className={`mr-2 text-xs font-medium ${accents[tone]}`}>{done}/{tasks.length} done</span><button onClick={onEditSkill} className="p-1.5 text-[#7A8499] hover:text-white" title="Edit skill"><Pencil size={14} /></button><button onClick={onDeleteSkill} className="p-1.5 text-[#7A8499] hover:text-rose-300" title="Delete skill"><Trash2 size={14} /></button></div>
       </div>
       <div className="mt-4 grid gap-2">
-        {tasks.map((task) => <div key={task.id} className={`group flex min-h-12 items-center gap-3 rounded-lg border px-3 py-2 ${task.status === "Done" ? "border-[#BDE7D8] bg-white/70" : "border-[#D5EBE7] bg-white"}`}><button onClick={() => onToggleTask(task)} className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${task.status === "Done" ? "border-[#22B884] bg-[#22B884] text-white" : "border-[#A8C8C3] text-transparent hover:border-[#10A89A]"}`} title={task.status === "Done" ? "Mark in progress" : "Mark done"}><CheckCircle2 size={13} /></button><button onClick={() => onEditTask(task)} className="min-w-0 flex-1 text-left"><p className={`truncate text-sm ${task.status === "Done" ? "text-[#789793] line-through" : "text-[#123F3B]"}`}>{task.title}</p><p className="mt-0.5 text-[10px] text-[#688B87]">{task.learningType} · {task.actualMinutes}/{task.plannedMinutes} min</p></button><button onClick={() => onDeleteTask(task.id)} className="p-1 text-[#789793] opacity-0 hover:text-rose-500 group-hover:opacity-100" title="Delete task"><Trash2 size={13} /></button></div>)}
+        {tasks.map((task) => <div key={task.id} className={`group flex min-h-12 items-center gap-3 rounded-lg border px-3 py-2 ${task.status === "Done" ? "border-[#BDE7D8] bg-white/70" : "border-[#D5EBE7] bg-white"}`}><button onClick={() => onToggleTask(task)} className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${task.status === "Done" ? "border-[#22B884] bg-[#22B884] text-white" : "border-[#A8C8C3] text-transparent hover:border-[#10A89A]"}`} title={task.status === "Done" ? "Mark in progress" : "Mark done"}><CheckCircle2 size={13} /></button><button onClick={() => onEditTask(task)} className="min-w-0 flex-1 text-left"><p className={`truncate text-sm ${task.status === "Done" ? "text-[#789793] line-through" : "text-[#123F3B]"}`}>{task.title}</p><p className="mt-0.5 text-[10px] text-[#688B87]">{task.learningType} · {task.actualMinutes}/{task.plannedMinutes} min</p></button><button onClick={() => onDeleteTask(task.id)} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-[#789793] hover:bg-[#FFEBED] hover:text-[#BD3345]" title="Delete task" aria-label={`Delete ${task.title}`}><Trash2 size={14} /></button></div>)}
         {!tasks.length && <p className="rounded-lg border border-dashed border-[#3B4250] px-3 py-7 text-center text-xs text-[#7A8499]">No tasks for this date</p>}
       </div>
       <button onClick={onAddTask} className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-[#B9DDD7] bg-white text-xs font-semibold text-[#087F77] hover:bg-[#E8F6F4]"><Plus size={14} /> Add task</button>
