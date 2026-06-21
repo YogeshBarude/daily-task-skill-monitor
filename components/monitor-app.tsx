@@ -72,7 +72,7 @@ const navGroups: { label: string; items: { tab: Tab; label: string; icon: React.
   }
 ];
 
-const colors = ["#2563EB", "#0F9F6E", "#D97706", "#DC2626", "#7C3AED", "#0891B2"];
+const colors = ["#10A89A", "#60BFAF", "#88C7BE", "#F0B95A", "#7BA9A2", "#D87987"];
 const projectOptions = ["AI Governance", "Synthetic Testing", "Coca-Cola Creative Analysis", "DU Telecom Concept Testing", "Personal", "Other"];
 const platformOptions = ["AI Governance Portal", "PowerPoint", "Docs", "Analytics workbook", "Excel", "Power BI", "Supabase", "Vercel", "Other"];
 const pocOptions = ["Vaibhav", "Internal", "Research team", "Product team", "Personal", "Other"];
@@ -126,8 +126,8 @@ export function MonitorApp() {
         </nav>
 
         <div className="border-t border-[#252A35] p-3">
-          <button onClick={() => setActive("Settings")} className="flex h-9 w-full items-center gap-3 rounded-md px-3 text-[13px] text-slate-400 hover:bg-white/[0.04] hover:text-slate-100"><Settings size={17} /> Settings</button>
-          <button onClick={() => store.signOut()} className="mt-1 flex h-9 w-full items-center gap-3 rounded-md px-3 text-[13px] text-slate-500 hover:bg-white/[0.04] hover:text-slate-200"><LogOut size={17} /> Sign out</button>
+          <button onClick={() => setActive("Settings")} className="flex h-9 w-full items-center gap-3 rounded-md px-3 text-[13px] text-[#688B87] hover:bg-[#F4FBFA] hover:text-[#123F3B]"><Settings size={17} /> Settings</button>
+          <button onClick={() => store.signOut()} className="mt-1 flex h-9 w-full items-center gap-3 rounded-md px-3 text-[13px] text-[#789793] hover:bg-[#FFF4F5] hover:text-[#BD3345]"><LogOut size={17} /> Sign out</button>
           <div className="mt-3 flex items-center gap-3 rounded-md border border-[#D5EBE7] bg-[#F4FBFA] p-2.5">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#DDF4F1] text-sm font-semibold text-[#087F77]">{store.user.name.slice(0, 2).toUpperCase()}</div>
             <div className="min-w-0"><p className="truncate text-xs font-medium text-slate-200">{store.user.name}</p><p className="truncate text-[10px] text-slate-500">{store.mode === "supabase" ? "Cloud workspace" : "Personal workspace"}</p></div>
@@ -142,11 +142,11 @@ export function MonitorApp() {
             <WeekNavigator weekStart={weekStart} selectedDate={selectedDate} onSelectDate={selectDate} onMoveWeek={moveWeek} />
             <div className="ml-auto flex items-center gap-2">
               <Button className="h-10 px-4" onClick={() => setShowLogTask(true)}><Plus size={17} /><span>Log Task</span></Button>
-              <button className="grid h-10 w-10 place-items-center rounded-md border border-[#2b3745] text-slate-400 hover:bg-white/[0.05] hover:text-white lg:hidden" onClick={() => setActive("Settings")} title="Profile"><UserCircle size={19} /></button>
+              <button className="grid h-10 w-10 place-items-center rounded-md border border-[#D5EBE7] bg-[#F8FCFB] text-[#688B87] hover:bg-[#E8F6F4] hover:text-[#087F77] lg:hidden" onClick={() => setActive("Settings")} title="Profile"><UserCircle size={19} /></button>
             </div>
           </div>
           <div className="scrollbar-thin flex gap-1 overflow-x-auto border-t border-[#252A35] px-3 py-2 lg:hidden">
-            {navGroups.flatMap((group) => group.items).map(({ tab, label }) => <button key={tab} onClick={() => setActive(tab)} className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs ${active === tab ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-white/[0.05]"}`}>{label}</button>)}
+            {navGroups.flatMap((group) => group.items).map(({ tab, label }) => <button key={tab} onClick={() => setActive(tab)} className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs ${active === tab ? "bg-[#10A89A] text-white" : "text-[#688B87] hover:bg-[#F4FBFA]"}`}>{label}</button>)}
           </div>
         </header>
 
@@ -276,11 +276,11 @@ function QuickLearningTaskModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="log-task-title" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 z-50 grid place-items-center bg-[#123F3B]/25 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="log-task-title" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <Card className="w-full max-w-md p-5">
         <div className="flex items-center justify-between">
           <h2 id="log-task-title" className="text-xl font-semibold">Log learning task</h2>
-          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-md text-[#7A8499] hover:bg-white/5 hover:text-white" aria-label="Close"><X size={18} /></button>
+          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-md text-[#688B87] hover:bg-[#E8F6F4] hover:text-[#123F3B]" aria-label="Close"><X size={18} /></button>
         </div>
         <form className="mt-5 grid gap-4" onSubmit={save}>
           <SelectField label="Linked skill" value={task.skillId} options={data.skills.map((skill) => skill.id)} labels={Object.fromEntries(data.skills.map((skill) => [skill.id, skill.skillName]))} onChange={(value) => setTask({ ...task, skillId: value })} />
@@ -304,14 +304,14 @@ function WeekNavigator({ weekStart, selectedDate, onSelectDate, onMoveWeek }: { 
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2">
-      <button type="button" onClick={() => onMoveWeek(-1)} className="grid h-10 w-10 place-items-center rounded-lg border border-[#252A35] bg-[#1E2330] text-[#7A8499] hover:text-[#F0F2F5]" aria-label="Previous week" title="Previous week"><ChevronLeft size={18} /></button>
-      <label className="relative flex h-10 min-w-[190px] cursor-pointer items-center rounded-lg border border-[#252A35] bg-[#1E2330] px-3">
-        <CalendarDays size={16} className="mr-2 text-[#5B8DEF]" />
-        <span className="whitespace-nowrap text-sm font-medium text-[#F0F2F5]">{format(start, "MMM d")} - {format(end, "MMM d, yyyy")}</span>
+      <button type="button" onClick={() => onMoveWeek(-1)} className="grid h-10 w-10 place-items-center rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] text-[#688B87] hover:border-[#B9DDD7] hover:text-[#087F77]" aria-label="Previous week" title="Previous week"><ChevronLeft size={18} /></button>
+      <label className="relative flex h-10 min-w-[190px] cursor-pointer items-center rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] px-3">
+        <CalendarDays size={16} className="mr-2 text-[#10A89A]" />
+        <span className="whitespace-nowrap text-sm font-medium text-[#123F3B]">{format(start, "MMM d")} - {format(end, "MMM d, yyyy")}</span>
         <input type="date" value={selectedDate} onChange={(event) => onSelectDate(event.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label="Select a date" />
       </label>
-      <button type="button" onClick={() => onMoveWeek(1)} className="grid h-10 w-10 place-items-center rounded-lg border border-[#252A35] bg-[#1E2330] text-[#7A8499] hover:text-[#F0F2F5]" aria-label="Next week" title="Next week"><ChevronRight size={18} /></button>
-      {!currentWeek && <button type="button" onClick={() => onSelectDate(toDateInput(new Date()))} className="h-10 rounded-lg border border-[#252A35] px-3 text-xs font-medium text-[#7A8499] hover:text-[#F0F2F5]">Today</button>}
+      <button type="button" onClick={() => onMoveWeek(1)} className="grid h-10 w-10 place-items-center rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] text-[#688B87] hover:border-[#B9DDD7] hover:text-[#087F77]" aria-label="Next week" title="Next week"><ChevronRight size={18} /></button>
+      {!currentWeek && <button type="button" onClick={() => onSelectDate(toDateInput(new Date()))} className="h-10 rounded-lg border border-[#D5EBE7] bg-white px-3 text-xs font-semibold text-[#087F77] hover:bg-[#F4FBFA]">Today</button>}
     </div>
   );
 }
@@ -359,18 +359,18 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
   ].sort((a, b) => a.time.localeCompare(b.time));
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[#2B3240] bg-[#12161D] shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
-      <div className="scrollbar-thin grid min-w-[760px] grid-cols-7 border-b border-[#2B3240]">
+    <div className="overflow-hidden rounded-xl border border-[#D5EBE7] bg-white shadow-[0_18px_50px_rgba(41,112,103,0.08)]">
+      <div className="scrollbar-thin grid min-w-[760px] grid-cols-7 border-b border-[#D5EBE7] bg-[#FBFEFD]">
         {days.map((day) => {
           const count = data.workTasks.filter((task) => task.assignedDate === day.input).length + data.learningTasks.filter((task) => task.plannedDate === day.input).length;
           const active = day.input === selectedDay.input;
           const isToday = day.input === todayInput;
           return (
-            <button key={day.input} type="button" aria-pressed={active} onClick={() => onSelectDate(day.input)} className={`min-h-[122px] border-r border-[#2B3240] px-3 py-4 text-center last:border-r-0 ${active ? "bg-[#5B8DEF]/25 shadow-[inset_0_-3px_0_#5B8DEF]" : "hover:bg-white/[0.035]"}`}>
-              <p className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${active ? "text-blue-200" : "text-slate-400"}`}>{day.dayName.slice(0, 3)}</p>
-              <p className={`mt-1 text-3xl font-semibold ${active ? "text-blue-100" : "text-slate-300"}`}>{format(day.date, "d")}</p>
-              <p className={`mt-1 text-[11px] ${active ? "text-blue-300" : "text-slate-500"}`}>{isToday ? "Today" : `${count} tasks`}</p>
-              <span className={`mx-auto mt-2 block h-1.5 w-1.5 rounded-full ${active ? "bg-blue-400" : count ? "bg-slate-500" : "bg-transparent"}`} />
+            <button key={day.input} type="button" aria-pressed={active} onClick={() => onSelectDate(day.input)} className={`min-h-[122px] border-r border-[#D5EBE7] px-3 py-4 text-center last:border-r-0 ${active ? "bg-[#DDF4F1] shadow-[inset_0_-3px_0_#10A89A]" : "hover:bg-[#F4FBFA]"}`}>
+              <p className={`text-[10px] font-semibold uppercase ${active ? "text-[#087F77]" : "text-[#688B87]"}`}>{day.dayName.slice(0, 3)}</p>
+              <p className={`mt-1 text-3xl font-bold ${active ? "text-[#11504A]" : "text-[#315E59]"}`}>{format(day.date, "d")}</p>
+              <p className={`mt-1 text-[11px] ${active ? "text-[#10A89A]" : "text-[#789793]"}`}>{isToday ? "Today" : `${count} tasks`}</p>
+              <span className={`mx-auto mt-2 block h-1.5 w-1.5 rounded-full ${active ? "bg-[#10A89A]" : count ? "bg-[#A8C8C3]" : "bg-transparent"}`} />
             </button>
           );
         })}
@@ -401,7 +401,7 @@ function Dashboard({ weekStart, selectedDate, onSelectDate, setActive }: { weekS
           </details>
         </section>
 
-        <aside className="bg-[#171B23] p-5">
+        <aside className="bg-[#F7FCFB] p-5">
           <div className="mb-4 flex items-center justify-between"><h2 className="text-base font-semibold text-slate-100">My progress</h2><Badge tone="blue">This week</Badge></div>
           <div className="grid gap-3">
             <ProgressStat title="Weekly completion" value={`${completion}%`} detail={`${completedTasks} of ${totalTasks} tasks done`} progress={completion} tone="green" icon={Goal} />
@@ -453,13 +453,13 @@ function AgendaItem({ time, type, title, meta, accent, done, icon: Icon, details
 }
 
 function ProgressStat({ title, value, detail, progress, tone, icon: Icon }: { title: string; value: string; detail: string; progress: number; tone: "green" | "blue" | "amber"; icon: React.ElementType }) {
-  const bar = tone === "green" ? "bg-emerald-400" : tone === "amber" ? "bg-amber-300" : "bg-blue-400";
-  const icon = tone === "green" ? "text-emerald-300" : tone === "amber" ? "text-amber-300" : "text-blue-300";
+  const bar = tone === "green" ? "bg-[#22B884]" : tone === "amber" ? "bg-[#F0B95A]" : "bg-[#10A89A]";
+  const icon = tone === "green" ? "text-[#22B884]" : tone === "amber" ? "text-[#D9952A]" : "text-[#10A89A]";
   return (
-    <div className="rounded-lg border border-[#2a3744] bg-[#0d151f] p-4">
-      <div className="flex items-center gap-2 text-xs font-medium text-slate-300"><Icon size={16} className={icon} /> {title}</div>
+    <div className="rounded-lg border border-[#D5EBE7] bg-white p-4 shadow-[0_8px_24px_rgba(41,112,103,0.04)]">
+      <div className="flex items-center gap-2 text-xs font-semibold text-[#476D69]"><Icon size={16} className={icon} /> {title}</div>
       <div className="mt-3 flex items-end justify-between"><div><p className="text-xl font-semibold text-slate-100">{value}</p><p className="mt-0.5 text-[11px] text-slate-500">{detail}</p></div><span className="text-xs text-slate-400">{Math.round(progress)}%</span></div>
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#202b37]"><div className={`h-full ${bar}`} style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} /></div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#DCEFEB]"><div className={`h-full ${bar}`} style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} /></div>
     </div>
   );
 }
@@ -498,12 +498,12 @@ function CompletedWorkPanel({ completedWork, pendingWork, setActive }: { complet
 }
 
 function Metric({ title, value, hint }: { title: string; value: string | number; hint?: string }) {
-  const tone = /done|completion/i.test(title) ? "border-emerald-500/35 bg-emerald-500/[0.055]" : /pending|blocked/i.test(title) ? "border-amber-500/35 bg-amber-500/[0.055]" : /skill|learning/i.test(title) ? "border-fuchsia-500/35 bg-fuchsia-500/[0.055]" : "border-blue-500/35 bg-blue-500/[0.055]";
-  const dot = /done|completion/i.test(title) ? "bg-[#3ECF8E]" : /pending|blocked/i.test(title) ? "bg-[#F5B84B]" : /skill|learning/i.test(title) ? "bg-[#C879FF]" : "bg-[#5B8DEF]";
+  const tone = /done|completion/i.test(title) ? "border-[#BDE7D8] bg-[#F1FBF7]" : /pending|blocked/i.test(title) ? "border-[#F1D99B] bg-[#FFFAEC]" : /skill|learning/i.test(title) ? "border-[#CDE9E5] bg-[#F4FBFA]" : "border-[#CDE9E5] bg-white";
+  const dot = /done|completion/i.test(title) ? "bg-[#22B884]" : /pending|blocked/i.test(title) ? "bg-[#F0B95A]" : "bg-[#10A89A]";
   return (
     <Card className={`min-h-[112px] ${tone}`}>
       <p className="flex items-center gap-2 text-[11px] font-bold uppercase text-[#8D98AE]"><span className={`h-2 w-2 rounded-full ${dot}`} />{title}</p>
-      <p className="mt-2 text-[32px] font-bold leading-none text-[#F0F2F5]">{value}</p>
+      <p className="mt-2 text-[32px] font-bold leading-none text-[#123F3B]">{value}</p>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
     </Card>
   );
@@ -621,12 +621,12 @@ function WorkTaskCard({ task, onChange, onEdit, onDelete }: { task: WorkTask; on
   }
 
   return (
-    <article className={`rounded-lg border p-4 transition ${done ? "border-emerald-500/25 bg-emerald-500/[0.055]" : "border-[#2B3240] bg-[#161920]"}`}>
+    <article className={`rounded-lg border p-4 transition ${done ? "border-[#BDE7D8] bg-[#F1FBF7]" : "border-[#D5EBE7] bg-white"}`}>
       <div className="flex flex-wrap items-start gap-3">
         <span className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${priorityTone}`} title={`${task.priority} priority`} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className={`text-sm font-semibold ${done ? "text-[#7A8499] line-through" : "text-[#F0F2F5]"}`}>{task.title}</h3>
+            <h3 className={`text-sm font-semibold ${done ? "text-[#789793] line-through" : "text-[#123F3B]"}`}>{task.title}</h3>
             <Badge tone={task.priority === "High" ? "red" : "amber"}>{task.priority}</Badge>
             <Badge tone={done ? "green" : task.status === "Blocked" ? "red" : "blue"}>{task.status}</Badge>
           </div>
@@ -638,10 +638,10 @@ function WorkTaskCard({ task, onChange, onEdit, onDelete }: { task: WorkTask; on
         </div>
         <button type="button" onClick={toggleComplete} className={`grid h-9 w-9 place-items-center rounded-md border ${done ? "border-emerald-400 bg-emerald-400 text-[#07110c]" : "border-[#465064] text-transparent hover:border-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300"}`} title={done ? "Mark in progress" : "Mark complete"}><CheckCircle2 size={18} /></button>
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[#252A35] pt-3">
+      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[#E0EFED] pt-3">
         <details className="group flex-1">
-          <summary className="w-fit cursor-pointer list-none text-xs font-medium text-blue-300 hover:text-blue-200">Task details <span className="ml-1 inline-block transition group-open:rotate-180">⌄</span></summary>
-          <div className="mt-3 grid gap-x-5 gap-y-3 rounded-md border border-[#252A35] bg-[#11151C] p-3 sm:grid-cols-2">
+          <summary className="w-fit cursor-pointer list-none text-xs font-semibold text-[#10A89A] hover:text-[#087F77]">Task details <span className="ml-1 inline-block transition group-open:rotate-180">⌄</span></summary>
+          <div className="mt-3 grid gap-x-5 gap-y-3 rounded-md border border-[#D5EBE7] bg-[#F8FCFB] p-3 sm:grid-cols-2">
             {details.map(([label, value]) => <div key={label}><p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#7A8499]">{label}</p><p className="mt-1 whitespace-pre-wrap text-sm text-[#D9DEE8]">{value}</p></div>)}
           </div>
         </details>
@@ -763,7 +763,7 @@ function Skills({ selectedDate, onSelectDate }: { selectedDate: string; onSelect
           {days.map((day) => {
             const active = day.input === selectedDate;
             const count = data.learningTasks.filter((task) => task.plannedDate === day.input).length;
-            return <button key={day.input} onClick={() => onSelectDate(day.input)} className={`rounded-lg border px-3 py-3 text-left transition ${active ? "border-[#5B8DEF] bg-[#5B8DEF] text-white" : "border-transparent bg-[#1E2330] text-[#F0F2F5] hover:border-[#3B4250]"}`}><div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{day.input === toDateInput(new Date()) ? "Today" : day.dayName}</span><span className="text-xs">{count}</span></div><p className={`mt-1 text-xs ${active ? "text-blue-100" : "text-[#7A8499]"}`}>{format(day.date, "MMM d")}</p></button>;
+            return <button key={day.input} onClick={() => onSelectDate(day.input)} className={`rounded-lg border px-3 py-3 text-left transition ${active ? "border-[#10A89A] bg-[#10A89A] text-white shadow-[0_8px_20px_rgba(16,168,154,0.14)]" : "border-[#D5EBE7] bg-[#F8FCFB] text-[#123F3B] hover:border-[#B9DDD7]"}`}><div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{day.input === toDateInput(new Date()) ? "Today" : day.dayName}</span><span className="text-xs">{count}</span></div><p className={`mt-1 text-xs ${active ? "text-white/80" : "text-[#688B87]"}`}>{format(day.date, "MMM d")}</p></button>;
           })}
         </div>
       </Card>
@@ -781,7 +781,7 @@ function Skills({ selectedDate, onSelectDate }: { selectedDate: string; onSelect
 
       <Card className="h-fit xl:sticky xl:top-[90px]">
         <h2 className="text-base font-semibold">Day&apos;s progress</h2>
-        <div className="mt-4 rounded-lg bg-[#5B8DEF] p-5 text-white"><p className="text-[11px] font-bold uppercase text-blue-100">Completed</p><p className="mt-2 text-4xl font-extrabold tabular-nums">{completed}/{selectedTasks.length}</p><p className="mt-1 text-xs text-blue-100">tasks completed today</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-[#3ECF8E]" style={{ width: `${completion}%` }} /></div></div>
+        <div className="mt-4 rounded-lg bg-[#10A89A] p-5 text-white shadow-[0_14px_32px_rgba(16,168,154,0.16)]"><p className="text-[11px] font-bold uppercase text-white/75">Completed</p><p className="mt-2 text-4xl font-extrabold tabular-nums">{completed}/{selectedTasks.length}</p><p className="mt-1 text-xs text-white/75">tasks completed today</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-white" style={{ width: `${completion}%` }} /></div></div>
         <div className="mt-5 grid grid-cols-2 gap-3"><ProgressMiniStat value={`${minutesToHours(totalMinutes)}h`} label="Actual" /><ProgressMiniStat value={`${minutesToHours(plannedMinutes)}h`} label="Planned" /></div>
         <h3 className="mt-6 text-sm font-semibold">Skill breakdown</h3>
         <div className="mt-3 grid gap-3">{skillGroups.filter((item) => item.tasks.length).map(({ skill, tasks, done }) => <div key={skill.id} className="rounded-lg border border-[#252A35] bg-[#1E2330] p-3"><div className="flex justify-between text-xs"><span className="font-medium">{skill.skillName}</span><span className="text-[#3ECF8E]">{done}/{tasks.length}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#343A48]"><div className="h-full bg-[#5B8DEF]" style={{ width: `${(done / tasks.length) * 100}%` }} /></div></div>)}</div>
@@ -796,12 +796,12 @@ function Skills({ selectedDate, onSelectDate }: { selectedDate: string; onSelect
 
 function SkillTile({ skill, tasks, done, tone, onAddTask, onEditSkill, onDeleteSkill, onEditTask, onDeleteTask, onToggleTask }: { skill: Skill; tasks: LearningTask[]; done: number; tone: number; onAddTask: () => void; onEditSkill: () => void; onDeleteSkill: () => void; onEditTask: (task: LearningTask) => void; onDeleteTask: (id: string) => void; onToggleTask: (task: LearningTask) => void }) {
   const tones = [
-    "border-blue-400/80 bg-blue-500/[0.14] shadow-[0_14px_36px_rgba(59,130,246,0.10)]",
-    "border-emerald-400/80 bg-emerald-500/[0.14] shadow-[0_14px_36px_rgba(16,185,129,0.10)]",
-    "border-fuchsia-400/80 bg-fuchsia-500/[0.14] shadow-[0_14px_36px_rgba(217,70,239,0.10)]",
-    "border-amber-400/80 bg-amber-500/[0.14] shadow-[0_14px_36px_rgba(245,158,11,0.10)]"
+    "border-[#B9DDD7] bg-[#F4FBFA] shadow-[0_14px_32px_rgba(41,112,103,0.06)]",
+    "border-[#BDE7D8] bg-[#F1FBF7] shadow-[0_14px_32px_rgba(41,112,103,0.05)]",
+    "border-[#D3E6E3] bg-[#FAFDFC] shadow-[0_14px_32px_rgba(41,112,103,0.05)]",
+    "border-[#F1D99B] bg-[#FFFAEC] shadow-[0_14px_32px_rgba(154,103,0,0.05)]"
   ];
-  const accents = ["text-blue-300", "text-emerald-300", "text-fuchsia-300", "text-amber-300"];
+  const accents = ["text-[#087F77]", "text-[#087F5B]", "text-[#527D78]", "text-[#9A6700]"];
   return (
     <article className={`min-h-[250px] rounded-lg border p-4 transition hover:-translate-y-0.5 ${tones[tone]}`}>
       <div className="flex items-start justify-between gap-3">
@@ -809,20 +809,20 @@ function SkillTile({ skill, tasks, done, tone, onAddTask, onEditSkill, onDeleteS
         <div className="flex items-center gap-1"><span className={`mr-2 text-xs font-medium ${accents[tone]}`}>{done}/{tasks.length} done</span><button onClick={onEditSkill} className="p-1.5 text-[#7A8499] hover:text-white" title="Edit skill"><Pencil size={14} /></button><button onClick={onDeleteSkill} className="p-1.5 text-[#7A8499] hover:text-rose-300" title="Delete skill"><Trash2 size={14} /></button></div>
       </div>
       <div className="mt-4 grid gap-2">
-        {tasks.map((task) => <div key={task.id} className={`group flex min-h-12 items-center gap-3 rounded-lg border px-3 py-2 ${task.status === "Done" ? "border-emerald-500/20 bg-emerald-500/10" : "border-[#252A35] bg-[#161920]"}`}><button onClick={() => onToggleTask(task)} className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${task.status === "Done" ? "border-[#3ECF8E] bg-[#3ECF8E] text-[#0D0F12]" : "border-[#596274] text-transparent hover:border-[#5B8DEF]"}`} title={task.status === "Done" ? "Mark in progress" : "Mark done"}><CheckCircle2 size={13} /></button><button onClick={() => onEditTask(task)} className="min-w-0 flex-1 text-left"><p className={`truncate text-sm ${task.status === "Done" ? "text-[#7A8499] line-through" : "text-[#F0F2F5]"}`}>{task.title}</p><p className="mt-0.5 text-[10px] text-[#7A8499]">{task.learningType} · {task.actualMinutes}/{task.plannedMinutes} min</p></button><button onClick={() => onDeleteTask(task.id)} className="p-1 text-[#596274] opacity-0 hover:text-rose-300 group-hover:opacity-100" title="Delete task"><Trash2 size={13} /></button></div>)}
+        {tasks.map((task) => <div key={task.id} className={`group flex min-h-12 items-center gap-3 rounded-lg border px-3 py-2 ${task.status === "Done" ? "border-[#BDE7D8] bg-white/70" : "border-[#D5EBE7] bg-white"}`}><button onClick={() => onToggleTask(task)} className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${task.status === "Done" ? "border-[#22B884] bg-[#22B884] text-white" : "border-[#A8C8C3] text-transparent hover:border-[#10A89A]"}`} title={task.status === "Done" ? "Mark in progress" : "Mark done"}><CheckCircle2 size={13} /></button><button onClick={() => onEditTask(task)} className="min-w-0 flex-1 text-left"><p className={`truncate text-sm ${task.status === "Done" ? "text-[#789793] line-through" : "text-[#123F3B]"}`}>{task.title}</p><p className="mt-0.5 text-[10px] text-[#688B87]">{task.learningType} · {task.actualMinutes}/{task.plannedMinutes} min</p></button><button onClick={() => onDeleteTask(task.id)} className="p-1 text-[#789793] opacity-0 hover:text-rose-500 group-hover:opacity-100" title="Delete task"><Trash2 size={13} /></button></div>)}
         {!tasks.length && <p className="rounded-lg border border-dashed border-[#3B4250] px-3 py-7 text-center text-xs text-[#7A8499]">No tasks for this date</p>}
       </div>
-      <button onClick={onAddTask} className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-current text-xs font-medium text-[#AAB3C5] hover:bg-white/[0.04]"><Plus size={14} /> Add task</button>
+      <button onClick={onAddTask} className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-[#B9DDD7] bg-white text-xs font-semibold text-[#087F77] hover:bg-[#E8F6F4]"><Plus size={14} /> Add task</button>
     </article>
   );
 }
 
 function ProgressMiniStat({ value, label }: { value: string; label: string }) {
-  return <div className="rounded-lg bg-[#1E2330] p-3 text-center"><p className="text-lg font-extrabold tabular-nums text-[#F0F2F5]">{value}</p><p className="mt-1 text-[10px] font-bold uppercase text-[#7A8499]">{label}</p></div>;
+  return <div className="rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] p-3 text-center"><p className="text-lg font-extrabold tabular-nums text-[#123F3B]">{value}</p><p className="mt-1 text-[10px] font-bold uppercase text-[#688B87]">{label}</p></div>;
 }
 
 function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/75 p-4" role="dialog" aria-modal="true" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><Card className="my-6 w-full max-w-md p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{title}</h2><button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-lg text-[#7A8499] hover:bg-white/5 hover:text-white" aria-label="Close"><X size={18} /></button></div><div className="mt-5">{children}</div></Card></div>;
+  return <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[#123F3B]/25 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><Card className="my-6 w-full max-w-md p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{title}</h2><button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-lg text-[#688B87] hover:bg-[#E8F6F4] hover:text-[#123F3B]" aria-label="Close"><X size={18} /></button></div><div className="mt-5">{children}</div></Card></div>;
 }
 
 function WorkAnalytics({ weekStart }: { weekStart: string }) {
@@ -835,7 +835,7 @@ function WorkAnalytics({ weekStart }: { weekStart: string }) {
       <Metric title="Blocked tasks" value={week.workTasks.filter((task) => task.status === "Blocked").length} />
       <Metric title="High priority pending" value={week.workTasks.filter((task) => task.priority === "High" && task.status !== "Completed").length} />
       <Metric title="Weekly productivity" value={`${score}/100`} hint={productivityLabel(score)} />
-      <ChartCard title="Daily work hours"><BarChartBox data={dailySeries(data, weekStart)} bars={[["workHours", "#2563EB"]]} /></ChartCard>
+      <ChartCard title="Daily work hours"><BarChartBox data={dailySeries(data, weekStart)} bars={[["workHours", "#10A89A"]]} /></ChartCard>
       <ChartCard title="Time by project"><PieChartBox data={projectDistribution(week.workTasks)} /></ChartCard>
       <ChartCard title="Status distribution"><PieChartBox data={statusDistribution(week.workTasks)} /></ChartCard>
       <ChartCard title="Priority distribution"><PieChartBox data={priorityDistribution(week.workTasks)} /></ChartCard>
@@ -860,7 +860,7 @@ function LearningAnalytics({ weekStart }: { weekStart: string }) {
       <section className="grid gap-4">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4"><Metric title="Learning hours" value={`${learningHours}h`} /><Metric title="Tasks done" value={completed} /><Metric title="Pending tasks" value={pending} /><Metric title="Sessions logged" value={week.learningTasks.filter((task) => task.actualMinutes > 0).length} /></div>
         <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Daily learning hours">{hasDailyData ? <BarChartBox data={dailyData} bars={[["learningHours", "#5B8DEF"]]} /> : <ChartEmptyState />}</ChartCard>
+          <ChartCard title="Daily learning hours">{hasDailyData ? <BarChartBox data={dailyData} bars={[["learningHours", "#10A89A"]]} /> : <ChartEmptyState />}</ChartCard>
           <ChartCard title="Time by skill category">{categoryData.some((item) => item.value > 0) ? <PieChartBox data={categoryData} /> : <ChartEmptyState />}</ChartCard>
         </div>
         <div>
@@ -870,17 +870,17 @@ function LearningAnalytics({ weekStart }: { weekStart: string }) {
               const tasks = week.learningTasks.filter((task) => task.skillId === skill.id);
               const done = tasks.filter((task) => task.status === "Done").length;
               const actual = tasks.reduce((total, task) => total + task.actualMinutes, 0);
-              return <div key={skill.id} className={`rounded-lg border p-4 ${["border-blue-500/50 bg-blue-500/[0.07]", "border-emerald-500/50 bg-emerald-500/[0.07]", "border-fuchsia-500/50 bg-fuchsia-500/[0.07]", "border-amber-500/50 bg-amber-500/[0.07]"][index % 4]}`}><div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{skill.skillName}</p><p className="mt-1 text-xs text-[#7A8499]">{skill.category} · {minutesToHours(actual)}h logged</p></div><span className="text-xs font-medium text-[#3ECF8E]">{done}/{tasks.length} done</span></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-[#252A35]"><div className="h-full bg-[#5B8DEF]" style={{ width: `${tasks.length ? (done / tasks.length) * 100 : 0}%` }} /></div></div>;
+              return <div key={skill.id} className={`rounded-lg border p-4 ${["border-[#CDE9E5] bg-[#F4FBFA]", "border-[#BDE7D8] bg-[#F1FBF7]", "border-[#D3E6E3] bg-[#FAFDFC]", "border-[#F1D99B] bg-[#FFFAEC]"][index % 4]}`}><div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{skill.skillName}</p><p className="mt-1 text-xs text-[#688B87]">{skill.category} · {minutesToHours(actual)}h logged</p></div><span className="text-xs font-medium text-[#087F5B]">{done}/{tasks.length} done</span></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-[#DCEFEB]"><div className="h-full bg-[#10A89A]" style={{ width: `${tasks.length ? (done / tasks.length) * 100 : 0}%` }} /></div></div>;
             })}
           </div>
         </div>
       </section>
       <Card className="h-fit xl:sticky xl:top-[90px]">
         <h2 className="text-base font-semibold">Weekly progress</h2>
-        <div className="mt-4 rounded-lg bg-[#5B8DEF] p-5 text-white"><p className="text-[11px] font-bold uppercase text-blue-100">Completion</p><p className="mt-2 text-4xl font-extrabold tabular-nums">{completion}%</p><p className="mt-1 text-xs text-blue-100">{completed} of {week.learningTasks.length} tasks done</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-[#3ECF8E]" style={{ width: `${completion}%` }} /></div></div>
+        <div className="mt-4 rounded-lg bg-[#10A89A] p-5 text-white shadow-[0_14px_32px_rgba(16,168,154,0.16)]"><p className="text-[11px] font-bold uppercase text-white/75">Completion</p><p className="mt-2 text-4xl font-extrabold tabular-nums">{completion}%</p><p className="mt-1 text-xs text-white/75">{completed} of {week.learningTasks.length} tasks done</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full bg-white" style={{ width: `${completion}%` }} /></div></div>
         <div className="mt-5 grid grid-cols-2 gap-3"><ProgressMiniStat value={`${minutesToHours(totalActualMinutes)}h`} label="Actual" /><ProgressMiniStat value={`${minutesToHours(totalPlannedMinutes)}h`} label="Planned" /></div>
         <h3 className="mt-6 text-sm font-semibold">Category breakdown</h3>
-        <div className="mt-3 grid gap-3">{categoryData.map((category, index) => <div key={category.name} className="rounded-lg border border-[#252A35] bg-[#1E2330] p-3"><div className="flex items-center justify-between text-xs"><span>{category.name}</span><span className="font-medium text-[#3ECF8E]">{category.value}h</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#343A48]"><div className="h-full" style={{ width: `${totalActualMinutes ? Math.min(100, (category.value * 60 / totalActualMinutes) * 100) : 0}%`, backgroundColor: colors[index % colors.length] }} /></div></div>)}</div>
+        <div className="mt-3 grid gap-3">{categoryData.map((category, index) => <div key={category.name} className="rounded-lg border border-[#D5EBE7] bg-[#F8FCFB] p-3"><div className="flex items-center justify-between text-xs"><span>{category.name}</span><span className="font-medium text-[#087F5B]">{category.value}h</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#DCEFEB]"><div className="h-full" style={{ width: `${totalActualMinutes ? Math.min(100, (category.value * 60 / totalActualMinutes) * 100) : 0}%`, backgroundColor: colors[index % colors.length] }} /></div></div>)}</div>
       </Card>
     </div>
   );
@@ -994,8 +994,8 @@ function SettingsPage() {
           <Field label="Current password"><input className={inputClass} type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /></Field>
           <Field label="New password"><input className={inputClass} type="password" minLength={8} autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required /></Field>
           <Field label="Confirm new password"><input className={inputClass} type="password" minLength={8} autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required /></Field>
-          {passwordError && <p className="rounded-md border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">{passwordError}</p>}
-          {passwordMessage && <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">{passwordMessage}</p>}
+          {passwordError && <p className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{passwordError}</p>}
+          {passwordMessage && <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{passwordMessage}</p>}
           <Button className="w-fit" type="submit" disabled={changingPassword || mode !== "supabase"}>{changingPassword ? "Changing password..." : "Change password"}</Button>
         </form>
       </Card>
@@ -1077,7 +1077,7 @@ function SuggestionField({ storageKey, label, value, defaults, onChange }: { sto
       <input className={inputClass} list={`${storageKey}-options`} value={value} onChange={(event) => onChange(event.target.value)} onBlur={remember} placeholder={`Choose or type ${label.toLowerCase()}`} />
       <datalist id={`${storageKey}-options`}>{options.map((option) => <option key={option} value={option} />)}</datalist>
       <div className="mt-2 flex flex-wrap gap-1.5">
-        {options.slice(0, 8).map((option) => <span key={option} className="flex items-center gap-1 rounded border border-[#303847] bg-[#171C25] px-2 py-1 text-[10px] text-[#AAB3C5]"><button type="button" onClick={() => onChange(option)}>{option}</button><button type="button" onClick={() => removeOption(option)} className="text-[#667085] hover:text-rose-300" title={`Remove ${option}`}><X size={11} /></button></span>)}
+        {options.slice(0, 8).map((option) => <span key={option} className="flex items-center gap-1 rounded border border-[#D5EBE7] bg-[#F4FBFA] px-2 py-1 text-[10px] text-[#476D69]"><button type="button" onClick={() => onChange(option)}>{option}</button><button type="button" onClick={() => removeOption(option)} className="text-[#789793] hover:text-rose-500" title={`Remove ${option}`}><X size={11} /></button></span>)}
       </div>
     </Field>
   );
